@@ -33,6 +33,32 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+class UserInfo(models.Model):
+    # user, first name, last name, company, email, phone
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50, blank=True, null=True)
+    email = models.EmailField()
+    telephone = models.CharField(max_length=50, blank=True, null=True)
+    companyID = models.ForeignKey(CompanyInfo.id,
+                                  on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
+
+
+class CompanyInfo(models.Model):
+    # name, orgnr, adressid
+    company = models.CharField(max_length=50, blank=True, null=True)
+    organisation_number = models.CharField(
+        max_length=50, blank=True, null=True)
+    adressID = models.ForeignKey(Address.id,
+                                 on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
+
 
 class Item(models.Model):
     title = models.CharField(max_length=100)
@@ -176,6 +202,19 @@ class Refund(models.Model):
 
     def __str__(self):
         return f"{self.pk}"
+
+
+class Support(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    subject = models.CharField(max_length=50)
+    message = models.TextField()
+    firstSent = models.DateTimeField(auto_now_add=True)
+    done = models.BooleanField(default=False)
+    doneDate = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username
 
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):

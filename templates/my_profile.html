@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form method="POST" action=".">
+{% csrf_token %}
+    <table>
+        <tbody>
+            {% comment %}
+                Info
+            {% endcomment %}
+        
+            <tr>
+                <td>First Name
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Last Name
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Email
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Telephone number
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Company
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>&nbsp;
+                </td>
+                <td>
+                    <a class="" href="{% url 'member:my_support' %}">
+                        <button>
+                            Edit
+                        </button>
+                    </a>
+                </td>
+            </tr>
+
+</form>
+            {% comment %}
+                If company, company info
+            {% endcomment %}
+
+<form method="POST" action=".">
+{% csrf_token %}
+            <tr>
+                <td>Company name
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Company organisationnumber
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Company adress
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>&nbsp;
+                </td>
+                <td>
+                    <a class="" href="{% url 'member:my_support' %}">
+                        <button>
+                            Edit
+                        </button>
+                    </a>
+                </td>
+            </tr>
+
+</form>
+            {% comment %}
+                Adresses
+            {% endcomment %}
+
+<form method="POST" action=".">
+{% csrf_token %}
+
+            <tr>
+                <td>Adresses
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>Street Adress
+                </td>
+                <td>
+                    <a class="" href="{% url 'member:my_support' %}">
+                        <button>
+                            Edit
+                        </button>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</form>
+
+
+{% endblock content %}
