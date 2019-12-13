@@ -23,6 +23,22 @@ ADDRESS_CHOICES = (
     ('S', 'Shipping'),
 )
 
+LANGUAGE_CHOICES = (
+    ('SWE', 'Svenska'),
+    ('ENG', 'English'),
+    ('DEU', 'Deutch'),
+    ('RUS', 'Russian'),
+)
+
+INTERVALL_CHOICES = (
+    ('001', 'En gång i veckan'),
+    ('002', 'Varannan vecka'),
+    ('010', 'En gång i månaden'),
+    ('020', 'Varannan månad'),
+    ('100', 'Var sjätte månad'),
+    ('200', 'En gång om året'),
+)
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -32,6 +48,7 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
 
 class UserInfo(models.Model):
     # user, first name, last name, company, email, phone
@@ -121,6 +138,7 @@ class Order(models.Model):
     items = models.ManyToManyField(OrderItem)
     start_date = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
+    updated_date = models.DateTimeField(auto_now_add=True)
     ordered = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
@@ -212,6 +230,43 @@ class Support(models.Model):
     firstSent = models.DateTimeField(auto_now_add=True)
     done = models.BooleanField(default=False)
     doneDate = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    items = models.ManyToManyField(OrderItem)
+    start_date = models.DateTimeField(auto_now_add=True)
+    next_order_date = models.DateTimeField()
+    updated_date = models.DateTimeField(auto_now_add=True)
+    category = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
+    shipping_address = models.ForeignKey(
+        'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
+    billing_address = models.ForeignKey(
+        'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
+
+
+class Cookies(models.Model):
+    user = models.TextField()
+    functional = models.BooleanField(default=False)
+    directed_ads = models.BooleanField(default=False)
+    tracking = models.BooleanField(default=False)
+    measurement = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.username
+
+
+class Settings(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    language = models.CharField(choices=LANGUAGE_CHOICES, max_length=3)
 
     def __str__(self):
         return self.user.username

@@ -9,20 +9,23 @@ from .views import (
     Errand,
     Profile,
     Settings,
-    Subscriptions,
-    Subscription,
+    SubscriptionsView,
+    SubscriptionView,
+    CookieSettingsView,
 )
 
 app_name = 'member'
 
 urlpatterns = [
-    path('overview/', Overview.as_view(), name='my_overview'),
-    path('orders/', Orders.as_view(), name='my_orders'),
-    path('order/<slug>', Order.as_view(), name='my_order'),
-    path('support/', Support.as_view(), name='my_support'),
-    path('errand/<slug>', Errand.as_view(), name='my_errand'),
-    path('profile/', Profile.as_view(), name='my_profile'),
-    path('settings/', Settings.as_view(), name='my_settings'),
-    path('subscriptions/', Subscriptions.as_view(), name='my_subscriptions'),
-    path('subscription/<slug>', Subscription.as_view(), name='my_subscription'),
+    path('my_overview/', Overview.as_view(), name='my_overview'),
+    path('my_orders/', Orders.as_view(), name='my_orders'),
+    path('my_order/<slug>', Order.as_view(), name='my_order'),
+    path('my_support/', Support.as_view(), name='my_support'),
+    path('my_errand/<slug>', Errand.as_view(), name='my_errand'),
+    path('my_profile/', Profile.as_view(), name='my_profile'),
+    path('my_settings/', Settings.as_view(), name='my_settings'),
+    path('settings/', CookieSettingsView.as_view(), name='cookie_settings'),
+    path('my_subscriptions/', SubscriptionsView.as_view(), name='my_subscriptions'),
+    path('my_subscription/<slug>',
+         SubscriptionView.as_view(), name='my_subscription'),
 ]
