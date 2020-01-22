@@ -10,16 +10,22 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from datetime import datetime
 from core.models import *
+from .forms import *
+
+# add save functions and button functions as well as the actual content to the templates, also add forms for cookie settings and settings as well as further contact form for support
 
 
 class Overview(View):
     def get(self, *args, **kwargs):
         try:
+
             # get the active support errands and the resently ended support errands
 
-            errands = Support()
-            errands = errands.objects.get(
-                user=self.request.user)
+            try:
+                errands = SupportThread().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                errands = {}
+
             errands1 = {}
             errands2 = {}
             today = datetime.now()
@@ -32,11 +38,43 @@ class Overview(View):
                 else:
                     errands1.append(errand)
 
+            # get the responces of open errand and see who last responded, user or support
+
+            responces_a = {}
+
+            for errand in errands1:
+                responces = errand.responce
+                # get the last responce
+                maxIndex = len(responces) - 1
+                responce = responces[maxIndex]
+
+                lastUser = responce.user
+                if lastUser.status == 1:
+                    responces_a.append({'lastReply': 'customer'})
+                else:
+                    responces_a.append({'lastReply': 'support'})
+
+            responces_r = {}
+
+            for errand in errands2:
+                responces = errand.responce
+                # get the last responce
+                maxIndex = len(responces) - 1
+                responce = responces[maxIndex]
+
+                lastUser = responce.user
+                if lastUser.status == 1:
+                    responces_r.append({'lastReply': 'customer'})
+                else:
+                    responces_r.append({'lastReply': 'support'})
+
             # get the active orders and the resently sent orders
 
-            orders = Order()
-            orders = orders.objects.get(
-                user=self.request.user)
+            try:
+                orders = Order().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                orders = {}
+
             order1 = {}
             order2 = {}
             today = datetime.now()
@@ -54,53 +92,67 @@ class Overview(View):
                 'support_r': errands2,
                 'order_a': order1,
                 'order_r': order2,
+                'responces_a': {'lastReply': 'none'},
+                'responces_r': {'lastReply': 'none'},
             }
 
-            return render(self.request, "my_overview.html", context)
+            if len(responces_a) < 0:
+                context.update({'responces_a': responces_a})
+
+            if len(responces_r) < 0:
+                context.update({'responces_r': responces_r})
+
+            return render(self.request, "member/my_overview.html", context)
+
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
-            return redirect("core:home")
 
 
-class Orders(LoginRequiredMixin, View):
+class Orders(View):
     def get(self, *args, **kwargs):
         try:
 
             # get the orders and sort out active ones
 
-            orders = Order()
-            orders = orders.objects.get(
-                user=self.request.user)
+            try:
+                orders = Order().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                orders = {}
+
             orders_a = {}
             today = datetime.now()
 
+            i = 0
             for order in orders:
                 if not order.recieved:
+                    del orders[i]
                     orders_a.append(order)
+                i +=1
 
-            #get all the items and their discounts
-
-            orders = Order.objects.get(user=self.request.user, ordered=False)
+            # get all the items and their discounts
+            
             context = {
                 'orders': orders,
                 'orders_a': orders_a,
             }
 
-            return render(self.request, "my_orders.html", context)
+            return render(self.request, "member/my_orders.html", context)
 
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your orderlistspage. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
-class Order(LoginRequiredMixin, View):
+class OrderView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             if self.request.POST['id']:
                 # get the right order
-                order = Order()
-                order = Order.objects.get(
-                    user=self.request.user, id=self.request.POST['id'])
+
+                try:
+                    order = Order().__class__.objects.get(user=self.request.user, id=self.request.POST['id'])
+                except ObjectDoesNotExist:
+                    order = {}
 
                 # get all the items and their discounts
                 discounts = {}
@@ -138,8 +190,8 @@ class Order(LoginRequiredMixin, View):
 
                 coupon_id = order.coupon
 
-                coupon = Coupon()
-                coupon = coupon.objects.get(id=coupon_id)
+                coupons = Coupon()
+                coupons = coupons.objects.get(id=coupon_id)
 
                 # get the payment info
                 payment_id = order.payment
@@ -154,11 +206,11 @@ class Order(LoginRequiredMixin, View):
                     'discounts': discounts,
                     'shipping_adress': shipping_adress,
                     'billing_adress': billing_adress,
-                    'coupon': coupon,
+                    'coupons': coupons,
                     'payment': payment,
                 }
 
-                return render(self.request, "order.html", context)
+                return render(self.request, "member/order.html", context)
             else:
                 return redirect("member:my_orders")
 
@@ -167,13 +219,16 @@ class Order(LoginRequiredMixin, View):
             return redirect("member:my_overview")
 
 
-class Support(View):
+class SupportView(View):
     def get(self, *args, **kwargs):
         try:
             # get all errands, sort out the active ones
-            errands = Support()
-            errands = errands.objects.get(
-                user=self.request.user)
+
+            try:
+                errands = SupportThread().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                errands = {}
+                
             errands_a = {}
             today = datetime.now()
 
@@ -186,7 +241,7 @@ class Support(View):
                 'errands_a': errands_a,
             }
 
-            return render(self.request, "my_support.html", context)
+            return render(self.request, "member/my_support.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing this page. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -196,13 +251,26 @@ class Errand(View):
     def get(self, *args, **kwargs):
         try:
             # id check here
-            if self.request.POST['id']:
-                errand = Support()
-                errand = errand.objects.get(user=self.request.user, id=self.request.POST['id'])
+            if self.request.POST['lookAt']:
+                try:
+                    errand = SupportThread().__class__.objects.get(user=self.request.user, ref=self.request.POST['lookAt'])
+                except ObjectDoesNotExist:
+                    errand = {}
+
+                try:
+                    responces = SupportResponces().__class__.objects.get(user=self.request.user, ref=self.request.POST['lookAt'])
+                except ObjectDoesNotExist:
+                    responces = {}
+
+                # add form for further contact on this issue
+
                 context = {
                     'errand': errand,
+                    'responces': responces,
                 }
-                return render(self.request, "my_errand.html", context)
+
+                return render(self.request, "member/my_errand.html", context)
+
         except ObjectDoesNotExist:
             messages.info(self.request, "Can't find this errand. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -212,10 +280,18 @@ class Profile(View):
     def get(self, *args, **kwargs):
         try:
             # obs make a form view for editing info and adding info
-
-            info = UserInfo.objects.get(user=self.request.user)
-            company = CompanyInfo.objects.get(user=self.request.user)
-            addresses = Address.objects.get(user=self.request.user)
+            try:
+                info = UserInfo().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                info = {}
+            try:
+                company = CompanyInfo().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                company = {}
+            try:
+                addresses = Address().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                addresses = {}
 
             context = {
                 'info': info,
@@ -223,7 +299,43 @@ class Profile(View):
                 'addresses': addresses,
             }
 
-            return render(self.request, "my_profile.html", context)
+            return render(self.request, "member/my_profile.html", context)
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+
+class EditUser(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get form for this using the user id
+
+            form = ProfileForm()
+            form = form.__init__(form, user=self.request.user)
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/edit_my_user_info.html", context)
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+
+class EditAdress(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get form for this using the user id
+
+            form = AdressForm()
+            form = form.__init__(form, user=self.request.user)
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/edit_my_adress.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -234,14 +346,17 @@ class Settings(View):
         try:
             # obs make a form view for editing info and adding info
 
-            cookieSettings = cookieSettings.objects.get(user=self.request.user)
-            userSettings = userSettings.objects.get(user=self.request.user)
+            try:
+                cookieSettings = Cookies().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                cookieSettings = {}
 
             context = {
                 'cookies': cookieSettings,
-                'settings': userSettings,
             }
-            return render(self.request, "my_profile.html", context)
+
+            return render(self.request, "member/my_settings.html", context)
+
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your settings. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -250,11 +365,16 @@ class Settings(View):
 class SubscriptionsView(View):
     def get(self, *args, **kwargs):
         try:
-            subscriptions = Subscription.objects.get(user=self.request.user)
+
+            try:
+                subscriptions = Subscription().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                subscriptions = {}
+
             context = {
                 'subscriptions': subscriptions,
             }
-            return render(self.request, "my_subscriptions.html", context)
+            return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -263,15 +383,41 @@ class SubscriptionsView(View):
 class SubscriptionView(View):
     def get(self, *args, **kwargs):
         try:
-            # obs make a form view for editing info and adding info
-            # add id check
+            # check if we have an id for the subscription
             if self.request.POST['id']:
-                subscription = Subscription.objects.get(user=self.request.user, id=self.request.POST['id'])
+                # check that the subscription belongs to the user
 
+                try:
+                    sub = Subscription().__class__.objects.get(user=self.request.user, id=self.request.POST['id'])
+                except ObjectDoesNotExist:
+                    sub = {}
+            
+                if len(sub) == 0:
+                    # subscription does not belong to user log possible hacking attempt
+                    messages.info(self.request, "This subscription is not yours.")
+                    return redirect("member:my_overview")
+                else:
+                    form = SubscriptionForm()
+                    form = form.__init__(form, self.request.POST['id'])
+                    context = {
+                        'form': form,
+                        'subscription': sub,
+                    }
+                    return render(self.request, "member/my_subscription.html", context)
+            elif self.request.POST['new']:
+                
+                # get a blank form
+                subID = 0
+                form = SubscriptionForm()
+                form = form.__init__(form, subID)
                 context = {
-                    'subscription': subscription,
+                    'form': form,
+                    'subscription': False,
                 }
-                return render(self.request, "my_subscription.html", context)
+                return render(self.request, "member/my_subscription.html", context)
+            else:
+                messages.info(self.request, "No subscription id. Contact the support for assistance.")
+                return redirect("member:my_overview")
         except ObjectDoesNotExist:
             messages.info(self.request, "Can't find this subscription. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -280,10 +426,13 @@ class SubscriptionView(View):
 class CookieSettingsView(View):
     def get(self, *args, **kwargs):
         try:
+            # turn into form
             # get cookie model, fill in with previous info if there is any
-            cookie_settings = Cookies()
-            cookie_settings = cookie_settings.objects.get(
-                user=self.request.user)
+
+            try:
+                cookie_settings = Cookies().__class__.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                cookie_settings = {}
 
             context = {
                 'cookie_settings': cookie_settings,

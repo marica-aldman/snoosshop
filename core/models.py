@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Sum
 from django.shortcuts import reverse
+from datetime import datetime
 from django_countries.fields import CountryField
 
 
@@ -50,6 +51,36 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class Address(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    street_address = models.CharField(max_length=100)
+    apartment_address = models.CharField(max_length=100)
+    country = CountryField(multiple=False)
+    zip = models.CharField(max_length=100)
+    address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
+    default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.username
+
+    class Meta:
+        verbose_name_plural = 'Addresses'
+        
+
+class CompanyInfo(models.Model):
+    # name, orgnr, adressid
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    company = models.CharField(max_length=50, blank=True, null=True)
+    organisation_number = models.CharField(
+        max_length=50, blank=True, null=True)
+    adressID = models.ForeignKey(Address, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
+
+
 class UserInfo(models.Model):
     # user, first name, last name, company, email, phone
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -58,20 +89,8 @@ class UserInfo(models.Model):
     last_name = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField()
     telephone = models.CharField(max_length=50, blank=True, null=True)
-    companyID = models.ForeignKey(CompanyInfo.id,
+    companyID = models.ForeignKey(CompanyInfo,
                                   on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.user.username
-
-
-class CompanyInfo(models.Model):
-    # name, orgnr, adressid
-    company = models.CharField(max_length=50, blank=True, null=True)
-    organisation_number = models.CharField(
-        max_length=50, blank=True, null=True)
-    adressID = models.ForeignKey(Address.id,
-                                 on_delete=models.CASCADE)
 
     def __str__(self):
         return self.user.username
@@ -136,9 +155,9 @@ class Order(models.Model):
                              on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
-    start_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
-    updated_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
@@ -176,29 +195,12 @@ class Order(models.Model):
         return total
 
 
-class Address(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    street_address = models.CharField(max_length=100)
-    apartment_address = models.CharField(max_length=100)
-    country = CountryField(multiple=False)
-    zip = models.CharField(max_length=100)
-    address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
-    default = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.user.username
-
-    class Meta:
-        verbose_name_plural = 'Addresses'
-
-
 class Payment(models.Model):
     stripe_charge_id = models.CharField(max_length=50)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.SET_NULL, blank=True, null=True)
     amount = models.FloatField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(default=datetime.now, blank=True)
 
     def __str__(self):
         return self.user.username
@@ -222,55 +224,58 @@ class Refund(models.Model):
         return f"{self.pk}"
 
 
-class Support(models.Model):
+class SupportThread(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
+    last_responce = models.PositiveIntegerField(default=1)
+    ref_code = models.CharField(max_length=20, blank=True, null=True)
     subject = models.CharField(max_length=50)
     message = models.TextField()
-    firstSent = models.DateTimeField(auto_now_add=True)
+    firstSent = models.DateTimeField(default=datetime.now, blank=True)
     done = models.BooleanField(default=False)
-    doneDate = models.DateTimeField(auto_now_add=True)
+    doneDate = models.DateTimeField(default=datetime.now, blank=True)
+
+    objects = models.Manager()
 
     def __str__(self):
         return self.user.username
 
 
+class SupportResponces(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    ref = models.ForeignKey(SupportThread, on_delete=models.CASCADE)
+    message = models.TextField()
+    responceSent = models.DateTimeField(default=datetime.now, blank=True)
+
+
 class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
+    ref = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
-    start_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order_date = models.DateTimeField()
-    updated_date = models.DateTimeField(auto_now_add=True)
-    category = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
-    shipping_address = models.ForeignKey(
-        'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
-    billing_address = models.ForeignKey(
-        'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
+    updated_date = models.DateTimeField(default=datetime.now, blank=True)
+    intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
+    shipping_address = models.ForeignKey(Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
+    billing_address = models.ForeignKey(Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user.username
 
 
 class Cookies(models.Model):
-    user = models.TextField()
-    functional = models.BooleanField(default=False)
-    directed_ads = models.BooleanField(default=False)
-    tracking = models.BooleanField(default=False)
-    measurement = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.user.username
-
-
-class Settings(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    language = models.CharField(choices=LANGUAGE_CHOICES, max_length=3)
+    functional = models.BooleanField(default=False)
+    directed_ads = models.BooleanField(default=False)
+    measurement = models.BooleanField(default=False)
+    onOff = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username
-
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
     if created:

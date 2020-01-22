@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--support errands-->
+<!--active-->
+<div class="">
+    <h1> Ärende: {{ errand.ref }} </h1>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Person
+                </th>
+                <th>
+                    Meddelande
+                </th>
+                <th>
+                    Skickat
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for errand in errands_a %}
+            <tr>
+                <td>
+                    {{ responce. }}
+                </td>
+                <td>
+                    {{ errand.subject }}
+                </td>
+                <td>
+                    {{ errand.firstSent}}
+                </td>
+                <td>
+                    {% if errand.last_responce == 1 %}
+                        Skickad
+                    {% else %}
+                        Besvarad
+                    {% endif %}
+                </td>
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- all -->
+<div class="">
+    <h1>Alla supportärenden</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Referens
+                </th>
+                <th>
+                    Ämne
+                </th>
+                <th>
+                    Startad
+                </th>
+                <th>
+                    Avslutad
+                </th>
+                <th>
+                    Aktivitet
+                </th>
+                <th>
+                    Titta på
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for errand in support %}
+            <tr>
+                <td>
+                    {{ errand.subject }}
+                </td>
+                <td>
+                    {{ errand.firstSent}}
+                </td>
+                <td>
+                    {% if errand.done %}
+                        {{ errand.doneDate }}
+                    {% else %}
+                        ---
+                    {% endif %}
+                </td>
+                <td>
+                    {% if errand.done %}
+                        Avslutat
+                    {% else %}
+                        Pågående
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST">
+                        <button type="submit" value="errand.ref_code" name="lookAt">
+                            Se ärende
+                        </button>
+                    </form>
+                </td>
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}
