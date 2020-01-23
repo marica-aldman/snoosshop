@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django_countries',
 
     'member',
+    'moderator',
     'core'
 ]
 
