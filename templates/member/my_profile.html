@@ -2,121 +2,142 @@
 
 {% block content %}
 
-<form method="POST" action=".">
-{% csrf_token %}
-    <table>
-        <tbody>
-            {% comment %}
-                Info
-            {% endcomment %}
-        
-            <tr>
-                <td>First Name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Last Name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Email
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Telephone number
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>&nbsp;
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
 
-</form>
-            {% comment %}
-                If company, company info
-            {% endcomment %}
+<main>
+    <div class="container">
+    <!--orders-->
+    <!--active-->
+        <div class="border rounded mb-3">
+        <form method="POST" action=".">
+        {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2">
+                <tbody>
+                    {% comment %}
+                        Info
+                    {% endcomment %}
+                
+                    <tr>
+                        <td class="mdb-color lighten-5 w-25">
+                            First Name
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Last Name
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Email
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Telephone number
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Company
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <a class="" href="{% url 'member:my_support' %}">
+                                <button class="btn btn-primary float-right">
+                                    Edit
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
 
-<form method="POST" action=".">
-{% csrf_token %}
-            <tr>
-                <td>Company name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company organisationnumber
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company adress
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>&nbsp;
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
+        </form>
+                    {% comment %}
+                        If company, company info
+                    {% endcomment %}
 
-</form>
-            {% comment %}
-                Adresses
-            {% endcomment %}
+        <form method="POST" action=".">
+        {% csrf_token %}
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Company name
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Company organisationnumber
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Company adress
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <a class="" href="{% url 'member:my_support' %}">
+                                <button class="btn btn-primary float-right">
+                                    Edit
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
 
-<form method="POST" action=".">
-{% csrf_token %}
+        </form>
+                    {% comment %}
+                        Adresses
+                    {% endcomment %}
 
-            <tr>
-                <td>Adresses
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Street Adress
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</form>
+        <form method="POST" action=".">
+        {% csrf_token %}
 
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Adresses
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Street Adress
+                        </td>
+                        <td>
+                            <a class="" href="{% url 'member:my_support' %}">
+                                <button class="btn btn-primary float-right">
+                                    Edit
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+
+    </div>
+
+</main>
 
 {% endblock content %}

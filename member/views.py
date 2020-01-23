@@ -9,8 +9,8 @@ from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
 from datetime import datetime
-from core.models import *
-from .forms import *
+from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies
+from .forms import SubscriptionForm, ProfileForm, InitialSupportForm, AdressForm
 
 # add save functions and button functions as well as the actual content to the templates, also add forms for cookie settings and settings as well as further contact form for support
 
@@ -22,12 +22,12 @@ class Overview(View):
             # get the active support errands and the resently ended support errands
 
             try:
-                errands = SupportThread().__class__.objects.get(user=self.request.user)
+                errands = SupportThread.objects.filter(user=self.request.user,)
             except ObjectDoesNotExist:
                 errands = {}
 
-            errands1 = {}
-            errands2 = {}
+            errands1 = []
+            errands2 = []
             today = datetime.now()
 
             for errand in errands:
@@ -40,7 +40,7 @@ class Overview(View):
 
             # get the responces of open errand and see who last responded, user or support
 
-            responces_a = {}
+            responces_a = []
 
             for errand in errands1:
                 responces = errand.responce
@@ -54,7 +54,7 @@ class Overview(View):
                 else:
                     responces_a.append({'lastReply': 'support'})
 
-            responces_r = {}
+            responces_r = []
 
             for errand in errands2:
                 responces = errand.responce
@@ -71,16 +71,17 @@ class Overview(View):
             # get the active orders and the resently sent orders
 
             try:
-                orders = Order().__class__.objects.get(user=self.request.user)
+                #orders = Order.objects.get(user=self.request.user, ordered=True)
+                orders = Order.objects.filter(user=self.request.user, ordered=True)
             except ObjectDoesNotExist:
                 orders = {}
 
-            order1 = {}
-            order2 = {}
+            order1 = []
+            order2 = []
             today = datetime.now()
 
             for order in orders:
-                if order.recieved:
+                if order.received:
                     time_diff = order.updated_date - today
                     if time_diff.days < 8:
                         order2.append(order)
@@ -115,11 +116,11 @@ class Orders(View):
             # get the orders and sort out active ones
 
             try:
-                orders = Order().__class__.objects.get(user=self.request.user)
+                orders = Order.objects.filter(user=self.request.user, ordered=True)
             except ObjectDoesNotExist:
                 orders = {}
 
-            orders_a = {}
+            orders_a = []
             today = datetime.now()
 
             i = 0
@@ -150,15 +151,15 @@ class OrderView(LoginRequiredMixin, View):
                 # get the right order
 
                 try:
-                    order = Order().__class__.objects.get(user=self.request.user, id=self.request.POST['id'])
+                    order = Order.objects.filter(user=self.request.user, ref_code=self.request.POST['id'])
                 except ObjectDoesNotExist:
                     order = {}
 
                 # get all the items and their discounts
-                discounts = {}
+                discounts = []
                 items = order.items
-                all_items = {}
-                all_order_items = {}
+                all_items = []
+                all_order_items = []
                 
                 for item in items:
                     item_id = item.id
@@ -225,11 +226,11 @@ class SupportView(View):
             # get all errands, sort out the active ones
 
             try:
-                errands = SupportThread().__class__.objects.get(user=self.request.user)
+                errands = SupportThread.objects.filter(user=self.request.user,)
             except ObjectDoesNotExist:
                 errands = {}
-                
-            errands_a = {}
+
+            errands_a = []
             today = datetime.now()
 
             for errand in errands:
@@ -247,18 +248,36 @@ class SupportView(View):
             return redirect("member:my_overview")
 
 
-class Errand(View):
+class NewErrandView(View):
+    def get(self, *args, **kwargs):
+        try:
+            # new errand
+
+            form = InitialSupportForm()
+
+            context = {
+                'form': form
+            }
+
+            return render(self.request, "member/new_errand.html", context)
+
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Can't find this errand. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+
+class ErrandView(View):
     def get(self, *args, **kwargs):
         try:
             # id check here
             if self.request.POST['lookAt']:
                 try:
-                    errand = SupportThread().__class__.objects.get(user=self.request.user, ref=self.request.POST['lookAt'])
+                    errand = SupportThread.objects.filter(user=self.request.user, ref=self.request.POST['lookAt'])
                 except ObjectDoesNotExist:
                     errand = {}
 
                 try:
-                    responces = SupportResponces().__class__.objects.get(user=self.request.user, ref=self.request.POST['lookAt'])
+                    responces = SupportResponces.objects.filter(user=self.request.user, ref=self.request.POST['lookAt'])
                 except ObjectDoesNotExist:
                     responces = {}
 
@@ -281,15 +300,15 @@ class Profile(View):
         try:
             # obs make a form view for editing info and adding info
             try:
-                info = UserInfo().__class__.objects.get(user=self.request.user)
+                info = UserInfo.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 info = {}
             try:
-                company = CompanyInfo().__class__.objects.get(user=self.request.user)
+                company = CompanyInfo.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 company = {}
             try:
-                addresses = Address().__class__.objects.get(user=self.request.user)
+                addresses = Address.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 addresses = {}
 
@@ -347,7 +366,7 @@ class Settings(View):
             # obs make a form view for editing info and adding info
 
             try:
-                cookieSettings = Cookies().__class__.objects.get(user=self.request.user)
+                cookieSettings = Cookies.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 cookieSettings = {}
 
@@ -367,7 +386,7 @@ class SubscriptionsView(View):
         try:
 
             try:
-                subscriptions = Subscription().__class__.objects.get(user=self.request.user)
+                subscriptions = Subscription.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 subscriptions = {}
 
@@ -388,7 +407,7 @@ class SubscriptionView(View):
                 # check that the subscription belongs to the user
 
                 try:
-                    sub = Subscription().__class__.objects.get(user=self.request.user, id=self.request.POST['id'])
+                    sub = Subscription.objects.filter(user=self.request.user, id=self.request.POST['id'])
                 except ObjectDoesNotExist:
                     sub = {}
             
@@ -430,7 +449,7 @@ class CookieSettingsView(View):
             # get cookie model, fill in with previous info if there is any
 
             try:
-                cookie_settings = Cookies().__class__.objects.get(user=self.request.user)
+                cookie_settings = Cookies.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 cookie_settings = {}
 

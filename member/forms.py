@@ -126,6 +126,12 @@ class ProfileForm(forms.ModelForm):
                 choices=adresses, max_length=3, initial=company.adressID)
 
 
+class InitialSupportForm(forms.ModelForm):
+    subject = forms.CharField(
+        max_length=50)
+    message = forms.CharField(widget=forms.Textarea)
+
+
 class AdressForm(forms.ModelForm):
     def __init__(self, id, *args, **kwargs):
         super(AdressForm, self).__init__(*args, **kwargs)

@@ -230,7 +230,6 @@ class SupportThread(models.Model):
     last_responce = models.PositiveIntegerField(default=1)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     subject = models.CharField(max_length=50)
-    message = models.TextField()
     firstSent = models.DateTimeField(default=datetime.now, blank=True)
     done = models.BooleanField(default=False)
     doneDate = models.DateTimeField(default=datetime.now, blank=True)

@@ -3,56 +3,61 @@
 {% block content %}
 
 <!-- all subscriptions-->
-<div class="">
-    <h1>Mina premunationer</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Referensnummer
-                </th>
-                <th>
-                    Status
-                </th>
-                <th>
-                    Datum för nästa utskick
-                </th>
-                <th>
-                    Titta på
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for subscription in subscriptions %}
-            <tr>
-                <td>
-                    {{ subscription.ref }}
-                </td>
-                <td>
-                    {% if subscription.active %}
-                        Aktiv
-                </td>
-                <td>
-                    {{ subscription.next_order_date }}
-                </td>
-                    {% else %}
-                        Avstängd
-                </td>
-                <td>
-                    ---
-                </td>
-                    {% endif %}
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="subscription.ref" name="lookAt">
-                            Se order
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-    </table>
-</div>
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            <h3>Mina premunationer</h3>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Referensnummer
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            Datum för nästa utskick
+                        </th>
+                        <th>
+                            Titta på
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for subscription in subscriptions %}
+                    <tr>
+                        <td>
+                            {{ subscription.ref }}
+                        </td>
+                        <td>
+                            {% if subscription.active %}
+                                Aktiv
+                        </td>
+                        <td>
+                            {{ subscription.next_order_date }}
+                        </td>
+                            {% else %}
+                                Avstängd
+                        </td>
+                        <td>
+                            ---
+                        </td>
+                            {% endif %}
+                        <td>
+                            <form method="POST">
+                                <button type="submit" value="subscription.ref" name="lookAt">
+                                    Se order
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
 
 {% endblock content %}
