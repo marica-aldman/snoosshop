@@ -33,11 +33,18 @@
         <!-- Right -->
         <ul class="navbar-nav nav-flex-icons">
           {% if request.user.is_authenticated %}
-              
+
+          {% if user.is_superuser %}
+            <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:mod_overview' %}">
+              <span class="clearfix d-none d-sm-inline-block">
+                Moderator översikt
+              </span>
+            </a>
+          {% endif %}
               {% comment %}
                 Menues logged in
               {% endcomment %}
-              
+
               {% comment %}
                 User menu
               {% endcomment %}
@@ -79,12 +86,12 @@
                 </a>
             </div>
           </li>
-          
-              
+
+
               {% comment %}
                 Cart
               {% endcomment %}
-              
+
           <li class="nav-item">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
               <span class="badge red z-depth-1 mr-1"> {{ request.user|cart_item_count }} </span>
@@ -107,7 +114,7 @@
               {% comment %}
                 Menues not logged in
               {% endcomment %}
-              
+
               {% comment %}
                 User
               {% endcomment %}
@@ -124,7 +131,7 @@
                 </a>
             </div>
           </li>
-              
+
               {% comment %}
                 Login
               {% endcomment %}
@@ -134,7 +141,7 @@
               <span class="clearfix d-none d-sm-inline-block"> Login </span>
             </a>
           </li>
-              
+
               {% comment %}
                 Signup
               {% endcomment %}
