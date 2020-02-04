@@ -35,7 +35,7 @@ class EditSubscriptionForm(forms.Form):
     start_date = forms.DateTimeField(required=True)
     intervall = forms.ChoiceField(choices=INTERVALL_CHOICES, required=True)
 
-    def __init__(self, theUser, slug, *args, **kwargs):
+    def __init__(self, theUser, slug='save', *args, **kwargs):
         super(EditSubscriptionForm, self).__init__(*args, **kwargs)
         # check if the slug is for a new or editing an old sub and if it is an old one get the old one
         initialornot = True
