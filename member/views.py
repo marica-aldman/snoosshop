@@ -5,14 +5,33 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import ListView, DetailView, View
+from django.views.generic import ListView, DetailView, View, FormView
 from django.shortcuts import redirect
 from django.utils import timezone
-from datetime import datetime
-from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies
-from .forms import SubscriptionForm, ProfileForm, InitialSupportForm, AdressForm
+from datetime import datetime, timedelta
+from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem
+from .forms import ProfileForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
+from django.utils.dateparse import parse_datetime
+
 
 # add save functions and button functions as well as the actual content to the templates, also add forms for cookie settings and settings as well as further contact form for support
+
+
+class Setup(View):
+    def get(self, *args, **kwargs):
+        try:
+            form = InitialForm()
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/setup.html", form)
+
+
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+            return redirect("core:home")
 
 
 class Overview(View):
@@ -71,7 +90,6 @@ class Overview(View):
             # get the active orders and the resently sent orders
 
             try:
-                #orders = Order.objects.get(user=self.request.user, ordered=True)
                 orders = Order.objects.filter(user=self.request.user, ordered=True)
             except ObjectDoesNotExist:
                 orders = {}
@@ -107,6 +125,7 @@ class Overview(View):
 
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+            return redirect("core:home")
 
 
 class Orders(View):
@@ -156,36 +175,39 @@ class OrderView(LoginRequiredMixin, View):
                     order = {}
 
                 # get all the items and their discounts
-                discounts = []
-                items = order.items
+
+                orderItems = order.items
                 all_items = []
                 all_order_items = []
                 
-                for item in items:
-                    item_id = item.id
-                    check_order_item = OrderItem()
-                    check_order_item = check_order_item.objects.get(id=item_id)
-                    check_item = Item()
-                    check_item = check_item.objects.get(id=item_id)
-                    item_discount = check_item.discount_price
-                    new = {
-                            'id': item_id,
-                            'discount': item_discount
+                for orderItem in orderItems:
+                    item = orderItem.item
+                    title = item.title
+                    price = item.price
+                    discount = item.discount_price
+                    image = item.image
+                    quantity = orderItem.quantity
+                    total_price = orderItem.get_final_price(orderItem)
+                    full_item = {
+                        'title': title,
+                        'price': price,
+                        'discount': discount,
+                        'image': image,
+                        'total_price': total_price,
+                        'quantity': quantity
                         }
-                    discounts.append(new)
-                    all_order_items.append(check_order_item)
-                    all_items.append(check_item)
+                    all_items.append(full_item)
 
                 # get all the addresses
 
-                shipping_adress_id = order.shipping_address
-                billing_adress_id = order.billing_address
+                shipping_address_id = order.shipping_address
+                billing_address_id = order.billing_address
 
-                shipping_adress = Address()
-                shipping_adress = shipping_adress.objects.get(id=shipping_adress_id)
+                shipping_address = Address()
+                shipping_address = shipping_address.objects.get(id=shipping_address_id)
 
-                billing_adress = Address()
-                billing_adress = billing_adress.objects.get(id=billing_adress_id)
+                billing_address = Address()
+                billing_address = billing_address.objects.get(id=billing_address_id)
 
                 # get the cupon used
 
@@ -204,9 +226,8 @@ class OrderView(LoginRequiredMixin, View):
                     'order': order,
                     'all_order_items': all_order_items,
                     'all_items': all_items,
-                    'discounts': discounts,
-                    'shipping_adress': shipping_adress,
-                    'billing_adress': billing_adress,
+                    'shipping_address': shipping_address,
+                    'billing_address': billing_address,
                     'coupons': coupons,
                     'payment': payment,
                 }
@@ -298,23 +319,42 @@ class ErrandView(View):
 class Profile(View):
     def get(self, *args, **kwargs):
         try:
-            # obs make a form view for editing info and adding info
+            # get user info
             try:
                 info = UserInfo.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
-                info = {}
+                info = {'company': False}
+            
+            # company info
             try:
                 company = CompanyInfo.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 company = {}
+
+            # get company address
+            company_address = ""
+            """ 
+            if info.company:
+                try:
+                    address = Address.objects.filter(id = company.addressID)
+                except ObjectDoesNotExist:
+                    address = {'street_address': ''}
+                
+                company_address = address.street_address """
+
+            # get user addresses
+
             try:
                 addresses = Address.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 addresses = {}
 
+            # place info in context and render page
+
             context = {
                 'info': info,
                 'company': company,
+                'company_address': company_address,
                 'addresses': addresses,
             }
 
@@ -342,19 +382,100 @@ class EditUser(View):
             return redirect("member:my_overview")
 
 
-class EditAdress(View):
+class Editaddress(View):
     def get(self, *args, **kwargs):
         try:
             # get form for this using the user id
-
-            form = AdressForm()
-            form = form.__init__(form, user=self.request.user)
+            form = addressForm()
+            form = form.__init__(form, user=self.request.user, id=self.request.POST['id'])
 
             context = {
                 'form': form,
             }
 
-            return render(self.request, "member/edit_my_adress.html", context)
+            return render(self.request, "member/edit_address.html", context)
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+
+class Newaddress(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get form for this using the user id
+            form = NewAddressForm()
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/new_address.html", context)
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+    def post(self, *args, **kwargs):
+        try:
+            form = NewAddressForm(self.request.POST or None)
+
+            if form.is_valid():
+
+                # get values
+                address = Address()
+
+                address.user = self.request.user
+                address.street_address = form.cleaned_data.get('street_address')
+                address.apartment_address = form.cleaned_data.get('apartment_address')
+                address.post_town = form.cleaned_data.get('post_town')
+                address.post_code = form.cleaned_data.get('post_code')
+                address.country = "Sverige"
+                address.default_address = form.cleaned_data.get('default_address')
+                
+                # check that if we want the adress to be both shipping and billing
+                address_type = form.cleaned_data.get('address_type')
+
+                if address_type == "A":
+                    # we want two copies of this address
+                    address2 = Address()
+                    address2.user = self.request.user
+                    address2.street_address = form.cleaned_data.get('street_address')
+                    address2.apartment_address = form.cleaned_data.get('apartment_address')
+                    address2.post_town = form.cleaned_data.get('post_town')
+                    address2.post_code = form.cleaned_data.get('post_code')
+                    address2.country = "Sverige"
+                    address2.default_address = form.cleaned_data.get('default')
+                    address2.address_type = "S"
+                    # check if this is set as the default address if it is remove default from all of this users addresses in the database
+
+                    if address.default_address:
+                        addresses = Address.objects.filter(user=self.request.user, default=True)
+                        for address1 in addresses:
+                            address1.default = False
+                            address1.save()
+
+                    # save the second copy of the adress
+                    address2.save()
+                    address.address_type = "B"
+                else:
+                    address.address_type = address_type
+
+                    #if this is the default remove default of the same address type from the users adresses
+                    if address.default_address:
+                        addresses = Address.objects.filter(user=self.request.user, default=True, address_type=address_type)
+                        for address1 in addresses:
+                            address1.default = False
+                            address1.save()
+
+                # save the address and return to list
+                address.save()
+                messages.info(self.request, "Address have been saved.")
+                return redirect("member:my_profile")
+            else:
+                context = {
+                    'form': form,
+                }
+
+                return render(self.request, "member/new_address.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
@@ -384,15 +505,21 @@ class Settings(View):
 class SubscriptionsView(View):
     def get(self, *args, **kwargs):
         try:
-
+            # get all subscriptions
             try:
                 subscriptions = Subscription.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 subscriptions = {}
 
+            # make a subscription object and give it new as slog for the new button
+            newSub = Subscription()
+            newSub.slug = 'new'
+
             context = {
                 'subscriptions': subscriptions,
+                'newSub': newSub,
             }
+
             return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
@@ -400,45 +527,243 @@ class SubscriptionsView(View):
 
 
 class SubscriptionView(View):
-    def get(self, *args, **kwargs):
-        try:
-            # check if we have an id for the subscription
-            if self.request.POST['id']:
-                # check that the subscription belongs to the user
+    def post(self, *args, **kwargs):
+        if 'saveSubscription' in self.request.POST.keys():
+            # saving subscription
+            # make a subscription object if new otherwise get the old one
+            test = 'hi'
 
-                try:
-                    sub = Subscription.objects.filter(user=self.request.user, id=self.request.POST['id'])
-                except ObjectDoesNotExist:
-                    sub = {}
-            
-                if len(sub) == 0:
-                    # subscription does not belong to user log possible hacking attempt
-                    messages.info(self.request, "This subscription is not yours.")
-                    return redirect("member:my_overview")
-                else:
-                    form = SubscriptionForm()
-                    form = form.__init__(form, self.request.POST['id'])
-                    context = {
-                        'form': form,
-                        'subscription': sub,
-                    }
-                    return render(self.request, "member/my_subscription.html", context)
-            elif self.request.POST['new']:
+                # handle saving and creating of orders here
                 
-                # get a blank form
-                subID = 0
-                form = SubscriptionForm()
-                form = form.__init__(form, subID)
+            # save all products and amounts
+            """sub.products_set.all().delete()
+            for product in self.cleaned_data['products']:
+                for amount in self.cleaned_data['amounts']:
+                    SubscriptionItem.objects.create(
+                        user=self.request.user,
+                        subscription=sub,
+                        item=product,
+                        quantity=amount,
+                    )"""
+            
+        else:
+            try:
+
+                # get the form
+
+                form = EditSubscriptionForm(self.request.user, slug=self.request.POST['slug'])
+
+                # if we are editing get the specific Subscription
+                if self.request.POST['slug'] != 'new':
+                    try:
+                        subscription = Subscription.objects.filter(user=self.request.user, slug=self.request.POST['slug'])
+                    except ObjectDoesNotExist:
+                        subscription = {}
+
+                    sub_date = ""
+                    number_of_products = 0
+                
+                    for sub in subscription:
+                        sub_date = sub.start_date.strftime("%Y-%m-%d")
+                        number_of_products = sub.number_of_items
+                    
+                else:
+                    sub_date = datetime.now().strftime("%Y-%m-%d")
+                    number_of_products = 1
+
                 context = {
                     'form': form,
-                    'subscription': False,
+                    'sub_date': sub_date,
+                    'number_of_products': number_of_products,
                 }
+
                 return render(self.request, "member/my_subscription.html", context)
-            else:
-                messages.info(self.request, "No subscription id. Contact the support for assistance.")
+
+            except ObjectDoesNotExist:
+                messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
                 return redirect("member:my_overview")
+
+
+class NewSubscriptionView(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get the users saved shipping addresses
+            shipping_addresses = Address.objects.filter(
+                user=self.request.user, address_type='S')
+
+            # get the users saved billing addresses
+            billing_addresses = Address.objects.filter(
+                user=self.request.user, address_type='B')
+
+            # get the form
+            aform = NewSubscriptionForm()
+
+            # get all products and place them in a json for using js to get multiple instances of products for the same subscription
+            all_products = Item.objects.all()
+            products = []
+            products_html = "["
+
+            for product in all_products:
+                products.append({'id': product.id, 'title': product.title})
+                id = str(product.id)
+                title = str(product.title)
+                products_html = products_html + "{&quot;id&quot;: &quot" + id + "&quot, &quot;title&quot;: &quot" + title + "&quot},"
+
+            products_html = products_html + "]"
+
+            # place form and product json in context
+            context = {
+                'form': aform,
+                'products_html': products_html,
+                'shipping_adress': shipping_addresses,
+                'billing_addresses': billing_addresses,
+            }
+
+            return render(self.request, "member/new_subscription.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Can't find this subscription. Contact the support for assistance.")
+            messages.info(self.request, "Something went wrong when accessing the new subscription form. Contact the support for assistance.")
+            return redirect("member:overview")
+
+    def post(self, *args, **kwargs):
+        try:
+
+            form = NewSubscriptionForm(self.request.POST or None)
+
+            if form.is_valid():
+
+                # new subscription instance
+
+                sub = Subscription()
+                # take in the data
+
+                sub.user = self.request.user
+                # make sure the date is in the correct format
+                sub.start_date = form.cleaned_data.get('start_date')
+
+                sub.intervall = form.cleaned_data.get('intervall')
+                sub.shipping_address = form.cleaned_data.get('shipping_address')
+                sub.billing_address = form.cleaned_data.get('billing_address')
+                sub.number_of_products = int(self.request.POST['number_of_products'])
+
+                # calcuate the rest of the data
+
+                sub.updated_date = datetime.now()
+                sub.active = True
+
+                if sub.intervall == '001':
+                    # add a week
+                    d = timedelta(days=7)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+
+                elif sub.intervall == '002':
+                    # add two weeks
+                    d = timedelta(days=14)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+
+                elif sub.intervall == '010':
+                    # add a month
+                    d = timedelta(days=30)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+                elif sub.intervall == '020':
+                    # add two months
+                    d = timedelta(days=60)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+                elif sub.intervall == '100':
+                    # add six months
+                    d = timedelta(days=182)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+                elif sub.intervall == '200':
+                    # add a year
+                    d = timedelta(days=365)
+                    next_date = sub.start_date + d
+
+                    sub.next_order_date = next_date
+                else:
+                    # this shouldnt be able to happen. Add nothing
+                    sub.next_order_date = sub.start_date
+
+                # slug
+                # create a slug using user id and number of subsciption the user has
+                try:
+                    subscriptions = Subscription.objects.filter(user=self.request.user)
+                except ObjectDoesNotExist:
+                    subscriptions = {}
+                sub_amount = str(len(subscriptions))
+                user_id = str(self.request.user.id)
+                slug = "s" + sub_amount + "u" + user_id
+                sub.slug = slug
+
+                # save subscription to aquire id
+                sub.save()
+
+                # create subscription items
+
+                i = 1
+
+                for i in range(sub.number_of_products + 1):
+                    subscription_item = SubscriptionItem()
+                    subscription_item.user = self.request.user
+                    p_string = "product" + str(i)
+                    a_string = "amount" + str(i)
+                    product_id = form.cleaned_data.get(p_string)
+                    amount = form.cleaned_data.get(a_string)
+                    products = Item.objects.filter(id=product_id)
+                    for product in products:
+                        subscription_item.item = product
+                    subscription_item.amount = amount
+                    subscription_item.save()
+                    sub.items.add(subscription_item)
+
+                # save the final instance of subscription
+                sub.save()
+
+                messages.info(self.request, "Subscription saved and activated")
+                return redirect("member:my_subscriptions")
+            # if the form is not valid
+            else:
+                # get the users saved shipping addresses
+                shipping_addresses = Address.objects.filter(
+                    user=self.request.user, address_type='S')
+
+                # get the users saved billing addresses
+                billing_addresses = Address.objects.filter(
+                    user=self.request.user, address_type='B')
+
+                # get all products and place them in a json for using js to get multiple instances of products for the same subscription
+                all_products = Item.objects.all()
+                products = []
+                products_html = "["
+
+                for product in all_products:
+                    products.append({'id': product.id, 'title': product.title})
+                    id = str(product.id)
+                    title = str(product.title)
+                    products_html = products_html + "{&quot;id&quot;: &quot" + id + "&quot, &quot;title&quot;: &quot" + title + "&quot},"
+
+                products_html = products_html + "]"
+
+                # place form and product json in context
+                context = {
+                    'form': form,
+                    'products_html': products_html,
+                    'shipping_adress': shipping_addresses,
+                    'billing_addresses': billing_addresses,
+                }
+
+                return render(self.request, "member/new_subscription.html", context)
+
+        except ObjectDoesNotExist:
+            messages.info(self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 

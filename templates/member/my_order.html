@@ -6,28 +6,32 @@
 <main>
     <div class="container">
 <!-- specific orders -->
-        <div class="border rounded mb-3">
-            <form method="POST">
-                <button type="submit" value="support" name="contactSupport">
-                    Kontakta support
+        <div>
+            <a href="{% url 'member:new_errand' %}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Skapa nytt supportärende
                 </button>
-            </form>
-            {% if order.being_delivered || order.recieved %}
-            <form method="POST">
-                <button type="submit" value="support" name="contactSupport">
+            </a>
+        </div>
+        {% if order.received %}
+        <div>
+            <a href="{% url 'member:return_order' %}">
+                <button type="submit" class="btn btn-primary float-right">
                     Returnera hela ordern
                 </button>
-            </form>
-            {% endif %}
-            {% if not order.being_delivered %}
-            <form method="POST">
-                <button type="submit" value="support" name="contactSupport">
+            </a>
+        </div>
+        {% endif %}
+        {% if not order.being_delivered and not order.received %}
+        <div>
+            <a href="{% url 'member:cancel_order' %}">
+                <button type="submit" class="btn btn-primary float-right">
                     Avbeställ
                 </button>
-            </form>
+            </a>
         </div>
+        {% endif %}
         <div class="border rounded mb-3">
-            {% endif %}
             <table class="table-striped table-hover w-100  mb-2">
                 <tbody>
                     <tr>
@@ -89,22 +93,22 @@
                             {% endif %}
                         </td>
                     </tr>
+                    {% if refund.requested %}
                     <tr>
                         <td class="mdb-color lighten-5">
                             Returstatus
                         </td>
                         <td>
-                            {% if refund.requested %}
-                                {% if refund_granted %}
+                            {% if order.refund_requested %}
+                                {% if order.refund_granted %}
                                     Återbetalning godkänd
                                 {% else %}
-                                    Returbetalning begärd
+                                    Retur begärd
                                 {% endif %}
-                            {% else %}
-                                Ej returnerad
                             {% endif %}
                         </td>
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -127,31 +131,25 @@
                         <th>
                             Totalkostnad
                         </th>
-                        <th>
-                            Åtgärd
-                        </th>
                     </tr>
                 </thead>
                 <tbody> <!-- available variables, all_order_items, all_items, discounts, coupon, payment -->
-                    {% for order_item in all_order_items %}
+                    {% for item in all_items %}
                     <tr>
                         <td>
-                            {{ order.ref_code }}
+                            {{ item.title }}
                         </td>
                         <td>
-                            {{ order.ref_code }}
+                            {{ item.quantity }}
                         </td>
                         <td>
-                            {{ order.ref_code }}
+                            {{ item.price }}
                         </td>
                         <td>
-                            {{ order.ref_code }}
+                            {{ item.discount }}
                         </td>
                         <td>
-                            {{ order.ref_code }}
-                        </td>
-                        <td>
-                            {{ order.ref_code }}
+                            {{ item.total_price }}
                         </td>
                     </tr>
                     {% endfor %}

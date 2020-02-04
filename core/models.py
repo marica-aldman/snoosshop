@@ -64,18 +64,23 @@ class Address(models.Model):
     def __str__(self):
         return self.user.username
 
+    def get_absolute_url(self):
+        return reverse("member:edit_address", kwargs={
+            'slug': self.id
+        })
+
     class Meta:
         verbose_name_plural = 'Addresses'
-        
+
 
 class CompanyInfo(models.Model):
-    # name, orgnr, adressid
+    # name, orgnr, addressid
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     company = models.CharField(max_length=50, blank=True, null=True)
     organisation_number = models.CharField(
         max_length=50, blank=True, null=True)
-    adressID = models.ForeignKey(Address, on_delete=models.CASCADE)
+    addressID = models.ForeignKey(Address, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.user.username
@@ -89,6 +94,7 @@ class UserInfo(models.Model):
     last_name = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField()
     telephone = models.CharField(max_length=50, blank=True, null=True)
+    company = models.BooleanField(default=False)
     companyID = models.ForeignKey(CompanyInfo,
                                   on_delete=models.CASCADE)
 
@@ -251,18 +257,32 @@ class SupportResponces(models.Model):
 class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    ref = models.CharField(max_length=20, blank=True, null=True)
-    items = models.ManyToManyField(OrderItem)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
+    next_order = models.ForeignKey(Order, related_name='next_order', on_delete=models.SET_NULL, blank=True, null=True)
     intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
     shipping_address = models.ForeignKey(Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
     active = models.BooleanField(default=True)
+    number_of_items = models.PositiveIntegerField()
+    slug = models.SlugField(max_length=20, null=False, unique=True)
 
     def __str__(self):
-        return self.user.username
+        return self.slug
+
+    def get_absolute_url(self):
+        return reverse("member:my_subscription", kwargs={
+            'slug': self.slug
+        })
+
+
+class SubscriptionItem(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    subscription = models.ForeignKey(Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
 
 
 class Cookies(models.Model):

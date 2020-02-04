@@ -5,6 +5,15 @@
 <!-- all subscriptions-->
 <main>
     <div class="container">
+        <div>
+                <form method="POST" action="{{ newSub.get_absolute_url }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="slug" value='new'>
+                    <button type="submit" class="btn btn-primary float-right">
+                        Se premunation
+                    </button>
+                </form>
+        </div>
         <div class="border rounded mb-3">
             <h3>Mina premunationer</h3>
             <table class="table-striped table-hover w-100  mb-2">
@@ -20,7 +29,7 @@
                             Datum för nästa utskick
                         </th>
                         <th>
-                            Titta på
+                            &nbsp;
                         </th>
                     </tr>
                 </thead>
@@ -30,24 +39,27 @@
                         <td>
                             {{ subscription.ref }}
                         </td>
-                        <td>
                             {% if subscription.active %}
+                        <td>
                                 Aktiv
                         </td>
                         <td>
                             {{ subscription.next_order_date }}
                         </td>
                             {% else %}
-                                Avstängd
+                        <td>
+                                Pausad
                         </td>
                         <td>
-                            ---
+                                ---
                         </td>
                             {% endif %}
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="subscription.ref" name="lookAt">
-                                    Se order
+                            <form method="POST" action="{{ subscription.get_absolute_url }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="slug" value={{subscription.slug}}>
+                                <button type="submit" class="btn btn-primary float-right">
+                                    Se premunation
                                 </button>
                             </form>
                         </td>
