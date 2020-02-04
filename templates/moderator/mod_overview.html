@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--orders-->
+<!--active-->
+<div class="h-25">
+  .
+</div>
+<div class="container h-75">
+  <div class="row">
+
+    <div class="col">
+
+      <div class="row border border-warning" >
+        <h1>Aktiva ordrar</h1>
+        <h4>_____________________________________</h4>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        Order Ref
+                    </th>
+                    <th>
+                        Beställd
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                    <th>
+                        Titta på ordern
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+        {% for order in order_a %}
+                <tr>
+                    <td>
+                        {{ order.ref_code }}
+                    </td>
+                    <td>
+                        {{ order.ordered_date }}
+                    </td>
+                    <td>
+                        {% if order.being_delivered %}
+                            Skickad
+                        {% else %}
+                            Under behandling
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST">
+                            <button type="submit" value="order.ref_code" name="lookAtOrder">
+                                Se order
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+
+      </div>
+
+    <!--recently completed-->
+      <div class="row border border-dark">
+          <h1>Avslutade ordrar</h1>
+          <h4>Ordrar avslutade seanste veckan.</h4>
+          <table>
+              <thead>
+                  <tr>
+                      <th>
+                          Order Ref
+                      </th>
+                      <th>
+                          Beställd
+                      </th>
+                      <th>
+                          Status
+                      </th>
+                      <th>
+                          Titta på ordern
+                      </th>
+                  </tr>
+              </thead>
+              <tbody>
+          {% for order in order_r %}
+                  <tr>
+                      <td>
+                          {{ order.ref_code }}
+                      </td>
+                      <td>
+                          {{ order.ordered_date }}
+                      </td>
+                      <td>
+                          Levererad
+                      </td>
+                      <td>
+                          <form method="POST">
+                              <button type="submit" value="order.id" name="lookAtOrder">
+                                  Se order
+                              </button>
+                          </form>
+                      </td>
+                  </tr>
+          {% endfor %}
+              </tbody>
+          </table>
+      </div>
+      <div class="row border">
+      <h4>Äldre Ordrar</h4>
+      </div>
+  </div>
+<!--support-->
+<!--active-->
+  <div class="col">
+    <div class="row border border-warning">
+
+      <h1>Aktiva support ärenden</h1>
+      <table>
+        <thead>
+            <tr>
+                <th>
+                    Ärende Ref
+                </th>
+                <th>
+                    Ämne
+                </th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    Titta på Ärendet
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for errand in errand_a %}
+            <tr>
+                <td>
+                    {{ errand.ref_code }}
+                </td>
+                <td>
+                    {{ errand.subject}}
+                </td>
+                <td>
+                    {% for responce in responce_a %}
+                        {% if responce.lastReply == 'customer'  %}
+                            Obesvarat
+                        {% else %}
+                            Besvarat
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    <form method="POST">
+                        <button type="submit" value="order.id" name="lookAtSupport">
+                            Se Ärende
+                        </button>
+                    </form>
+                </td>
+            </tr>
+    {% endfor %}
+        </tbody>
+      </table>
+    </div>
+<!--recently closed-->
+    <div class="row border">
+    <h1>Avslutade support ärenden</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Ärende Ref
+                </th>
+                <th>
+                    Ämne
+                </th>
+                <th>
+                    Datum för avslut
+                </th>
+                <th>
+                    Titta på Ärendet
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for errand in errand_r %}
+            <tr>
+                <td>
+                    {{ errand.ref_code }}
+                </td>
+                <td>
+                    {{ errand.subject}}
+                </td>
+                <td>
+                    {{ errand.doneDate }}
+                </td>
+                <td>
+                    <form method="POST">
+                        <button type="submit" value="order.id" name="lookAtSupport">
+                            Se Ärende
+                        </button>
+                    </form>
+                </td>
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+    <div>
+        Avslutade ärenden senaste veckan.
+    </div>
+
+    </div>
+
+  </div>
+</div>
+</div>
+
+
+{% endblock content %}
