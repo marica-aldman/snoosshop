@@ -5,120 +5,133 @@
 <!-- add create new button -->
 <!--support errands-->
 <!--active-->
+<main>
+    <div class="container">
+        <div>
+            <a href="{% url 'member:new_errand' %}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Skapa nytt supportärende
+                </button>
+            </a>
+        </div>
+    <!--orders-->
+    <!--active-->
+        <div class="border rounded mb-3">
+            <h3>Aktiva supportärenden</h3>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Referens
+                        </th>
+                        <th>
+                            Ämne
+                        </th>
+                        <th>
+                            Startad
+                        </th>
+                        <th>
+                            Aktivitet
+                        </th>
+                        <th>
+                            Titta på
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for errand in errands_a %}
+                    <tr>
+                        <td>
+                            {{ errand.ref_code }}
+                        </td>
+                        <td>
+                            {{ errand.subject }}
+                        </td>
+                        <td>
+                            {{ errand.firstSent}}
+                        </td>
+                        <td>
+                            {% if errand.last_responce == 1 %}
+                                Skickad
+                            {% else %}
+                                Besvarad
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                <button type="submit" value="errand.ref_code" name="lookAt">
+                                    Se ärende
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- all -->
+        <div class="border rounded mb-3">
+            <h3>Alla supportärenden</h3>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Referens
+                        </th>
+                        <th>
+                            Ämne
+                        </th>
+                        <th>
+                            Startad
+                        </th>
+                        <th>
+                            Avslutad
+                        </th>
+                        <th>
+                            Aktivitet
+                        </th>
+                        <th>
+                            Titta på
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for errand in support %}
+                    <tr>
+                        <td>
+                            {{ errand.subject }}
+                        </td>
+                        <td>
+                            {{ errand.firstSent}}
+                        </td>
+                        <td>
+                            {% if errand.done %}
+                                {{ errand.doneDate }}
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if errand.done %}
+                                Avslutat
+                            {% else %}
+                                Pågående
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                <button type="submit" value="errand.ref_code" name="lookAt">
+                                    Se ärende
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<div class="">
-    <h1>Aktiva supportärenden</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Referens
-                </th>
-                <th>
-                    Ämne
-                </th>
-                <th>
-                    Startad
-                </th>
-                <th>
-                    Aktivitet
-                </th>
-                <th>
-                    Titta på
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for errand in errands_a %}
-            <tr>
-                <td>
-                    {{ errand.ref_code }}
-                </td>
-                <td>
-                    {{ errand.subject }}
-                </td>
-                <td>
-                    {{ errand.firstSent}}
-                </td>
-                <td>
-                    {% if errand.last_responce == 1 %}
-                        Skickad
-                    {% else %}
-                        Besvarad
-                    {% endif %}
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="errand.ref_code" name="lookAt">
-                            Se ärende
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-    </table>
-</div>
-<!-- all -->
-<div class="">
-    <h1>Alla supportärenden</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Referens
-                </th>
-                <th>
-                    Ämne
-                </th>
-                <th>
-                    Startad
-                </th>
-                <th>
-                    Avslutad
-                </th>
-                <th>
-                    Aktivitet
-                </th>
-                <th>
-                    Titta på
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for errand in support %}
-            <tr>
-                <td>
-                    {{ errand.subject }}
-                </td>
-                <td>
-                    {{ errand.firstSent}}
-                </td>
-                <td>
-                    {% if errand.done %}
-                        {{ errand.doneDate }}
-                    {% else %}
-                        ---
-                    {% endif %}
-                </td>
-                <td>
-                    {% if errand.done %}
-                        Avslutat
-                    {% else %}
-                        Pågående
-                    {% endif %}
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="errand.ref_code" name="lookAt">
-                            Se ärende
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-    </table>
-</div>
+</main>
 
 {% endblock content %}

@@ -2,67 +2,76 @@
 
 {% block content %}
 
-<div class="">
-    <h1>Inställningar för mina kakor</h1>
-    <form method="POST">
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                        Typ
-                    </th>
-                    <th>
-                        Inställning
-                    </th>
-                    <th>
-                        Ändra
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-        {% for cookie in cookieSettings %}
-                <tr>
-                    <td>
-                        {% if cookie.functional %}
-                            Sidfunktion
-                    </td>
-                    <td>
-                            {% if cookie.onoff %}
-                                <input type="checkbox" checked>
-                            {% else %}
-                                <input type="checkbox">
-                            {% endif %}
-                    </td>
-                        {% elif cookie.directed_ads %}
-                            Personligtanpassad reklam
-                    </td>
-                    <td>
-                            {% if cookie.onoff %}
-                                <input type="checkbox" checked>
-                            {% else %}
-                                <input type="checkbox">
-                            {% endif %}
-                    </td>
-                        {% elif cookie.mesurement %}
-                            Mätningskakor för sidans utveckling
-                    </td>
-                    <td>
-                            {% if cookie.onoff %}
-                                <input type="checkbox" checked>
-                            {% else %}
-                                <input type="checkbox">
-                            {% endif %}
-                    </td>
-                        {% endif %}
-                    </td>
-                </tr>
-        {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit" value="save" name="saveCookies">
-            Spara kakinställningar
-        </button>
-    </form>
-</div>
+<main>
+    <div class="container">
+    <!--orders-->
+    <!--active-->
+        <div class="border rounded mb-3">
+            <h3>Inställningar för mina kakor</h3>
+            <form method="POST">
+                <table class="table-striped table-hover w-100  mb-2">
+                    <thead class="mdb-color lighten-5">
+                        <tr>
+                            <th>
+                                Typ
+                            </th>
+                            <th>
+                                Inställning
+                            </th>
+                            <th>
+                                Ändra
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% for cookie in cookieSettings %}
+                        <tr>
+                            <td>
+                                {% if cookie.functional %}
+                                    Sidfunktion
+                            </td>
+                            <td>
+                                    {% if cookie.onoff %}
+                                        <input type="checkbox" checked>
+                                    {% else %}
+                                        <input type="checkbox">
+                                    {% endif %}
+                            </td>
+                                {% elif cookie.directed_ads %}
+                                    Personligtanpassad reklam
+                            </td>
+                            <td>
+                                    {% if cookie.onoff %}
+                                        <input type="checkbox" checked>
+                                    {% else %}
+                                        <input type="checkbox">
+                                    {% endif %}
+                            </td>
+                                {% elif cookie.mesurement %}
+                                    Mätningskakor för sidans utveckling
+                            </td>
+                            <td>
+                                    {% if cookie.onoff %}
+                                        <input type="checkbox" checked>
+                                    {% else %}
+                                        <input type="checkbox">
+                                    {% endif %}
+                            </td>
+                                {% endif %}
+                            </td>
+                        </tr>
+                {% endfor %}
+                    </tbody>
+                </table>
+               {% comment %}  <div>
+                    <button type="submit"class="btn btn-primary float-right mb-5">
+                        Spara kakinställningar
+                    </button>
+                </div> {% endcomment %}
+            </form>
+        </div>
 
+    </div>
+
+</main>
 {% endblock content %}

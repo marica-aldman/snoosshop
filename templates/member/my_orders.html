@@ -3,72 +3,77 @@
 {% block content %}
 
 <!-- all orders -->
-<div>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Order ref
-                </th>
-                <th>
-                    Beställd
-                </th>
-                <th>
-                    Status
-                </th>
-                <th>
-                    Titta på ordern
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for order in order_a %}
-            <tr>
-                <td>
-                    {{ order.ref_code }}
-                </td>
-                <td>
-                    {{ order.ordered_date }}
-                </td>
-                <td>
-                    {% if order.being_delivered %}
-                        Skickad
-                    {% else %}
-                        Under behandling
-                    {% endif %}
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="order.id" name="lookAtOrder">
-                            Se order
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-    {% for order in orders %}
-            <tr>
-                <td>
-                    {{ order.ref_code }}
-                </td>
-                <td>
-                    {{ order.ordered_date }}
-                </td>
-                <td>
-                    Levererad
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="order.id" name="lookAtOrder">
-                            Se order
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-    </table>
-</div>
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Order ref
+                        </th>
+                        <th>
+                            Beställd
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            Titta på ordern
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for order in order_a %}
+                    <tr>
+                        <td>
+                            {{ order.ref_code }}
+                        </td>
+                        <td>
+                            {{ order.ordered_date }}
+                        </td>
+                        <td>
+                            {% if order.being_delivered %}
+                                Skickad
+                            {% else %}
+                                Under behandling
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                <button type="submit" value="order.id" name="lookAtOrder">
+                                    Se order
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+            {% for order in orders %}
+                    <tr>
+                        <td>
+                            {{ order.ref_code }}
+                        </td>
+                        <td>
+                            {{ order.ordered_date }}
+                        </td>
+                        <td>
+                            Levererad
+                        </td>
+                        <td>
+                            <form method="POST">
+                                <button type="submit" value="order.id" name="lookAtOrder">
+                                    Se order
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
+    </div>
+
+</main>
 
 {% endblock content %}

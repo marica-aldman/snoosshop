@@ -3,143 +3,162 @@
 {% block content %}
 
 
+<main>
+    <div class="container">
 <!-- specific orders -->
-<div>
-    <form method="POST">
-        <button type="submit" value="support" name="contactSupport">
-            Kontakta support
-        </button>
-    </form>
-    {% if order.being_delivered || order.recieved %}
-    <form method="POST">
-        <button type="submit" value="support" name="contactSupport">
-            Returnera hela ordern
-        </button>
-    </form>
-    {% endif %}
-    {% if not order.being_delivered %}
-    <form method="POST">
-        <button type="submit" value="support" name="contactSupport">
-            Avbeställ
-        </button>
-    </form>
-    {% endif %}
-    <table>
-        <tbody>
-            <tr>
-                <td>
-                    Order Referens
-                </td>
-                <td>
-                    {{ order.ref_code }}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Beställd
-                </td>
-                <td>
-                    {{ order.ordered_date }}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Faktureringsadress
-                </td>
-                <td>
-                    {{ billing_adress }}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Leveransadress
-                </td>
-                <td>
-                    {{ shipping_adress }}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Använda rabattkoder
-                </td>
-                <td>
-                    {% for coupon in coupons %}
-                        {% if foorloop.counter > 1 %}
-                            <br>
-                        {% endif %}
-                            {{coupon.code}}: {{coupon.amount}}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Status
-                </td>
-                <td>
-                    {% if order.being_delivered %}
-                        Skickad
-                    {% elif order.recieved %}
-                        Mottagen
-                    {% else %}
-                        Underbehandling
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Returstatus
-                </td>
-                <td>
+        <div>
+            <a href="{% url 'member:new_errand' %}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Skapa nytt supportärende
+                </button>
+            </a>
+        </div>
+        {% if order.received %}
+        <div>
+            <a href="{% url 'member:return_order' %}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Returnera hela ordern
+                </button>
+            </a>
+        </div>
+        {% endif %}
+        {% if not order.being_delivered and not order.received %}
+        <div>
+            <a href="{% url 'member:cancel_order' %}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Avbeställ
+                </button>
+            </a>
+        </div>
+        {% endif %}
+        <div class="border rounded mb-3">
+            <table class="table-striped table-hover w-100  mb-2">
+                <tbody>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Order Referens
+                        </td>
+                        <td>
+                            {{ order.ref_code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Beställd
+                        </td>
+                        <td>
+                            {{ order.ordered_date }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Faktureringsadress
+                        </td>
+                        <td>
+                            {{ billing_adress }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Leveransadress
+                        </td>
+                        <td>
+                            {{ shipping_adress }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Använda rabattkoder
+                        </td>
+                        <td>
+                            {% for coupon in coupons %}
+                                {% if foorloop.counter > 1 %}
+                                    <br>
+                                {% endif %}
+                                    {{coupon.code}}: {{coupon.amount}}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Status
+                        </td>
+                        <td>
+                            {% if order.being_delivered %}
+                                Skickad
+                            {% elif order.recieved %}
+                                Mottagen
+                            {% else %}
+                                Underbehandling
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% if refund.requested %}
-                        {% if refund_granted %}
-                            Återbetalning godkänd
-                        {% else %}
-                            Returbetalning begärd
-                        {% endif %}
-                    {% else %}
-                        Ej returnerad
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Returstatus
+                        </td>
+                        <td>
+                            {% if order.refund_requested %}
+                                {% if order.refund_granted %}
+                                    Återbetalning godkänd
+                                {% else %}
+                                    Retur begärd
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endif %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Produkt
-                </th>
-                <th>
-                    Mängd
-                </th>
-                <th>
-                    Kostnad per stock
-                </th>
-                <th>
-                    Rabatt
-                </th>
-                <th>
-                    Totalkostnad
-                </th>
-                <th>
-                    Åtgärd
-                </th>
-            </tr>
-        </thead>
-        <tbody> <!-- available variables, all_order_items, all_items, discounts, coupon, payment -->
-            {% for order_item in all_order_items %}
-            <tr>
-                <td>
-                    {{ order.ref_code }}
-                </td>
-                <td>
-                    {{ order.ref_code }}
-                </td>
-            </tr>
-            {% endfor %}
-            
-        </tbody>
-    </table>
-</div>
+                </tbody>
+            </table>
+        </div>
+        <div class="border rounded mb-3">
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Produkt
+                        </th>
+                        <th>
+                            Mängd
+                        </th>
+                        <th>
+                            Kostnad per stock
+                        </th>
+                        <th>
+                            Rabatt
+                        </th>
+                        <th>
+                            Totalkostnad
+                        </th>
+                    </tr>
+                </thead>
+                <tbody> <!-- available variables, all_order_items, all_items, discounts, coupon, payment -->
+                    {% for item in all_items %}
+                    <tr>
+                        <td>
+                            {{ item.title }}
+                        </td>
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+                        <td>
+                            {{ item.price }}
+                        </td>
+                        <td>
+                            {{ item.discount }}
+                        </td>
+                        <td>
+                            {{ item.total_price }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    
+                </tbody>
+            </table>
+        </div>
 
+    </div>
+
+</main>
 {% endblock content %}

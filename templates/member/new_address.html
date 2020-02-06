@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<!-- all subscriptions-->
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            <h3>Ny address</h3>
+            <form method="POST">
+                {% csrf_token %}
+
+                <table class="table-striped table-hover w-100  mb-2">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Gatuadress:
+                            </td>
+                            <td>
+                                {{ form.street_address|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Lägenhetsnummer:
+                            </td>
+                            <td>
+                                {{ form.apartment_address|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Postadress:
+                            </td>
+                            <td>
+                                {{ form.post_town|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Postkod:
+                            </td>
+                            <td>
+                                {{ form.post_code|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Addresstyp:
+                            </td>
+                            <td>
+                                {{ form.address_type|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Huvudsaklig address:
+                            </td>
+                            <td>
+                                <input type="checkbox" name="default_address">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type='submit' class='btn btn-primary'>Spara</button>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+{% endblock content %}

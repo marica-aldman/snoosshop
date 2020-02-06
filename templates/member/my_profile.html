@@ -2,121 +2,205 @@
 
 {% block content %}
 
-<form method="POST" action=".">
-{% csrf_token %}
-    <table>
-        <tbody>
-            {% comment %}
-                Info
-            {% endcomment %}
-        
-            <tr>
-                <td>First Name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Last Name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Email
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Telephone number
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>&nbsp;
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
 
-</form>
-            {% comment %}
-                If company, company info
-            {% endcomment %}
+<main>
+    <div class="container">
+    <!--orders-->
+    <!--active-->
+        <div class="border rounded mb-3">
+        <h3>
+            Min information
+        </h3>
+        <form method="POST" action=".">
+        {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2">
+                <tbody>
+                    {% comment %}
+                        Info
+                    {% endcomment %}
 
-<form method="POST" action=".">
-{% csrf_token %}
-            <tr>
-                <td>Company name
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company organisationnumber
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Company adress
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>&nbsp;
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
+                    {% if info.company %}
+                    
+                    <tr>
+                        <td class="mdb-color lighten-5 w-25">
+                            Företagets kontaktperson
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
 
-</form>
-            {% comment %}
-                Adresses
-            {% endcomment %}
+                    {% endif %}
+                
+                    <tr>
+                        <td class="mdb-color lighten-5 w-25">
+                            Förnamn
+                        </td>
+                        <td>
+                            {{ info.first_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Efternamn
+                        </td>
+                        <td>
+                            {{ info.last_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Email
+                        </td>
+                        <td>
+                            {{ info.email }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Telefon number
+                        </td>
+                        <td>
+                            {{ info.telephone }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <a class="" href="{% url 'member:my_support' %}">
+                                <button class="btn btn-primary float-right">
+                                    Ändra
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-<form method="POST" action=".">
-{% csrf_token %}
+        </form>
+                    {% if info.company %}
+                    {% comment %}
+                        If company, company info
+                    {% endcomment %}
+        <h3>
+            Företagets information
+        </h3>
 
-            <tr>
-                <td>Adresses
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr>
-                <td>Street Adress
-                </td>
-                <td>
-                    <a class="" href="{% url 'member:my_support' %}">
-                        <button>
-                            Edit
-                        </button>
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</form>
+        <form method="POST" action=".">
+        {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2">
+                <tbody>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Företagets namn
+                        </td>
+                        <td>
+                            {{ company.company }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            Organisationnummer
+                        </td>
+                        <td>
+                            {{ company.organisation_number }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Företagets address
+                        </td>
+                        <td>
+                            {{ company_address }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <a class="" href="{% url 'member:my_support' %}">
+                                <button class="btn btn-primary float-right">
+                                    Ändra
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
 
+                </tbody>
+            </table>
+        </form>
+                    {% endif %}
+                    {% comment %}
+                         addresses
+                    {% endcomment %}
+        <h3>
+            Mina sparade addresser
+        </h3>
+        <div>
+            <a class="" href="{% url 'member:new_address' %}">
+                <button class="btn btn-primary float-right">
+                    Lägg till ny
+                </button>
+            </a>
+        </div>
+
+        <form method="POST" action=".">
+        {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Gatu address
+                        </th>
+                        <th>
+                            Typ
+                        </th>
+                        <th>
+                            Huvudsaklig
+                        </th>
+                        <th>
+                            &nbsp;
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for address in  addresses %}
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            {{  address.street_address }}
+                        </td>
+                        <td>
+                            {% if address.address_type == "S"%}
+                                Leverans address
+                            {% else %}
+                                Faktura address
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if address.default %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="" href="{{ address.get_absolute_url }}">
+                                <button class="btn btn-primary float-right">
+                                    Ändra/Titta på
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </form>
+
+    </div>
+
+</main>
 
 {% endblock content %}

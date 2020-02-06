@@ -2,5 +2,76 @@
 
 {% block content %}
 
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            <form method="POST" action=".">
+                {% csrf_token %}
+                {{ form.new_or_old }}
+                <div id="info">
+                    <table class="table table-striped table-hover w-100  mb-2">
+                        <tbody>
+                            <tr>
+                                <td class="w-25">Start datum:</td>
+                                <td>
+                                    <input type="date" name="start_date" required id="id_start_date"  value="{{ sub_date }}">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Periodicitet:</td>
+                                <td>
+                                    {{ form.intervall }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Leverans address:</td>
+                                <td>
+                                    {{ form.shipping }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">Fakuterings address:</td>
+                                <td>
+                                    {{ form.billing }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="products">
+                    <input type="hidden" id="product_list" value="{{ products_html }}" >
+                    <input type="hidden" id="number_of_products" value="{{ number_of_products }}" name="number_of_products" >
+                    {% for product_field in form.get_product_fields %}
+                        {% for amount_field in form.get_amount_fields %}
+                        
+                    <table class="table table-striped table-hover w-100  mb-2" id="product1">
+                        <tbody>
+                            <tr>
+                                <td class="w-25">
+                                    Vara:
+                                </td>
+                                <td>
+                                    {{ product_field }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    Mängd:
+                                </td>
+                                <td>
+                                    {{ amount_field }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                        {% endfor %}
+                    {% endfor %}
+                                    <button type='submit' id="add_item" class='btn btn-primary'>Lägg till vara</button>
+                </div>
+                <button type='submit' class='btn btn-primary'>Spara</button>
+            </form>
+        </div>
+    </div>
+</main>
 
 {% endblock content %}
