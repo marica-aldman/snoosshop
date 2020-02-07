@@ -9,8 +9,9 @@
                 <form method="POST" action="{{ newSub.get_absolute_url }}">
                     {% csrf_token %}
                     <input type="hidden" name="slug" value='new'>
+                    <input type="hidden" name="new_or_old" value='new'>
                     <button type="submit" class="btn btn-primary float-right">
-                        Se premunation
+                        Ny premunation
                     </button>
                 </form>
         </div>
@@ -29,7 +30,10 @@
                             Datum för nästa utskick
                         </th>
                         <th>
-                            &nbsp;
+                            Se
+                        </th>
+                        <th>
+                            Ta bort
                         </th>
                     </tr>
                 </thead>
@@ -60,6 +64,16 @@
                                 <input type="hidden" name="slug" value={{subscription.slug}}>
                                 <button type="submit" class="btn btn-primary float-right">
                                     Se premunation
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the subscription? This action can not be undone.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete" value='yes'>
+                                <input type="hidden" name="id" value={{subscription.id}}>
+                                <button type="submit" class="btn btn-primary float-right">
+                                    Ta bort premunation
                                 </button>
                             </form>
                         </td>

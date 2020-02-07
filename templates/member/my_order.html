@@ -5,6 +5,7 @@
 
 <main>
     <div class="container">
+    {{test}}
 <!-- specific orders -->
         <div>
             <a href="{% url 'member:new_errand' %}">
@@ -15,7 +16,7 @@
         </div>
         {% if order.received %}
         <div>
-            <a href="{% url 'member:return_order' %}">
+            <a href="{% url 'member:returnOrder' %}">
                 <button type="submit" class="btn btn-primary float-right">
                     Returnera hela ordern
                 </button>
@@ -24,7 +25,7 @@
         {% endif %}
         {% if not order.being_delivered and not order.received %}
         <div>
-            <a href="{% url 'member:cancel_order' %}">
+            <a href="{% url 'member:cancelOrder' %}">
                 <button type="submit" class="btn btn-primary float-right">
                     Avbeställ
                 </button>
@@ -55,7 +56,7 @@
                             Faktureringsadress
                         </td>
                         <td>
-                            {{ billing_adress }}
+                            {{ shipping_address.street_address }}
                         </td>
                     </tr>
                     <tr>
@@ -63,7 +64,7 @@
                             Leveransadress
                         </td>
                         <td>
-                            {{ shipping_adress }}
+                            {{ billing_address.street_address }}
                         </td>
                     </tr>
                     <tr>
@@ -71,12 +72,7 @@
                             Använda rabattkoder
                         </td>
                         <td>
-                            {% for coupon in coupons %}
-                                {% if foorloop.counter > 1 %}
-                                    <br>
-                                {% endif %}
-                                    {{coupon.code}}: {{coupon.amount}}
-                            {% endfor %}
+                            {{ coupons.code }}
                         </td>
                     </tr>
                     <tr>
@@ -134,26 +130,25 @@
                     </tr>
                 </thead>
                 <tbody> <!-- available variables, all_order_items, all_items, discounts, coupon, payment -->
-                    {% for item in all_items %}
+                {% for orderItem in all_order_items %}
                     <tr>
                         <td>
-                            {{ item.title }}
+                            {{orderItem.item.title}}
                         </td>
                         <td>
-                            {{ item.quantity }}
+                            {{orderItem.quantity}}
                         </td>
                         <td>
-                            {{ item.price }}
+                            {{orderItem.quantity}}
                         </td>
                         <td>
-                            {{ item.discount }}
+                            {{orderItem.quantity}}
                         </td>
                         <td>
-                            {{ item.total_price }}
+                            {{orderItem.get_total}}
                         </td>
                     </tr>
-                    {% endfor %}
-                    
+                {% endfor %}
                 </tbody>
             </table>
         </div>

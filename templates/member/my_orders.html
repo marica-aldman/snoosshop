@@ -21,10 +21,13 @@
                         <th>
                             Titta på ordern
                         </th>
+                        <th>
+                            &nbsp;
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
-            {% for order in order_a %}
+            {% for order in orders_a %}
                     <tr>
                         <td>
                             {{ order.ref_code }}
@@ -40,15 +43,26 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="order.id" name="lookAtOrder">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="../../member/deleteOrder">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete" value='yes'>
+                                <input type="hidden" name="id" value={{order.id}}>
+                                <button type="submit" class="btn btn-primary float-right">
+                                    Ta bort order
                                 </button>
                             </form>
                         </td>
                     </tr>
             {% endfor %}
-            {% for order in orders %}
+            {% for order in orders_r %}
                     <tr>
                         <td>
                             {{ order.ref_code }}
@@ -60,9 +74,20 @@
                             Levererad
                         </td>
                         <td>
-                            <form method="POST">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
                                 <button type="submit" value="order.id" name="lookAtOrder">
                                     Se order
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="../../member/deleteOrder">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete" value='yes'>
+                                <input type="hidden" name="id" value={{order.id}}>
+                                <button type="submit" class="btn btn-primary float-right">
+                                    Ta bort order
                                 </button>
                             </form>
                         </td>
