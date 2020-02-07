@@ -115,9 +115,8 @@ class EditSubscriptionForm(forms.Form):
             i = 1
             test = "WTF"
             for sub in subcription:
-                # first name a hidden field for new or edit check
                 subscriptionItems = SubscriptionItem.objects.filter(
-                    subscription=sub.id)
+                    subscription=sub)
                 test = "we have a sub"
 
                 # if we have items they will be in subItems

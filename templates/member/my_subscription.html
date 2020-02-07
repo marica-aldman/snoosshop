@@ -6,16 +6,15 @@
     <div class="container">
         <div class="border rounded mb-3">
         {% if old %}
-            {% for sub in subscription %}
-            <form method="POST" action="../../member/saveSubscription">
+            <form method="POST" action="../../member/deactivating">
                 {% csrf_token %}
                 <input type="hidden" name="activate" value='yes'>
-                <input type="hidden" name="id" value={{sub.id}}>
+                <input type="hidden" name="id" value={{subscription.id}}>
+                <input type="hidden" name="next" value={{subscription.next_order}}>
                 <button type="submit" name="deactivateSubscription" value="True" class="btn btn-primary float-right">
                     Avaktivera premunation
                 </button>
             </form>
-            {% endfor %}
         {% endif %}
             <form method="POST" action="../../member/saveSubscription">
                 {% csrf_token %}

@@ -14,8 +14,12 @@ from .forms import ProfileForm, InitialSupportForm, addressForm, NewSubscription
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
 
+import random
+import string
 
-# add save functions and button functions as well as the actual content to the templates, also add forms for cookie settings and settings as well as further contact form for support
+
+def create_ref_code():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 
 class Setup(View):
@@ -30,7 +34,8 @@ class Setup(View):
             return render(self.request, "member/setup.html", form)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
             return redirect("core:home")
 
 
@@ -90,7 +95,8 @@ class Overview(View):
             # get the active orders and the resently sent orders
 
             try:
-                orders = Order.objects.filter(user=self.request.user, ordered=True)
+                orders = Order.objects.filter(
+                    user=self.request.user, ordered=True)
             except ObjectDoesNotExist:
                 orders = {}
 
@@ -124,7 +130,8 @@ class Overview(View):
             return render(self.request, "member/my_overview.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
             return redirect("core:home")
 
 
@@ -135,14 +142,16 @@ class Orders(View):
             # get the orders and sort out active ones
 
             try:
-                orders_a = Order.objects.filter(user=self.request.user, ordered=True, received=False)
-                orders_r = Order.objects.filter(user=self.request.user, ordered=True, received=True)
+                orders_a = Order.objects.filter(
+                    user=self.request.user, ordered=True, received=False)
+                orders_r = Order.objects.filter(
+                    user=self.request.user, ordered=True, received=True)
             except ObjectDoesNotExist:
                 orders_a = {}
                 orders_r = {}
 
             # get all the items and their discounts
-            
+
             context = {
                 'orders_r': orders_r,
                 'orders_a': orders_a,
@@ -151,197 +160,90 @@ class Orders(View):
             return render(self.request, "member/my_orders.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your orderlistspage. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your orderlistspage. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
 class OrderView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         try:
-            try:
-                orderQuery = Order.objects.filter(user=self.request.user, id=int(self.request.POST['lookAtOrder']))
-                test = 'first try'
+            orderQuery = Order.objects.filter(
+                user=self.request.user, id=int(self.request.POST['lookAtOrder']))
+            test = 'first try'
 
-                for order in orderQuery:
-                    # get all the addresses
-
-                    shipping_address_id = order.shipping_address.id
-                    billing_address_id = order.billing_address.id
-
-                    shipping_addressQuery = Address.objects.filter(id=shipping_address_id)
-
-                    billing_addressQuery = Address.objects.filter(id=billing_address_id)
-
-                    shipping_address = Address()
-                    billing_address = Address()
-
-                    for address in shipping_addressQuery:
-                        shipping_address = address
-                        
-                    for address in billing_addressQuery:
-                        billing_address = address
-                        
-                    # get the cupon used
-                    coupon_id = 0
-                    coupons = Coupon()
-
-                    if order.coupon is not None:
-                        coupon_id = order.coupon.id
-
-                        couponsQuery = Coupon.objects.filter(id=coupon_id)
-
-                        for coupon in couponsQuery:
-                            coupons = coupon
-
-                    # get the payment info
-                    payment_id = 1
-                    payments = Payment()
-                    if order.payment is not None:
-                        payment_id = order.payment.id
-
-                        paymentQuery = Payment.objects.filter(id=payment_id)
-
-                        for payment in paymentQuery:
-                            payments = payment
-
-                    test = 'not in yet'
-                    theOrder = Order()
-                    theOrderItems = {}
-                    theItems = {}
-                    i = 1
-                    j = 1
-
-                    # get all the items and their discounts
-                    for order in orderQuery:
-                        orderItems = order.items.all()
-                        theOrderItems = orderItems
-                        theOrder = order
-                        test = 'order'
-                        for orderItem in orderItems:
-                            i += 1
-                            itemQuery = Item.objects.filter(id=orderItem.item.id)
-                            test = 'orderItem'
-                            for item in itemQuery:
-                                theItems[j] = item
-                                j += 1
-                                test = 'all the way!'
-                    
-                    rangeNumber = ""
-                    k = 1
-                    for k in range(j-1):
-                        k += 1
-                        rangeNumber = rangeNumber + str(k)
-
-                    context = {
-                        'order': theOrder,
-                        'j': rangeNumber,
-                        'i': 1,
-                        'all_items': theItems,
-                        'all_order_items': theOrderItems,
-                        'shipping_address': shipping_address,
-                        'billing_address': billing_address,
-                        'coupons': coupons,
-                        'payment': payments,
-                        "test": test,
-                    }
-
-                    return render(self.request, "member/my_order.html", context)
-
-                    context = {
-                        'order': '',
-                        'all_items': '',
-                        'all_order_items': '',
-                        'shipping_address': '',
-                        'billing_address': '',
-                        'coupons': '',
-                        'payment': '',
-                        "test": 'total fail',
-                    }
-
-                    return render(self.request, "member/my_order.html", context)
-
-            except ObjectDoesNotExist:
-                orderQuery = {}
-                test = 'first except'
-
+            for order in orderQuery:
                 # get all the addresses
-
-                shipping_address_id = order.shipping_address
-                billing_address_id = order.billing_address
-
-                shipping_addressQuery = Address.objects.filter(id=shipping_address_id)
-
-                billing_addressQuery = Address.objects.filter(id=billing_address_id)
 
                 shipping_address = Address()
                 billing_address = Address()
 
-                for address in shipping_addressQuery:
-                    shipping_address = address
-                    
-                for address in billing_addressQuery:
-                    billing_address = address
-                    
+                if order.shipping_address is not None:
+                    shipping_address_id = order.shipping_address.id
+                    billing_address_id = order.billing_address.id
+
+                    shipping_addressQuery = Address.objects.filter(
+                        id=shipping_address_id)
+
+                    billing_addressQuery = Address.objects.filter(
+                        id=billing_address_id)
+
+                    for address in shipping_addressQuery:
+                        shipping_address = address
+
+                    for address in billing_addressQuery:
+                        billing_address = address
+
                 # get the cupon used
-
-                coupon_id = order.coupon
-
-                couponsQuery = Coupon.objects.filter(id=coupon_id)
+                coupon_id = 0
                 coupons = Coupon()
 
-                for coupon in couponsQuery:
-                    coupons = coupon
+                if order.coupon is not None:
+                    coupon_id = order.coupon.id
+
+                    couponsQuery = Coupon.objects.filter(id=coupon_id)
+
+                    for coupon in couponsQuery:
+                        coupons = coupon
 
                 # get the payment info
-                payment_id = order.payment
-
-                paymentQuery = Payment.objects.filter(id=payment_id)
+                payment_id = 1
                 payments = Payment()
+                if order.payment is not None:
+                    payment_id = order.payment.id
 
-                for payment in paymentQuery:
-                    payments = payment
+                    paymentQuery = Payment.objects.filter(id=payment_id)
+
+                    for payment in paymentQuery:
+                        payments = payment
 
                 test = 'not in yet'
+                theOrder = Order()
+                theOrderItems = {}
+
                 # get all the items and their discounts
                 for order in orderQuery:
                     orderItems = order.items.all()
-                    i = 1
+                    theOrderItems = orderItems
+                    theOrder = order
+                    theOrderItems + orderItems
                     test = 'order'
-                    for orderItem in orderItems:
-                        itemQuery = Item.objects.filter(id=orderItem.item.id)
-                        test = 'orderItem'
-                        for item in itemQuery:
-                            test = item.title
-                            test = 'item'
-
-                    context = {
-                        'order': orderQuery,
-                        'all_items': '',
-                        'all_order_items': '',
-                        'shipping_address': shipping_address,
-                        'billing_address': billing_address,
-                        'coupons': coupons,
-                        'payment': payments,
-                        "test": test,
-                    }
-
-                    return render(self.request, "member/my_order.html", context)
 
                 context = {
-                    'order': '',
-                    'all_items': '',
-                    'all_order_items': '',
-                    'shipping_address': '',
-                    'billing_address': '',
-                    'coupons': '',
-                    'payment': '',
-                    "test": 'total fail',
+                    'order': theOrder,
+                    'all_order_items': theOrderItems,
+                    'shipping_address': shipping_address,
+                    'billing_address': billing_address,
+                    'coupons': coupons,
+                    'payment': payments,
+                    "test": test,
                 }
 
                 return render(self.request, "member/my_order.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Can't find this order. Contact the support for assistance.")
+            messages.info(
+                self.request, "Can't find this order. Contact the support for assistance.")
             return redirect("member:my_orders")
 
 
@@ -369,7 +271,8 @@ class SupportView(View):
 
             return render(self.request, "member/my_support.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing this page. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing this page. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -387,7 +290,8 @@ class NewErrandView(View):
             return render(self.request, "member/new_errand.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Can't find this errand. Contact the support for assistance.")
+            messages.info(
+                self.request, "Can't find this errand. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -397,12 +301,14 @@ class ErrandView(View):
             # id check here
             if self.request.POST['lookAt']:
                 try:
-                    errand = SupportThread.objects.filter(user=self.request.user, ref=self.request.POST['lookAt'])
+                    errand = SupportThread.objects.filter(
+                        user=self.request.user, ref=self.request.POST['lookAt'])
                 except ObjectDoesNotExist:
                     errand = {}
 
                 try:
-                    responces = SupportResponces.objects.filter(user=self.request.user, ref=self.request.POST['lookAt'])
+                    responces = SupportResponces.objects.filter(
+                        user=self.request.user, ref=self.request.POST['lookAt'])
                 except ObjectDoesNotExist:
                     responces = {}
 
@@ -416,7 +322,8 @@ class ErrandView(View):
                 return render(self.request, "member/my_errand.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Can't find this errand. Contact the support for assistance.")
+            messages.info(
+                self.request, "Can't find this errand. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -428,7 +335,7 @@ class Profile(View):
                 info = UserInfo.objects.filter(user=self.request.user)
             except ObjectDoesNotExist:
                 info = {'company': False}
-            
+
             # company info
             try:
                 company = CompanyInfo.objects.filter(user=self.request.user)
@@ -464,7 +371,8 @@ class Profile(View):
 
             return render(self.request, "member/my_profile.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -482,7 +390,8 @@ class EditUser(View):
 
             return render(self.request, "member/edit_my_user_info.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -491,7 +400,8 @@ class Editaddress(View):
         try:
             # get form for this using the user id
             form = addressForm()
-            form = form.__init__(form, user=self.request.user, id=self.request.POST['id'])
+            form = form.__init__(form, user=self.request.user,
+                                 id=int(self.request.POST['id']))
 
             context = {
                 'form': form,
@@ -499,7 +409,8 @@ class Editaddress(View):
 
             return render(self.request, "member/edit_address.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -515,7 +426,8 @@ class Newaddress(View):
 
             return render(self.request, "member/new_address.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -528,13 +440,16 @@ class Newaddress(View):
                 address = Address()
 
                 address.user = self.request.user
-                address.street_address = form.cleaned_data.get('street_address')
-                address.apartment_address = form.cleaned_data.get('apartment_address')
+                address.street_address = form.cleaned_data.get(
+                    'street_address')
+                address.apartment_address = form.cleaned_data.get(
+                    'apartment_address')
                 address.post_town = form.cleaned_data.get('post_town')
                 address.post_code = form.cleaned_data.get('post_code')
                 address.country = "Sverige"
-                address.default_address = form.cleaned_data.get('default_address')
-                
+                address.default_address = form.cleaned_data.get(
+                    'default_address')
+
                 # check that if we want the address to be both shipping and billing
                 address_type = form.cleaned_data.get('address_type')
 
@@ -542,8 +457,10 @@ class Newaddress(View):
                     # we want two copies of this address
                     address2 = Address()
                     address2.user = self.request.user
-                    address2.street_address = form.cleaned_data.get('street_address')
-                    address2.apartment_address = form.cleaned_data.get('apartment_address')
+                    address2.street_address = form.cleaned_data.get(
+                        'street_address')
+                    address2.apartment_address = form.cleaned_data.get(
+                        'apartment_address')
                     address2.post_town = form.cleaned_data.get('post_town')
                     address2.post_code = form.cleaned_data.get('post_code')
                     address2.country = "Sverige"
@@ -552,7 +469,8 @@ class Newaddress(View):
                     # check if this is set as the default address if it is remove default from all of this users addresses in the database
 
                     if address.default_address:
-                        addresses = Address.objects.filter(user=self.request.user, default=True)
+                        addresses = Address.objects.filter(
+                            user=self.request.user, default=True)
                         for address1 in addresses:
                             address1.default = False
                             address1.save()
@@ -563,9 +481,10 @@ class Newaddress(View):
                 else:
                     address.address_type = address_type
 
-                    #if this is the default remove default of the same address type from the users addresses
+                    # if this is the default remove default of the same address type from the users addresses
                     if address.default_address:
-                        addresses = Address.objects.filter(user=self.request.user, default=True, address_type=address_type)
+                        addresses = Address.objects.filter(
+                            user=self.request.user, default=True, address_type=address_type)
                         for address1 in addresses:
                             address1.default = False
                             address1.save()
@@ -581,7 +500,8 @@ class Newaddress(View):
 
                 return render(self.request, "member/new_address.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -602,7 +522,8 @@ class Settings(View):
             return render(self.request, "member/my_settings.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your settings. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your settings. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -611,7 +532,8 @@ class SubscriptionsView(View):
         try:
             # get all subscriptions
             try:
-                subscriptions = Subscription.objects.filter(user=self.request.user)
+                subscriptions = Subscription.objects.filter(
+                    user=self.request.user)
             except ObjectDoesNotExist:
                 subscriptions = {}
 
@@ -626,7 +548,8 @@ class SubscriptionsView(View):
 
             return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -636,7 +559,8 @@ class SubscriptionsView(View):
             if 'delete' in self.request.POST.keys():
                 # get the subscription
                 message = 'in delete'
-                subscription = Subscription.objects.filter(user=self.request.user, id=int(self.request.POST['id']),)
+                subscription = Subscription.objects.filter(
+                    user=self.request.user, id=int(self.request.POST['id']),)
                 # enter the query
                 for sub in subscription:
                     # check that there is an order connected
@@ -644,8 +568,8 @@ class SubscriptionsView(View):
                     if sub.next_order is not None:
                         message = 'in next_order'
                         # get the order
-                        orderQuery = Order.objects.filter(id=sub.next_order.id)
-                        test = orderQuery
+                        orderQuery = Order.objects.filter(id=sub.next_order)
+                        message = sub.next_order
                         # enter the query
                         for order in orderQuery:
                             message = 'in order'
@@ -667,7 +591,8 @@ class SubscriptionsView(View):
                         message = 'subscription deleted'
             # get all subscriptions
             try:
-                subscriptions = Subscription.objects.filter(user=self.request.user,)
+                subscriptions = Subscription.objects.filter(
+                    user=self.request.user,)
             except ObjectDoesNotExist:
                 subscriptions = {}
 
@@ -683,59 +608,77 @@ class SubscriptionsView(View):
 
             return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
 class SubscriptionView(View):
     def post(self, *args, **kwargs):
         try:
-            # get the form
-
-            form = EditSubscriptionForm(self.request.user, slug=self.request.POST['slug'])
 
             # if we are editing get the specific Subscription otherwise set values for new
             if self.request.POST['slug'] == 'new':
+
+                # set additional values
                 sub_date = datetime.now().strftime("%Y-%m-%d")
                 number_of_products = 1
                 old = False
                 subscription = Subscription()
-            
+
+                # get the form
+                form = EditSubscriptionForm(
+                    self.request.user, slug=self.request.POST['slug'])
+
                 context = {
                     'form': form,
                     'sub_date': sub_date,
                     'number_of_products': number_of_products,
                     'old': old,
+                    'subscription': subscription,
                 }
 
                 return render(self.request, "member/my_subscription.html", context)
             else:
                 old = True
                 try:
-                    subscription = Subscription.objects.filter(user=self.request.user, slug=self.request.POST['slug'])
+                    subscription = Subscription.objects.filter(
+                        user=self.request.user, slug=self.request.POST['slug'])
                     sub_date = ""
                     number_of_products = 0
-                
-                    for sub in subscription:
-                        sub_date = sub.start_date.strftime("%Y-%m-%d")
-                        number_of_products = sub.number_of_items
-                    context = {
-                        'form': form,
-                        'sub_date': sub_date,
-                        'subscription': sub,
-                        'number_of_products': number_of_products,
-                        'old': old,
-                        'subscription': subscription,
-                    }
 
-                    return render(self.request, "member/my_subscription.html", context)
+                    if subscription is not None:
+                        for sub in subscription:
+                            sub_date = sub.start_date.strftime("%Y-%m-%d")
+                            number_of_products = sub.number_of_items
+
+                            # get the form
+                            form = EditSubscriptionForm(
+                                self.request.user, slug=self.request.POST['slug'], n_o_p=number_of_products)
+
+                            context = {
+                                'form': form,
+                                'sub_date': sub_date,
+                                'subscription': sub,
+                                'number_of_products': number_of_products,
+                                'old': old,
+                            }
+
+                            return render(self.request, "member/my_subscription.html", context)
+                    else:
+                        messages.info(
+                            self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+                        return redirect("member:my_subscriptions")
+
                 except ObjectDoesNotExist:
-                    messages.info(self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+                    messages.info(
+                        self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
                     return redirect("member:my_subscriptions")
 
         except ObjectDoesNotExist:
-                messages.info(self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
-                return redirect("member:my_overview")
+            messages.info(
+                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+            return redirect("member:my_overview")
 
 
 class SaveSubscriptionView(View):
@@ -746,7 +689,8 @@ class SaveSubscriptionView(View):
             if self.request.POST['new_or_old'] == 'old':
 
                 # get the old subscription
-                subscription = Subscription.objects.filter(user=self.request.user, id=self.request.POST['id'],)
+                subscription = Subscription.objects.filter(
+                    user=self.request.user, id=int(self.request.POST['id']),)
                 message = ''
                 # access query set
                 for sub in subscription:
@@ -771,7 +715,8 @@ class SaveSubscriptionView(View):
                         elif address.id == int(billing_address):
                             sub.billing_address = address
                     # number_of_products
-                    sub.number_of_items = int(self.request.POST['number_of_products'])
+                    sub.number_of_items = int(
+                        self.request.POST['number_of_products'])
 
                     # calcuate the rest of the data
                     sub.updated_date = datetime.now()
@@ -780,7 +725,8 @@ class SaveSubscriptionView(View):
                     if sub.intervall == '001':
                         # add a week
                         d = timedelta(days=7)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
@@ -788,7 +734,8 @@ class SaveSubscriptionView(View):
                     elif sub.intervall == '002':
                         # add two weeks
                         d = timedelta(days=14)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
@@ -796,28 +743,32 @@ class SaveSubscriptionView(View):
                     elif sub.intervall == '010':
                         # add a month
                         d = timedelta(days=30)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
                     elif sub.intervall == '020':
                         # add two months
                         d = timedelta(days=60)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
                     elif sub.intervall == '100':
                         # add six months
                         d = timedelta(days=182)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
                     elif sub.intervall == '200':
                         # add a year
                         d = timedelta(days=365)
-                        add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                        add_date = datetime.strptime(
+                            sub.start_date, '%Y-%m-%d')
                         next_date = add_date + d
 
                         sub.next_order_date = next_date
@@ -830,7 +781,8 @@ class SaveSubscriptionView(View):
 
                     # delete subscription items
 
-                    sub_items = SubscriptionItem.objects.filter(subscription=sub)
+                    sub_items = SubscriptionItem.objects.filter(
+                        subscription=sub)
                     for item in sub_items:
                         item.delete()
 
@@ -845,18 +797,24 @@ class SaveSubscriptionView(View):
                         subscription_item.subscription = sub
                         p_string = 'product%s' % (i,)
                         a_string = 'amount%s' % (i,)
-                        product_id = self.request.POST[p_string]
-                        amount = self.request.POST[a_string]
+                        product_id = int(self.request.POST[p_string])
+                        amount = int(self.request.POST[a_string])
                         products = Item.objects.filter(id=product_id)
                         for product in products:
+                            subscription_item.item_title = product.title
+                            subscription_item.price = product.price
+                            subscription_item.discount_price = product.discount_price
                             subscription_item.item = product
                         subscription_item.quantity = amount
+                        subscription_item.total_price = subscription_item.price * subscription_item.quantity
                         subscription_item.save()
 
                     # save the order and order items for the next order
                     # first se if an order is connected, if it is get it
-                    if sub.next_order is not None:
-                        theOrderQuery = Order.objects.filter(id=sub.next_order.id)
+
+                    if sub.next_order > 0:
+                        theOrderQuery = Order.objects.filter(
+                            id=sub.next_order)
                         for theOrder in theOrderQuery:
                             theOrder.subscription_order = True
                             theOrder.subscription_date = sub.next_order_date
@@ -870,17 +828,18 @@ class SaveSubscriptionView(View):
                                 elif address.id == int(billing_address):
                                     theOrder.billing_address = address
                             theOrder.save()
-                            sub.next_order = theOrder
+                            sub.next_order = theOrder.id
                             sub.save()
-                            
+
                             # remove old order items and then make new the order items, one for each sub item and add to order
-                            
+
                             orderItems = theOrder.items.all()
                             for item in orderItems:
                                 item.delete()
 
-                            all_sub_items = SubscriptionItem.objects.filter(subscription=sub)
-                            
+                            all_sub_items = SubscriptionItem.objects.filter(
+                                subscription=sub)
+
                             for item in all_sub_items:
                                 # new orderItem object
                                 orderItem = OrderItem()
@@ -900,6 +859,19 @@ class SaveSubscriptionView(View):
                         theOrder = Order()
 
                         theOrder.user = sub.user
+
+                        # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                        ref_code = create_ref_code()
+                        ref_test = True
+
+                        while ref_test:
+                            testOrder = Order.objects.filter(ref_code=ref_code)
+                            if testOrder is not None:
+                                refcode = create_ref_code()
+                            else:
+                                ref_test = False
+
+                        theOrder.ref_code = ref_code
                         theOrder.subscription_order = True
                         theOrder.subscription_date = sub.next_order_date
                         theOrder.ordered_date = datetime.now()
@@ -912,21 +884,25 @@ class SaveSubscriptionView(View):
                             elif address.id == int(billing_address):
                                 theOrder.billing_address = address
                         theOrder.save()
-                        sub.next_order = theOrder
+                        sub.next_order = theOrder.id
                         sub.save()
-                        
+
                         # make the order items, one for each sub item and add to order
-                    
-                        all_sub_items = SubscriptionItem.objects.filter(user=sub.user, subscription=sub)
+
+                        all_sub_items = SubscriptionItem.objects.filter(
+                            subscription=sub)
                         # message = "Oops2"
-                        for item in all_sub_items:
+                        for subitem in all_sub_items:
                             # new orderItem object
                             orderItem = OrderItem()
                             # populate
                             orderItem.user = sub.user
                             orderItem.ordered = True
-                            orderItem.item = item.item
-                            orderItem.quantity = item.quantity
+                            orderItem.item = subitem.item
+                            orderItem.quantity = subitem.quantity
+                            orderItem.price = orderItem.item.price
+                            orderItem.total_price = orderItem.item.get_total_item_price()
+                            orderItem.discount_price = item.get_total_discount_item_price()
                             # save
                             orderItem.save()
                             # add the item to the order
@@ -962,7 +938,8 @@ class SaveSubscriptionView(View):
                     elif address.id == int(billing_address):
                         sub.billing_address = address
                 # number of products
-                sub.number_of_items = int(self.request.POST['number_of_products'])
+                sub.number_of_items = int(
+                    self.request.POST['number_of_products'])
 
                 # calcuate the rest of the data
                 sub.updated_date = datetime.now()
@@ -1014,10 +991,11 @@ class SaveSubscriptionView(View):
                     sub.next_order_date = next_date
                 else:
                     # this shouldnt be able to happen. Add nothing
-                    sub.next_order_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
+                    sub.next_order_date = datetime.strptime(
+                        sub.start_date, '%Y-%m-%d')
 
                 # temp slug
-                sub.slug = "temp"
+                sub.slug = "temp2"
 
                 # save subscription
                 sub.save()
@@ -1039,12 +1017,16 @@ class SaveSubscriptionView(View):
                     subscription_item.subscription = sub
                     p_string = 'product%s' % (i,)
                     a_string = 'amount%s' % (i,)
-                    product_id = self.request.POST[p_string]
+                    product_id = int(self.request.POST[p_string])
                     amount = int(self.request.POST[a_string])
                     products = Item.objects.filter(id=product_id)
                     for product in products:
+                        subscription_item.item_title = product.title
+                        subscription_item.price = product.price
+                        subscription_item.discount_price = product.discount_price
                         subscription_item.item = product
                     subscription_item.quantity = amount
+                    subscription_item.total_price = subscription_item.price * subscription_item.quantity
                     subscription_item.save()
 
                 # save the order and order items for the next order
@@ -1064,11 +1046,12 @@ class SaveSubscriptionView(View):
                 theOrder.billing_address = sub.billing_address
                 theOrder.save()
 
-                sub.next_order = theOrder
+                sub.next_order = theOrder.id
                 sub.save()
 
                 # make the order items, one for each sub item and add to order
-                all_sub_items = SubscriptionItem.objects.filter(subscription=sub)
+                all_sub_items = SubscriptionItem.objects.filter(
+                    subscription=sub)
                 for item in all_sub_items:
                     # new orderItem object
                     orderItem = OrderItem()
@@ -1086,13 +1069,18 @@ class SaveSubscriptionView(View):
                 messages.info(self.request, message)
                 return redirect("member:my_subscriptions")
 
-        elif 'deactivateSubscription' in self.request.POST.keys():
-            subscription = Subscription.objects.filter(user=self.request.user, id=int(self.request.POST['id']))
+
+class DeactivateSubscriptionView(View):
+    def post(self, *args, **kwargs):
+        if 'deactivateSubscription' in self.request.POST.keys():
+            subscription = Subscription.objects.filter(
+                user=self.request.user, id=int(self.request.POST['id']))
 
             for sub in subscription:
                 # deactivate subscription
                 if sub.active is False:
-                    messages.info(self.request, "Subscription already deactivated")
+                    messages.info(
+                        self.request, "Subscription already deactivated")
                     return redirect("member:my_subscriptions")
                 else:
                     sub.active = False
@@ -1100,37 +1088,44 @@ class SaveSubscriptionView(View):
 
                     # delete the order connected to the sub
                     try:
-                        theOrder = Order.objects.filter(id=sub.next_order.id)
+                        theOrder = Order.objects.filter(id=sub.next_order)
                         # lets handle the query
                         for order in theOrder:
                             # first get the list of items
                             theOrderItems = order.items.all()
                             # then go through the items one by one
                             for item in theOrderItems:
-                                # get the query for each item
-                                orderItem = OrderItem.objects.filter(id=item.id)
-                                # handle the query
-                                for theItem in orderItem:
-                                    # delete the item
-                                    theItem.delete()
-                                    # delete order
-                                    order.delete()
+                                # delete the items
+                                orderItem.delete()
+                                # delete order
+                                order.delete()
 
-                        messages.info(self.request, "Subscription deactivated and connected order deleted.")
+                            messages.info(
+                                self.request, "Subscription deactivated and connected order deleted.")
+                            return redirect("member:my_subscriptions")
+
+                        messages.info(
+                            self.request, "Subscription deactivated no connected order detected.")
                         return redirect("member:my_subscriptions")
 
                     except ObjectDoesNotExist:
                         messages.info(self.request, "Subscription deactivated")
                         return redirect("member:my_subscriptions")
+        else:
+            messages.info(self.request, "Fix buttons")
+            return redirect("member:my_subscriptions")
 
 
 class DeleteOrder(View):
     def post(self, *args, **kwargs):
-        message = "oh dear"
-        orderId = self.request.POST['id']
+        message = "Test"
+        postID = self.request.POST['id']
+        orderId = int(self.request.POST['id'])
+        message = postID
         orderQuery = Order.objects.filter(id=orderId)
         for order in orderQuery:
             oIs = order.items.all()
+            message = oIs
             for item in oIs:
                 item.delete()
                 order.delete()
@@ -1147,7 +1142,8 @@ class CookieSettingsView(View):
             # get cookie model, fill in with previous info if there is any
 
             try:
-                cookie_settings = Cookies.objects.filter(user=self.request.user)
+                cookie_settings = Cookies.objects.filter(
+                    user=self.request.user)
             except ObjectDoesNotExist:
                 cookie_settings = {}
 
@@ -1157,5 +1153,6 @@ class CookieSettingsView(View):
 
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            messages.info(
+                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
             return redirect("core:home")

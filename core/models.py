@@ -80,7 +80,8 @@ class CompanyInfo(models.Model):
     company = models.CharField(max_length=50, blank=True, null=True)
     organisation_number = models.CharField(
         max_length=50, blank=True, null=True)
-    addressID = models.ForeignKey(Address, on_delete=models.CASCADE)
+    addressID = models.ForeignKey(
+        Address, on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -96,7 +97,7 @@ class UserInfo(models.Model):
     telephone = models.CharField(max_length=50, blank=True, null=True)
     company = models.BooleanField(default=False)
     companyID = models.ForeignKey(CompanyInfo,
-                                  on_delete=models.CASCADE)
+                                  on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -135,8 +136,12 @@ class OrderItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     ordered = models.BooleanField(default=False)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item = models.ForeignKey(
+        Item, on_delete=models.SET_NULL, blank=True, null=True)
     quantity = models.IntegerField(default=1)
+    price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
+    discount_price = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -221,7 +226,8 @@ class Coupon(models.Model):
 
 
 class Refund(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(
+        Order, on_delete=models.SET_NULL, blank=True, null=True)
     reason = models.TextField()
     accepted = models.BooleanField(default=False)
     email = models.EmailField()
@@ -260,10 +266,12 @@ class Subscription(models.Model):
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
-    next_order = models.ForeignKey(Order, related_name='next_order', on_delete=models.SET_NULL, blank=True, null=True)
+    next_order = models.IntegerField(default=1)
     intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
-    shipping_address = models.ForeignKey(Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
-    billing_address = models.ForeignKey(Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
+    shipping_address = models.ForeignKey(
+        Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
+    billing_address = models.ForeignKey(
+        Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
     active = models.BooleanField(default=True)
     number_of_items = models.PositiveIntegerField()
     slug = models.SlugField(max_length=20, null=False, unique=True)
@@ -280,8 +288,15 @@ class Subscription(models.Model):
 class SubscriptionItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    subscription = models.ForeignKey(Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    subscription = models.ForeignKey(
+        Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
+    item = models.ForeignKey(
+        Item, on_delete=models.SET_NULL, blank=True, null=True)
+    item_title = models.CharField(
+        max_length=100, default="Somethings wrong, contact support")
+    price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
+    discount_price = models.FloatField(blank=True, null=True)
     quantity = models.PositiveIntegerField()
 
 
@@ -295,6 +310,7 @@ class Cookies(models.Model):
 
     def __str__(self):
         return self.user.username
+
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
     if created:

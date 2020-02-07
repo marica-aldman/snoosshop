@@ -17,6 +17,7 @@ from .views import (
     SubscriptionsView,
     SubscriptionView,
     SaveSubscriptionView,
+    DeactivateSubscriptionView,
     CookieSettingsView,
     DeleteOrder,
 )
@@ -42,6 +43,8 @@ urlpatterns = [
          SubscriptionView.as_view(), name='my_subscription'),
     path('saveSubscription',
          SaveSubscriptionView.as_view(), name='saving'),
+    path('deactivating',
+         DeactivateSubscriptionView.as_view(), name='deactivating'),
     path('deleteOrder',
          DeleteOrder.as_view(), name='deletingOrder'),
     path('cancelOrder',
