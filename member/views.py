@@ -230,21 +230,28 @@ class Orders(View):
         try:
 
             # get the orders and sort out active ones
-
+            subscription = False
             try:
                 orders_a = Order.objects.filter(
-                    user=self.request.user, ordered=True, received=False)
+                    user=self.request.user, ordered=True, received=False, subscription_order=False)
                 orders_r = Order.objects.filter(
-                    user=self.request.user, ordered=True, received=True)
+                    user=self.request.user, ordered=True, received=True, subscription_order=False)
+                orders_s = Order.objects.filter(
+                    user=self.request.user, subscription_order=True)
+                if orders_s is not None:
+                    subscription = True
             except ObjectDoesNotExist:
                 orders_a = {}
                 orders_r = {}
+                orders_s = {}
 
             # get all the items and their discounts
 
             context = {
                 'orders_r': orders_r,
                 'orders_a': orders_a,
+                'orders_s': orders_s,
+                'subscription': subscription,
             }
 
             return render(self.request, "member/my_orders.html", context)
@@ -260,7 +267,6 @@ class OrderView(LoginRequiredMixin, View):
         try:
             orderQuery = Order.objects.filter(
                 user=self.request.user, id=int(self.request.POST['lookAtOrder']))
-            test = 'first try'
 
             for order in orderQuery:
                 # get all the addresses
@@ -307,17 +313,13 @@ class OrderView(LoginRequiredMixin, View):
                     for payment in paymentQuery:
                         payments = payment
 
-                test = 'not in yet'
                 theOrder = Order()
                 theOrderItems = {}
 
                 # get all the items and their discounts
                 for order in orderQuery:
-                    orderItems = order.items.all()
-                    theOrderItems = orderItems
+                    theOrderItems = order.items.all()
                     theOrder = order
-                    theOrderItems + orderItems
-                    test = 'order'
 
                 context = {
                     'order': theOrder,
@@ -326,7 +328,6 @@ class OrderView(LoginRequiredMixin, View):
                     'billing_address': billing_address,
                     'coupons': coupons,
                     'payment': payments,
-                    "test": test,
                 }
 
                 return render(self.request, "member/my_order.html", context)
@@ -620,7 +621,6 @@ class Settings(View):
 class SubscriptionsView(View):
     def get(self, *args, **kwargs):
         try:
-            test = timezone.now()
             # get all subscriptions
             try:
                 subscriptions = Subscription.objects.filter(
@@ -635,7 +635,6 @@ class SubscriptionsView(View):
             context = {
                 'subscriptions': subscriptions,
                 'newSub': newSub,
-                'test': test,
             }
 
             return render(self.request, "member/my_subscriptions.html", context)

@@ -16,20 +16,26 @@
         </div>
         {% if order.received %}
         <div>
-            <a href="{% url 'member:returnOrder' %}">
+            <form method="POST" action="../../member/returnOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
+                {% csrf_token %}
+                <input type="hidden" name="delete" value='yes'>
+                <input type="hidden" name="id" value={{order.id}}>
                 <button type="submit" class="btn btn-primary float-right">
                     Returnera hela ordern
                 </button>
-            </a>
+            </form>
         </div>
         {% endif %}
         {% if not order.being_delivered and not order.received %}
         <div>
-            <a href="{% url 'member:cancelOrder' %}">
+            <form method="POST" action="../../member/cancelOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
+                {% csrf_token %}
+                <input type="hidden" name="delete" value='yes'>
+                <input type="hidden" name="id" value={{order.id}}>
                 <button type="submit" class="btn btn-primary float-right">
                     Avbeställ
                 </button>
-            </a>
+            </form>
         </div>
         {% endif %}
         <div class="border rounded mb-3">
@@ -73,6 +79,30 @@
                         </td>
                         <td>
                             {{ coupons.code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Frakt
+                        </td>
+                        <td>
+                            {{ order.freight }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Använda rabattkoder
+                        </td>
+                        <td>
+                            {{ coupons.code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Totalkostnad
+                        </td>
+                        <td>
+                            {{ order.total_price }}
                         </td>
                     </tr>
                     <tr>
@@ -122,10 +152,7 @@
                             Kostnad per stock
                         </th>
                         <th>
-                            Rabatt
-                        </th>
-                        <th>
-                            Totalkostnad
+                            Totalkostnad per produkt
                         </th>
                     </tr>
                 </thead>
@@ -139,13 +166,10 @@
                             {{orderItem.quantity}}
                         </td>
                         <td>
-                            {{orderItem.quantity}}
+                            {{orderItem.price}}
                         </td>
                         <td>
-                            {{orderItem.quantity}}
-                        </td>
-                        <td>
-                            {{orderItem.get_total}}
+                            {{orderItem.total_price}}
                         </td>
                     </tr>
                 {% endfor %}

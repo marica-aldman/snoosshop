@@ -167,10 +167,14 @@ class Order(models.Model):
                              on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
+    total_price = models.FloatField(blank=True, null=True)
+    freight = models.FloatField(blank=True, null=True)
     sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)
+    subscription_order = models.BooleanField(default=False)
+    being_read = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
@@ -205,6 +209,11 @@ class Order(models.Model):
         if self.coupon:
             total -= self.coupon.amount
         return total
+
+    def get_absolute_url_member(self):
+        return reverse("member:my_order", kwargs={
+            'slug': self.id
+        })
 
 
 class Payment(models.Model):
