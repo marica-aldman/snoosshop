@@ -46,7 +46,7 @@ urlpatterns = [
     path('deactivating',
          DeactivateSubscriptionView.as_view(), name='deactivating'),
     path('deleteOrder',
-         DeleteOrder.as_view(), name='deletingOrder'),
+         DeleteOrder.as_view(), name='deleteOrder'),
     path('cancelOrder',
          DeleteOrder.as_view(), name='cancelOrder'),
     path('returnOrder',

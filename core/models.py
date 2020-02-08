@@ -138,10 +138,11 @@ class OrderItem(models.Model):
     ordered = models.BooleanField(default=False)
     item = models.ForeignKey(
         Item, on_delete=models.SET_NULL, blank=True, null=True)
+    title = models.CharField(max_length=100, blank=True, null=True)
     quantity = models.IntegerField(default=1)
     price = models.FloatField(blank=True, null=True)
-    total_price = models.FloatField(blank=True, null=True)
     discount_price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -294,10 +295,10 @@ class SubscriptionItem(models.Model):
         Item, on_delete=models.SET_NULL, blank=True, null=True)
     item_title = models.CharField(
         max_length=100, default="Somethings wrong, contact support")
-    price = models.FloatField(blank=True, null=True)
-    total_price = models.FloatField(blank=True, null=True)
-    discount_price = models.FloatField(blank=True, null=True)
     quantity = models.PositiveIntegerField()
+    price = models.FloatField(blank=True, null=True)
+    discount_price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
 
 
 class Cookies(models.Model):

@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View, FormView
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem
 from .forms import ProfileForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
@@ -20,6 +21,97 @@ import string
 
 def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
+
+
+def get_next_order_date(subdate, intervall):
+    if intervall == '001':
+        # add a week
+        d = timedelta(days=7)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+
+    elif intervall == '002':
+        # add two weeks
+        d = timedelta(days=14)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+
+    elif intervall == '010':
+        # add a month
+        d = timedelta(days=30)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+    elif intervall == '020':
+        # add two months
+        d = timedelta(days=60)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+    elif intervall == '100':
+        # add six months
+        d = timedelta(days=182)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+    elif intervall == '200':
+        # add a year
+        d = timedelta(days=365)
+        add_date = subdate
+        next_date = add_date + d
+
+        return next_date
+    else:
+        # this shouldnt be able to happen. do nothing
+        return subdate
+
+
+def save_subItems_and_orderItems(sub, amount, product):
+    # create a subscription item object
+    subscription_item = SubscriptionItem()
+    # set basic values
+    subscription_item.user = sub.user
+    subscription_item.subscription = sub
+    subscription_item.quantity = amount
+    message = 'trying to save products'
+    # set product values
+    subscription_item.item_title = product.title
+    subscription_item.price = product.price
+    subscription_item.item = product
+
+    # new orderItem object
+    orderItem = OrderItem()
+    # set basic valeus
+    orderItem.user = sub.user
+    orderItem.ordered = True
+    orderItem.item = product
+    orderItem.title = product.title
+    orderItem.quantity = subscription_item.quantity
+    orderItem.price = product.price
+    message = "Subscription saved but there is no such product."
+    if product.discount_price is not None:
+        orderItem.discount_price = product.discount_price
+        subscription_item.discount_price = product.discount_price
+        # set calculated values
+        orderItem.total_price = orderItem.get_final_price
+        subscription_item.total_price = orderItem.total_price
+    else:
+        orderItem.discount_price = 1
+        subscription_item.discount_price = 1
+        orderItem.total_price = orderItem.price
+        subscription_item.total_price = orderItem.price
+    # save orderitem
+    orderItem.save()
+    # save subitems
+    subscription_item.save()
+    return orderItem
 
 
 class Setup(View):
@@ -52,7 +144,7 @@ class Overview(View):
 
             errands1 = []
             errands2 = []
-            today = datetime.now()
+            today = make_aware(datetime.now())
 
             for errand in errands:
                 if errand.done:
@@ -102,7 +194,7 @@ class Overview(View):
 
             order1 = []
             order2 = []
-            today = datetime.now()
+            today = make_aware(datetime.now())
 
             for order in orders:
                 if order.received:
@@ -258,7 +350,7 @@ class SupportView(View):
                 errands = {}
 
             errands_a = []
-            today = datetime.now()
+            today = make_aware(datetime.now())
 
             for errand in errands:
                 if not errand.done:
@@ -344,13 +436,13 @@ class Profile(View):
 
             # get company address
             company_address = ""
-            """ 
+            """
             if info.company:
                 try:
                     address = Address.objects.filter(id = company.addressID)
                 except ObjectDoesNotExist:
                     address = {'street_address': ''}
-                
+
                 company_address = address.street_address """
 
             # get user addresses
@@ -530,6 +622,7 @@ class Settings(View):
 class SubscriptionsView(View):
     def get(self, *args, **kwargs):
         try:
+            test = timezone.now()
             # get all subscriptions
             try:
                 subscriptions = Subscription.objects.filter(
@@ -544,6 +637,7 @@ class SubscriptionsView(View):
             context = {
                 'subscriptions': subscriptions,
                 'newSub': newSub,
+                'test': test,
             }
 
             return render(self.request, "member/my_subscriptions.html", context)
@@ -562,6 +656,7 @@ class SubscriptionsView(View):
                 subscription = Subscription.objects.filter(
                     user=self.request.user, id=int(self.request.POST['id']),)
                 # enter the query
+                message = "sub:"
                 for sub in subscription:
                     # check that there is an order connected
                     message = 'in sub'
@@ -604,6 +699,7 @@ class SubscriptionsView(View):
                 'subscriptions': subscriptions,
                 'newSub': newSub,
             }
+
             messages.info(self.request, message)
 
             return render(self.request, "member/my_subscriptions.html", context)
@@ -616,7 +712,6 @@ class SubscriptionsView(View):
 class SubscriptionView(View):
     def post(self, *args, **kwargs):
         try:
-
             # if we are editing get the specific Subscription otherwise set values for new
             if self.request.POST['slug'] == 'new':
 
@@ -640,7 +735,6 @@ class SubscriptionView(View):
 
                 return render(self.request, "member/my_subscription.html", context)
             else:
-                old = True
                 try:
                     subscription = Subscription.objects.filter(
                         user=self.request.user, slug=self.request.POST['slug'])
@@ -649,6 +743,10 @@ class SubscriptionView(View):
 
                     if subscription is not None:
                         for sub in subscription:
+                            if sub.active:
+                                old = True
+                            else:
+                                old = False
                             sub_date = sub.start_date.strftime("%Y-%m-%d")
                             number_of_products = sub.number_of_items
 
@@ -700,7 +798,8 @@ class SaveSubscriptionView(View):
 
                     # start date
                     # make sure the date is in the correct format
-                    sub.start_date = self.request.POST['start_date']
+                    sub.start_date = make_aware(datetime.strptime(
+                        self.request.POST['start_date'], '%Y-%m-%d'))
                     # intervall
                     sub.intervall = self.request.POST['intervall']
                     # all user addresses
@@ -719,98 +818,13 @@ class SaveSubscriptionView(View):
                         self.request.POST['number_of_products'])
 
                     # calcuate the rest of the data
-                    sub.updated_date = datetime.now()
+                    sub.updated_date = make_aware(datetime.now())
                     sub.active = True
-
-                    if sub.intervall == '001':
-                        # add a week
-                        d = timedelta(days=7)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-
-                    elif sub.intervall == '002':
-                        # add two weeks
-                        d = timedelta(days=14)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-
-                    elif sub.intervall == '010':
-                        # add a month
-                        d = timedelta(days=30)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-                    elif sub.intervall == '020':
-                        # add two months
-                        d = timedelta(days=60)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-                    elif sub.intervall == '100':
-                        # add six months
-                        d = timedelta(days=182)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-                    elif sub.intervall == '200':
-                        # add a year
-                        d = timedelta(days=365)
-                        add_date = datetime.strptime(
-                            sub.start_date, '%Y-%m-%d')
-                        next_date = add_date + d
-
-                        sub.next_order_date = next_date
-                    else:
-                        # this shouldnt be able to happen. Add nothing
-                        sub.next_order_date = sub.start_date
+                    sub.next_order_date = get_next_order_date(
+                        sub.start_date, sub.intervall)
 
                     # save subscription
                     sub.save()
-
-                    # delete subscription items
-
-                    sub_items = SubscriptionItem.objects.filter(
-                        subscription=sub)
-                    for item in sub_items:
-                        item.delete()
-
-                    # recreate subscription items
-
-                    i = 1
-
-                    for i in range(sub.number_of_items):
-                        i += 1
-                        subscription_item = SubscriptionItem()
-                        subscription_item.user = sub.user
-                        subscription_item.subscription = sub
-                        p_string = 'product%s' % (i,)
-                        a_string = 'amount%s' % (i,)
-                        product_id = int(self.request.POST[p_string])
-                        amount = int(self.request.POST[a_string])
-                        products = Item.objects.filter(id=product_id)
-                        for product in products:
-                            subscription_item.item_title = product.title
-                            subscription_item.price = product.price
-                            subscription_item.discount_price = product.discount_price
-                            subscription_item.item = product
-                        subscription_item.quantity = amount
-                        subscription_item.total_price = subscription_item.price * subscription_item.quantity
-                        subscription_item.save()
-
-                    # save the order and order items for the next order
-                    # first se if an order is connected, if it is get it
 
                     if sub.next_order > 0:
                         theOrderQuery = Order.objects.filter(
@@ -818,7 +832,7 @@ class SaveSubscriptionView(View):
                         for theOrder in theOrderQuery:
                             theOrder.subscription_order = True
                             theOrder.subscription_date = sub.next_order_date
-                            theOrder.ordered_date = datetime.now()
+                            theOrder.ordered_date = sub.start_date
                             theOrder.ordered = True
                             theOrder.received = False
                             theOrder.being_delivered = False
@@ -831,29 +845,34 @@ class SaveSubscriptionView(View):
                             sub.next_order = theOrder.id
                             sub.save()
 
-                            # remove old order items and then make new the order items, one for each sub item and add to order
-
+                            # remove old order items and subitems
                             orderItems = theOrder.items.all()
                             for item in orderItems:
                                 item.delete()
 
-                            all_sub_items = SubscriptionItem.objects.filter(
+                            sub_items = SubscriptionItem.objects.filter(
                                 subscription=sub)
+                            for item in sub_items:
+                                item.delete()
 
-                            for item in all_sub_items:
-                                # new orderItem object
-                                orderItem = OrderItem()
-                                # populate
-                                orderItem.user = sub.user
-                                orderItem.ordered = True
-                                orderItem.item = item.item
-                                orderItem.quantity = item.quantity
-                                # save
-                                orderItem.save()
-                                # add the item to the order
-                                theOrder.items.add(orderItem)
+                            # and then make new the order items, and subItems
 
-                                # message = "Subscription saved and activated."
+                            i = 1
+
+                            for i in range(sub.number_of_items):
+                                i += 1
+                                p_string = 'product%s' % (i,)
+                                a_string = 'amount%s' % (i,)
+                                product_id = int(self.request.POST[p_string])
+                                amount = int(self.request.POST[a_string])
+                                products = Item.objects.filter(id=product_id)
+                                # enter the product query set for easy handling when saving subscription and order items
+                                for product in products:
+                                    orderItem = save_subItems_and_orderItems(
+                                        sub, amount)
+                                    theOrder.items.add(orderItem)
+                                    message = "Subscription saved and activated."
+
                     else:
                         # it isn't so we make a new one
                         theOrder = Order()
@@ -874,7 +893,7 @@ class SaveSubscriptionView(View):
                         theOrder.ref_code = ref_code
                         theOrder.subscription_order = True
                         theOrder.subscription_date = sub.next_order_date
-                        theOrder.ordered_date = datetime.now()
+                        theOrder.ordered_date = sub.start_date
                         theOrder.ordered = True
                         theOrder.received = False
                         theOrder.being_delivered = False
@@ -887,32 +906,26 @@ class SaveSubscriptionView(View):
                         sub.next_order = theOrder.id
                         sub.save()
 
-                        # make the order items, one for each sub item and add to order
+                        i = 1
 
-                        all_sub_items = SubscriptionItem.objects.filter(
-                            subscription=sub)
-                        # message = "Oops2"
-                        for subitem in all_sub_items:
-                            # new orderItem object
-                            orderItem = OrderItem()
-                            # populate
-                            orderItem.user = sub.user
-                            orderItem.ordered = True
-                            orderItem.item = subitem.item
-                            orderItem.quantity = subitem.quantity
-                            orderItem.price = orderItem.item.price
-                            orderItem.total_price = orderItem.item.get_total_item_price()
-                            orderItem.discount_price = item.get_total_discount_item_price()
-                            # save
-                            orderItem.save()
-                            # add the item to the order
-                            theOrder.items.add(orderItem)
-
-                            # message = "Subscription saved and activated. " + str(sub.id) + " " + str(theOrder.id) + " " + str(orderItem.id)
+                        for i in range(sub.number_of_items):
+                            i += 1
+                            p_string = 'product%s' % (i,)
+                            a_string = 'amount%s' % (i,)
+                            product_id = int(self.request.POST[p_string])
+                            amount = int(self.request.POST[a_string])
+                            products = Item.objects.filter(id=product_id)
+                            # enter the product query set for easy handling when saving subscription and order items
+                            for product in products:
+                                orderItem = save_subItems_and_orderItems(
+                                    sub, amount)
+                                theOrder.items.add(orderItem)
+                                message = "Subscription saved and activated."
                     messages.info(self.request, message)
                     return redirect("member:my_subscriptions")
 
             else:
+                print('start')
                 message = ''
 
                 # make a subscription object
@@ -923,7 +936,8 @@ class SaveSubscriptionView(View):
 
                 # start date
                 # make sure the date is in the correct format
-                sub.start_date = self.request.POST['start_date']
+                sub.start_date = make_aware(datetime.strptime(
+                    self.request.POST['start_date'], '%Y-%m-%d'))
                 # intervall
                 sub.intervall = self.request.POST['intervall']
                 # all user addresses
@@ -937,62 +951,19 @@ class SaveSubscriptionView(View):
                         sub.shipping_address = address
                     elif address.id == int(billing_address):
                         sub.billing_address = address
+                print('address')
                 # number of products
                 sub.number_of_items = int(
                     self.request.POST['number_of_products'])
 
                 # calcuate the rest of the data
-                sub.updated_date = datetime.now()
+                sub.updated_date = make_aware(datetime.now())
                 sub.active = True
 
-                if sub.intervall == '001':
-                    # add a week
-                    d = timedelta(days=7)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-
-                elif sub.intervall == '002':
-                    # add two weeks
-                    d = timedelta(days=14)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-
-                elif sub.intervall == '010':
-                    # add a month
-                    d = timedelta(days=30)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-                elif sub.intervall == '020':
-                    # add two months
-                    d = timedelta(days=60)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-                elif sub.intervall == '100':
-                    # add six months
-                    d = timedelta(days=182)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-                elif sub.intervall == '200':
-                    # add a year
-                    d = timedelta(days=365)
-                    add_date = datetime.strptime(sub.start_date, '%Y-%m-%d')
-                    next_date = add_date + d
-
-                    sub.next_order_date = next_date
-                else:
-                    # this shouldnt be able to happen. Add nothing
-                    sub.next_order_date = datetime.strptime(
-                        sub.start_date, '%Y-%m-%d')
+                # get_next_order_date
+                sub.next_order_date = get_next_order_date(
+                    sub.start_date, sub.intervall)
+                print('next_date')
 
                 # temp slug
                 sub.slug = "temp2"
@@ -1006,39 +977,28 @@ class SaveSubscriptionView(View):
                 # resave
                 sub.save()
 
-                # create subscription items
-
-                i = 1
-
-                for i in range(sub.number_of_items):
-                    i += 1
-                    subscription_item = SubscriptionItem()
-                    subscription_item.user = sub.user
-                    subscription_item.subscription = sub
-                    p_string = 'product%s' % (i,)
-                    a_string = 'amount%s' % (i,)
-                    product_id = int(self.request.POST[p_string])
-                    amount = int(self.request.POST[a_string])
-                    products = Item.objects.filter(id=product_id)
-                    for product in products:
-                        subscription_item.item_title = product.title
-                        subscription_item.price = product.price
-                        subscription_item.discount_price = product.discount_price
-                        subscription_item.item = product
-                    subscription_item.quantity = amount
-                    subscription_item.total_price = subscription_item.price * subscription_item.quantity
-                    subscription_item.save()
-
-                # save the order and order items for the next order
+                # save the order
                 # first create the order
 
                 theOrder = Order()
 
                 theOrder.user = sub.user
-                theOrder.ref_code = create_ref_code()
+                # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                ref_code = create_ref_code()
+                ref_test = True
+
+                while ref_test:
+                    testOrder = Order.objects.filter(ref_code=ref_code)
+                    if testOrder is None:
+                        refcode = create_ref_code()
+                    else:
+                        ref_test = False
+                print('refcode')
+
+                theOrder.ref_code = ref_code
                 theOrder.subscription_order = True
                 theOrder.subscription_date = sub.next_order_date
-                theOrder.ordered_date = datetime.now()
+                theOrder.ordered_date = make_aware(datetime.now())
                 theOrder.ordered = True
                 theOrder.received = False
                 theOrder.being_delivered = False
@@ -1049,23 +1009,27 @@ class SaveSubscriptionView(View):
                 sub.next_order = theOrder.id
                 sub.save()
 
-                # make the order items, one for each sub item and add to order
-                all_sub_items = SubscriptionItem.objects.filter(
-                    subscription=sub)
-                for item in all_sub_items:
-                    # new orderItem object
-                    orderItem = OrderItem()
-                    # populate
-                    orderItem.user = sub.user
-                    orderItem.ordered = True
-                    orderItem.item = item.item
-                    orderItem.quantity = item.quantity
-                    # save
-                    orderItem.save()
-                    # add the item to the order
-                    theOrder.items.add(orderItem)
+                # create subscription items and corresponding orderItems
 
-                    message = "Subscription saved and activated."
+                i = 1
+                message = 'before'
+
+                for i in range(sub.number_of_items):
+                    message = 'subItem'
+                    i += 1
+                    p_string = 'product%s' % (i,)
+                    a_string = 'amount%s' % (i,)
+                    product_id = int(self.request.POST[p_string])
+                    amount = int(self.request.POST[a_string])
+                    products = Item.objects.filter(id=product_id)
+                    # enter the product query set for easy handling when saving subscription and order items
+                    print('loop1')
+                    for product in products:
+                        print('loop2')
+                        orderItem = save_subItems_and_orderItems(
+                            sub, amount, product)
+                        theOrder.items.add(orderItem)
+                        message = "Subscription saved and activated."
                 messages.info(self.request, message)
                 return redirect("member:my_subscriptions")
 
@@ -1084,33 +1048,28 @@ class DeactivateSubscriptionView(View):
                     return redirect("member:my_subscriptions")
                 else:
                     sub.active = False
-                    sub.save()
 
                     # delete the order connected to the sub
-                    try:
-                        theOrder = Order.objects.filter(id=sub.next_order)
-                        # lets handle the query
-                        for order in theOrder:
-                            # first get the list of items
-                            theOrderItems = order.items.all()
-                            # then go through the items one by one
-                            for item in theOrderItems:
-                                # delete the items
-                                orderItem.delete()
-                                # delete order
-                                order.delete()
+                    theOrder = Order.objects.filter(id=sub.next_order)
+                    # lets handle the query
+                    message = "Subscription deactivated no order detected."
+                    for order in theOrder:
+                        # first get the list of items
+                        theOrderItems = order.items.all()
+                        # then go through the items one by one
+                        message = "Subscription deactivated no order items detected."
+                        for item in theOrderItems:
+                            # delete the items
+                            item.delete()
+                            # delete order
+                            order.delete()
+                            message = "Subscription deactivated."
+                    sub.next_order = 0
+                    sub.save()
 
-                            messages.info(
-                                self.request, "Subscription deactivated and connected order deleted.")
-                            return redirect("member:my_subscriptions")
-
-                        messages.info(
-                            self.request, "Subscription deactivated no connected order detected.")
-                        return redirect("member:my_subscriptions")
-
-                    except ObjectDoesNotExist:
-                        messages.info(self.request, "Subscription deactivated")
-                        return redirect("member:my_subscriptions")
+                    messages.info(
+                        self.request, message)
+                    return redirect("member:my_subscriptions")
         else:
             messages.info(self.request, "Fix buttons")
             return redirect("member:my_subscriptions")
@@ -1118,18 +1077,15 @@ class DeactivateSubscriptionView(View):
 
 class DeleteOrder(View):
     def post(self, *args, **kwargs):
-        message = "Test"
         postID = self.request.POST['id']
         orderId = int(self.request.POST['id'])
-        message = postID
         orderQuery = Order.objects.filter(id=orderId)
         for order in orderQuery:
             oIs = order.items.all()
-            message = oIs
             for item in oIs:
                 item.delete()
-                order.delete()
-                message = "Order deleted"
+            order.delete()
+            message = "Order deleted"
 
         messages.info(self.request, message)
         return redirect("member:my_orders")

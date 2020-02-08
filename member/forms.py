@@ -141,6 +141,7 @@ class EditSubscriptionForm(forms.Form):
                 # add hidden fields for checking if it is a new or old save
                 self.fields['new_or_old'] = forms.CharField(
                     widget=forms.HiddenInput(), initial='old')
+
                 # add a hidden field for number of products
                 i = i - 1
                 self.fields['number_of_products'] = forms.CharField(
