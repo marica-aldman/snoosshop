@@ -111,32 +111,31 @@ class EditSubscriptionForm(forms.Form):
                 widget=forms.HiddenInput(), initial=n_o_p)
         else:
             subcription = Subscription.objects.filter(user=theUser, slug=slug)
-
+            print('in form')
             i = 1
-            test = "WTF"
             for sub in subcription:
                 subscriptionItems = SubscriptionItem.objects.filter(
                     subscription=sub)
-                test = "we have a sub"
+                print('in sub')
 
                 # if we have items they will be in subItems
-                for item in subscriptionItems:
+                for subItem in subscriptionItems:
+                    item = subItem.item
                     # create fields for all products in the subscription including initial value if it shouls have one
                     field_name1 = 'product%s' % (i,)
                     self.fields[field_name1] = forms.ChoiceField(
-                        choices=product_tuple, required=False, initial=item.item)
+                        choices=product_tuple, required=False, initial=item.id)
                     # remove label
                     self.fields[field_name1].label = ""
 
                     # create fields for all amounts in the subscription including initial value
                     field_name2 = 'amount%s' % (i,)
                     self.fields[field_name2] = forms.IntegerField(
-                        min_value=1, required=False, initial=item.quantity)
+                        min_value=1, required=False, initial=subItem.quantity)
                     # remove label
                     self.fields[field_name2].label = ""
                     # increment i
                     i += 1
-                    test = "we have items"
 
                 # add hidden fields for checking if it is a new or old save
                 self.fields['new_or_old'] = forms.CharField(
@@ -161,9 +160,6 @@ class EditSubscriptionForm(forms.Form):
                 # set initials for the other fields
                 self.fields['intervall'].initial = sub.intervall
                 self.fields['start_date'].initial = sub.start_date
-
-                # forloop test
-                self.fields['test'] = forms.CharField(initial=test)
 
     def get_product_fields(self):
         for field_name in self.fields:

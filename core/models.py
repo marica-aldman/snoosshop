@@ -167,7 +167,7 @@ class Order(models.Model):
                              on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
-    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)

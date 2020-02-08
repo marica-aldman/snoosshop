@@ -80,7 +80,6 @@ def save_subItems_and_orderItems(sub, amount, product):
     subscription_item.user = sub.user
     subscription_item.subscription = sub
     subscription_item.quantity = amount
-    message = 'trying to save products'
     # set product values
     subscription_item.item_title = product.title
     subscription_item.price = product.price
@@ -95,7 +94,6 @@ def save_subItems_and_orderItems(sub, amount, product):
     orderItem.title = product.title
     orderItem.quantity = subscription_item.quantity
     orderItem.price = product.price
-    message = "Subscription saved but there is no such product."
     if product.discount_price is not None:
         orderItem.discount_price = product.discount_price
         subscription_item.discount_price = product.discount_price
@@ -649,37 +647,30 @@ class SubscriptionsView(View):
     def post(self, *args, **kwargs):
         try:
             # if we pressed a delete button preform the delete
-            message = 'start'
+            message = ''
             if 'delete' in self.request.POST.keys():
                 # get the subscription
-                message = 'in delete'
                 subscription = Subscription.objects.filter(
                     user=self.request.user, id=int(self.request.POST['id']),)
                 # enter the query
-                message = "sub:"
                 for sub in subscription:
                     # check that there is an order connected
-                    message = 'in sub'
-                    if sub.next_order is not None:
-                        message = 'in next_order'
+                    if sub.next_order > 0:
                         # get the order
                         orderQuery = Order.objects.filter(id=sub.next_order)
-                        message = sub.next_order
                         # enter the query
                         for order in orderQuery:
-                            message = 'in order'
                             # get the orderItem
                             orderItemQuery = order.items.all()
                             # enter the query
                             for orderItem in orderItemQuery:
-                                message = 'in orderitem'
                                 # delete order item
                                 orderItem.delete()
                             # delete order
                             order.delete()
                             # delete subscription
                             sub.delete()
-                            # message = 'subscription and corresponding order deleted'
+                            message = 'subscription and corresponding order deleted'
                     else:
                         # delete subscription
                         sub.delete()
@@ -832,7 +823,9 @@ class SaveSubscriptionView(View):
                         for theOrder in theOrderQuery:
                             theOrder.subscription_order = True
                             theOrder.subscription_date = sub.next_order_date
-                            theOrder.ordered_date = sub.start_date
+                            theOrder.updated_date = make_aware(datetime.now())
+                            theOrder.ordered_date = make_aware(datetime.now())
+                            theOrder.sub_out_date = sub.start_date
                             theOrder.ordered = True
                             theOrder.received = False
                             theOrder.being_delivered = False
@@ -869,7 +862,7 @@ class SaveSubscriptionView(View):
                                 # enter the product query set for easy handling when saving subscription and order items
                                 for product in products:
                                     orderItem = save_subItems_and_orderItems(
-                                        sub, amount)
+                                        sub, amount, product)
                                     theOrder.items.add(orderItem)
                                     message = "Subscription saved and activated."
 
@@ -885,7 +878,7 @@ class SaveSubscriptionView(View):
 
                         while ref_test:
                             testOrder = Order.objects.filter(ref_code=ref_code)
-                            if testOrder is not None:
+                            if testOrder is None:
                                 refcode = create_ref_code()
                             else:
                                 ref_test = False
@@ -893,7 +886,9 @@ class SaveSubscriptionView(View):
                         theOrder.ref_code = ref_code
                         theOrder.subscription_order = True
                         theOrder.subscription_date = sub.next_order_date
-                        theOrder.ordered_date = sub.start_date
+                        theOrder.updated_date = make_aware(datetime.now())
+                        theOrder.ordered_date = make_aware(datetime.now())
+                        theOrder.sub_out_date = sub.start_date
                         theOrder.ordered = True
                         theOrder.received = False
                         theOrder.being_delivered = False
@@ -918,14 +913,13 @@ class SaveSubscriptionView(View):
                             # enter the product query set for easy handling when saving subscription and order items
                             for product in products:
                                 orderItem = save_subItems_and_orderItems(
-                                    sub, amount)
+                                    sub, amount, product)
                                 theOrder.items.add(orderItem)
                                 message = "Subscription saved and activated."
                     messages.info(self.request, message)
                     return redirect("member:my_subscriptions")
 
             else:
-                print('start')
                 message = ''
 
                 # make a subscription object
@@ -951,7 +945,6 @@ class SaveSubscriptionView(View):
                         sub.shipping_address = address
                     elif address.id == int(billing_address):
                         sub.billing_address = address
-                print('address')
                 # number of products
                 sub.number_of_items = int(
                     self.request.POST['number_of_products'])
@@ -963,7 +956,6 @@ class SaveSubscriptionView(View):
                 # get_next_order_date
                 sub.next_order_date = get_next_order_date(
                     sub.start_date, sub.intervall)
-                print('next_date')
 
                 # temp slug
                 sub.slug = "temp2"
@@ -993,12 +985,12 @@ class SaveSubscriptionView(View):
                         refcode = create_ref_code()
                     else:
                         ref_test = False
-                print('refcode')
 
                 theOrder.ref_code = ref_code
                 theOrder.subscription_order = True
-                theOrder.subscription_date = sub.next_order_date
+                theOrder.updated_date = make_aware(datetime.now())
                 theOrder.ordered_date = make_aware(datetime.now())
+                theOrder.sub_out_date = sub.start_date
                 theOrder.ordered = True
                 theOrder.received = False
                 theOrder.being_delivered = False
@@ -1012,10 +1004,8 @@ class SaveSubscriptionView(View):
                 # create subscription items and corresponding orderItems
 
                 i = 1
-                message = 'before'
 
                 for i in range(sub.number_of_items):
-                    message = 'subItem'
                     i += 1
                     p_string = 'product%s' % (i,)
                     a_string = 'amount%s' % (i,)
@@ -1023,9 +1013,7 @@ class SaveSubscriptionView(View):
                     amount = int(self.request.POST[a_string])
                     products = Item.objects.filter(id=product_id)
                     # enter the product query set for easy handling when saving subscription and order items
-                    print('loop1')
                     for product in products:
-                        print('loop2')
                         orderItem = save_subItems_and_orderItems(
                             sub, amount, product)
                         theOrder.items.add(orderItem)
