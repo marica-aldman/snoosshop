@@ -1,0 +1,5 @@
+
+    def get_absolute_cat_url(self):
+        return reverse("core:category", kwargs={
+            'slug': self.category
+        })
