@@ -9,10 +9,13 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
 from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile
+from .filters import ItemFilter
 
 import random
 import string
 import stripe
+import django_filters
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -514,3 +517,5 @@ class RequestRefundView(View):
             except ObjectDoesNotExist:
                 messages.info(self.request, "This order does not exist.")
                 return redirect("core:request-refund")
+
+#Category views
