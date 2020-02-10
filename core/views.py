@@ -535,12 +535,12 @@ class RequestRefundView(View):
 #Category views
 
 class CategoryView(View):
-    print("not get")
-    def get(self, *args, **kwargs):
+    def get(self, slug, *args, **kwargs):
         try:
-            categoryquery = Item.objects.filter(category="TS")
+            print(slug)
+            categoryquery = Category.objects.filter(slug="TS")
             context = {
-
+                'object_list': categoryquery
             }
             return render(self.request, "category.html", context)
         except ObjectDoesNotExist:

@@ -29,18 +29,18 @@
             </li>
             {% for cat in category_choices %}
 
-              {% if cat.id == item.category.id %}
+              {% if cat == item.category %}
 
-                <li class="nav-item" active>
-                  <a class="nav-link" href="{{category.get_absolute_cat_url}}">
-                    {{category.title}}
+                <li class="nav-item active">
+                  <a class="nav-link" href="{{cat.get_absolute_cat_url}}">
+                    {{cat.title}}
                   </a>
                 </li>
               {% else %}
 
                 <li class="nav-item">
-                  <a class="nav-link" href="{{category.get_absolute_cat_url}}">
-                    {{category.title}}
+                  <a class="nav-link" href="{{cat.get_absolute_cat_url}}">
+                    {{cat.title}}
                   </a>
                 </li>
               {% endif%}
