@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem
-from .forms import ProfileForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
+from .forms import UserInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
 from slugify import slugify
@@ -490,18 +490,62 @@ class InfoView(View):
         try:
             # get form for this using the user id
 
-            form = UserInfoForm()
-            form = form.__init__(form, user=self.request.user)
+            form = UserInfoForm(the_User=self.request.user)
+
+            # check if there is a company connected
+            try:
+                info = UserInfo.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                info = UserInfo()
 
             context = {
                 'form': form,
+                'info': info,
             }
 
             return render(self.request, "member/my_info.html", context)
         except ObjectDoesNotExist:
             messages.info(
                 self.request, "Something went wrong when accessing your information. Contact the support for assistance.")
-            return redirect("member:my_overview")
+            return redirect("member:my_profile")
+
+    def post(self, *args, **kwargs):
+        try:
+            form = UserInfoForm(self.request.POST)
+            print(self.request.POST)
+
+            if form.is_valid():
+
+                info = UserInfo.objects.get(user)
+
+                info.first_name = form.cleaned_data.get('first_name')
+                info.last_name = form.cleaned_data.get('last_name')
+                info.email = form.cleaned_data.get('email')
+                info.telephone = form.cleaned_data.get('telephone')
+
+                info.save()
+                messages.info(
+                    self.request, "User information saved.")
+                return redirect("member:my_profile")
+            else:
+                try:
+                    info = UserInfo.objects.get(user=self.request.user)
+                except ObjectDoesNotExist:
+                    info = UserInfo()
+
+                context = {
+                    'form': form,
+                    'info': info,
+                }
+                messages.info(
+                    self.request, "Missing certain information.")
+
+                return render(self.request, "member/my_info.html", context)
+
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when saving your information. Contact the support for assistance.")
+            return redirect("member:my_profile")
 
 
 class CompanyView(View):

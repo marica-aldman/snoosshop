@@ -2,6 +2,7 @@ from django import forms
 from datetime import datetime
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
+from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
 
 
@@ -251,52 +252,34 @@ class NewAddressForm(forms.Form):
         self.fields['address_type'].label = ""
 
 
-class ProfileForm(forms.ModelForm):
-    def __init__(self, id, *args, **kwargs):
-        super(ProfileForm, self).__init__(*args, **kwargs)
+class UserInfoForm(forms.Form):
+    def __init__(self, the_User, *args, **kwargs):
+        super(UserInfoForm, self).__init__(*args, **kwargs)
 
-        # get the user info and place in object
+        try:
+            # get the user info and place in object
+            try:
+                info = UserInfo.objects.get(user=the_User)
+            except ObjectDoesNotExist or TypeError:
+                info = UserInfo()
 
-        user = UserInfo()
-        user = user.objects.get(id=id)
-
-        # get all addresses
-
-        all_addresses = Address()
-        all_addresses = all_addresses.objects.get(user=user.user)
-
-        # make a choice variable from the addresses
-
-        addresses = {}
-
-        for address in all_addresses:
-            addresses.append(
-                {'id': address.id, 'street': address.street_address})
-
-        self.first_name = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.first_name)
-        self.last_name = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.last_name)
-        self.email = forms.EmailField(initial=user.email)
-        self.telephone = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.telephone)
-
-        # check if there is a company
-
-        is_company = False
-        if user.companyID:
-            is_company = True
-
-        if is_company:
-            company = CompanyInfo()
-            company = CompanyInfo(id=user.companyID)
-            self.company_name = forms.CharField(
-                max_length=50, blank=True, null=True, initial=company.company)
-            self.company_org = forms.CharField(
-                max_length=50, blank=True, null=True, initial=company.organisation_number)
-
-            self.company_address = forms.ChoiceField(
-                choices=addresses, max_length=3, initial=company. addressID)
+            # make the fields
+            self.fields['first_name'] = forms.CharField(
+                max_length=50, label="", initial=info.first_name, required=False)
+            self.fields['last_name'] = forms.CharField(
+                max_length=50, label="", initial=info.last_name, required=False)
+            self.fields['email'] = forms.EmailField(
+                label="", initial=info.email, required=False)
+            self.fields['telephone'] = forms.CharField(
+                max_length=50, label="", initial=info.telephone, required=False)
+        except TypeError:
+            self.fields['first_name'] = forms.CharField(
+                max_length=50, label="", required=False)
+            self.fields['last_name'] = forms.CharField(
+                max_length=50, label="", required=False)
+            self.fields['email'] = forms.EmailField(label="", required=False)
+            self.fields['telephone'] = forms.CharField(
+                max_length=50, label="", required=False)
 
 
 class InitialSupportForm(forms.ModelForm):
