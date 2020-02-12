@@ -14,13 +14,31 @@ from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund
 from .forms import ProfileForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
+from slugify import slugify
 
 import random
 import string
 
 
+def test_slug_address(slug):
+    test = False
+    addressQuery = Address.objects.filter(slug=slug)
+    if len(addressQuery) > 0:
+        test = True
+    return test
+
+
 def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
+
+
+def where_am_i(self):
+    path = self.request.get_full_path()
+    split_path = path.split("/")
+    page = split_path[-1]
+    if page == "":
+        page = split_path[-2]
+    return page
 
 
 def get_next_order_date(subdate, intervall):
@@ -382,7 +400,7 @@ class NewErrandView(View):
 
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Can't find this errand. Contact the support for assistance.")
+                self.request, "Something went wrong. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -390,27 +408,27 @@ class ErrandView(View):
     def get(self, *args, **kwargs):
         try:
             # id check here
-            if self.request.POST['lookAt']:
-                try:
-                    errand = SupportThread.objects.filter(
-                        user=self.request.user, ref=self.request.POST['lookAt'])
-                except ObjectDoesNotExist:
-                    errand = {}
+            slug = where_am_i(self)
+            try:
+                errand = SupportThread.objects.filter(
+                    user=self.request.user, slug=slug)
+            except ObjectDoesNotExist:
+                errand = {}
 
-                try:
-                    responces = SupportResponces.objects.filter(
-                        user=self.request.user, ref=self.request.POST['lookAt'])
-                except ObjectDoesNotExist:
-                    responces = {}
+            try:
+                responces = SupportResponces.objects.filter(
+                    user=self.request.user, slug=slug)
+            except ObjectDoesNotExist:
+                responces = {}
 
-                # add form for further contact on this issue
+            # add form for further contact on this issue
 
-                context = {
-                    'errand': errand,
-                    'responces': responces,
-                }
+            context = {
+                'errand': errand,
+                'responces': responces,
+            }
 
-                return render(self.request, "member/my_errand.html", context)
+            return render(self.request, "member/my_errand.html", context)
 
         except ObjectDoesNotExist:
             messages.info(
@@ -467,38 +485,137 @@ class Profile(View):
             return redirect("member:my_overview")
 
 
-class EditUser(View):
+class InfoView(View):
     def get(self, *args, **kwargs):
         try:
             # get form for this using the user id
 
-            form = ProfileForm()
+            form = UserInfoForm()
             form = form.__init__(form, user=self.request.user)
 
             context = {
                 'form': form,
             }
 
-            return render(self.request, "member/edit_my_user_info.html", context)
+            return render(self.request, "member/my_info.html", context)
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+                self.request, "Something went wrong when accessing your information. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+
+class CompanyView(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get form for this using the user id
+
+            form = CompanyForm()
+            form = form.__init__(form, user=self.request.user)
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/company_info.html", context)
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing the company info. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
 class Editaddress(View):
     def get(self, *args, **kwargs):
         try:
-            # get form for this using the user id
-            form = addressForm()
-            form = form.__init__(form, user=self.request.user,
-                                 id=int(self.request.POST['id']))
+            # which adress
+            page = where_am_i(self)
+            # get the address
+            addressQuery = Address.objects.filter(
+                user=self.request.user, slug=page)
+            for address in addressQuery:
+                # get form
 
-            context = {
-                'form': form,
-            }
+                form = addressForm(address)
 
-            return render(self.request, "member/edit_address.html", context)
+                ADDRESS_CHOICES_EXTENDED = [
+                    {'key': 'B', 'name': 'Billing'},
+                    {'key': 'S', 'name': 'Shipping'},
+                    {'key': 'A', 'name': 'BOTH'},
+                ]
+
+                context = {
+                    'form': form,
+                    'address': address,
+                    'address_choices': ADDRESS_CHOICES_EXTENDED
+                }
+
+                return render(self.request, "member/edit_address.html", context)
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return redirect("member:my_overview")
+
+    def post(self, *args, **kwargs):
+        try:
+            # which adress
+            slug = where_am_i(self)
+            # get the address
+            address = Address.objects.get(slug=slug)
+            # print(address)
+            # get the form
+            form = addressForm(data=self.request.POST, address=address)
+            # check form
+            if form.is_valid():
+                # print(address)
+
+                address.street_address = form.cleaned_data.get(
+                    'street_address')
+                address.apartment_address = form.cleaned_data.get(
+                    'apartment_address')
+                address.post_town = form.cleaned_data.get('post_town')
+                address.zip = form.cleaned_data.get('zip')
+                address.country = "Sverige"
+                if address.address_type == self.request.POST['address_type']:
+                    if address.default is True:
+                        if self.request.POST['default_address'] == 'on':
+                            address.default = True
+                        else:
+                            address.default = False
+                    else:
+                        address.default = False
+                else:
+                    if self.request.POST['default_address'] == 'on':
+                        changeAdressTypeQuery = Address.objects.filter(
+                            address_type=form.cleaned_data('address_type'))
+                        for addressOfType in changeAdressTypeQuery:
+                            addressOfType = False
+                        address.default = True
+                        address.address_type = form.cleaned_data(
+                            'address_type')
+                    else:
+                        address.default = False
+                        address.address_type = form.cleaned_data(
+                            'address_type')
+                testString = address.street_address + \
+                    address.address_type + str(address.user.id)
+                toSlug = slugify(testString)
+                if toSlug != address.slug:
+                    testVariable = test_slug_address(toSlug)
+                    if testVariable:
+                        messages.info(
+                            self.request, "You already have this address saved.")
+                        return redirect("member:my_profile")
+                    else:
+                        address.slug = toSlug
+
+                # save the address and return to list
+                address.save()
+
+                messages.info(self.request, "Address have been saved.")
+                return redirect("member:my_profile")
+            else:
+                messages.info(
+                    self.request, "Something is wrong, contact support.")
+                return redirect("member:my_profile")
         except ObjectDoesNotExist:
             messages.info(
                 self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
@@ -536,10 +653,12 @@ class Newaddress(View):
                 address.apartment_address = form.cleaned_data.get(
                     'apartment_address')
                 address.post_town = form.cleaned_data.get('post_town')
-                address.post_code = form.cleaned_data.get('post_code')
+                address.zip = form.cleaned_data.get('zip')
                 address.country = "Sverige"
-                address.default_address = form.cleaned_data.get(
-                    'default_address')
+                if self.request.POST['default_address'] == 'on':
+                    address.default = True
+                else:
+                    address.default = False
 
                 # check that if we want the address to be both shipping and billing
                 address_type = form.cleaned_data.get('address_type')
@@ -553,13 +672,16 @@ class Newaddress(View):
                     address2.apartment_address = form.cleaned_data.get(
                         'apartment_address')
                     address2.post_town = form.cleaned_data.get('post_town')
-                    address2.post_code = form.cleaned_data.get('post_code')
+                    address2.zip = form.cleaned_data.get('zip')
                     address2.country = "Sverige"
-                    address2.default_address = form.cleaned_data.get('default')
+                    if self.request.POST['default_address'] == 'on':
+                        address2.default = True
+                    else:
+                        address2.default = False
                     address2.address_type = "S"
                     # check if this is set as the default address if it is remove default from all of this users addresses in the database
 
-                    if address.default_address:
+                    if address.default:
                         addresses = Address.objects.filter(
                             user=self.request.user, default=True)
                         for address1 in addresses:
@@ -567,21 +689,42 @@ class Newaddress(View):
                             address1.save()
 
                     # save the second copy of the address
+
+                    toSlug = address2.street_address + \
+                        address2.address_type + str(address2.user.id)
+                    testSlug = slugify(toSlug)
+                    existingSlug = test_slug_address(testSlug)
+                    if existingSlug:
+                        messages.info(self.request, "Address already exists.")
+                        return redirect("member:my_profile")
+                    else:
+                        address2.slug = testSlug
                     address2.save()
                     address.address_type = "B"
                 else:
                     address.address_type = address_type
 
                     # if this is the default remove default of the same address type from the users addresses
-                    if address.default_address:
+                    if address.default:
                         addresses = Address.objects.filter(
                             user=self.request.user, default=True, address_type=address_type)
                         for address1 in addresses:
                             address1.default = False
                             address1.save()
+                # create a slug
 
+                toSlug = address.street_address + \
+                    address.address_type + str(address.user.id)
+                testSlug = slugify(toSlug)
+                existingSlug = test_slug_address(testSlug)
+                if existingSlug:
+                    messages.info(self.request, "Address already exists.")
+                    return redirect("member:my_profile")
+                else:
+                    address.slug = testSlug
                 # save the address and return to list
                 address.save()
+
                 messages.info(self.request, "Address have been saved.")
                 return redirect("member:my_profile")
             else:
@@ -620,6 +763,7 @@ class Settings(View):
 
 class SubscriptionsView(View):
     def get(self, *args, **kwargs):
+
         try:
             # get all subscriptions
             try:
@@ -703,7 +847,8 @@ class SubscriptionView(View):
     def post(self, *args, **kwargs):
         try:
             # if we are editing get the specific Subscription otherwise set values for new
-            if self.request.POST['slug'] == 'new':
+            slug = where_am_i(self)
+            if slug == 'new':
 
                 # set additional values
                 sub_date = datetime.now().strftime("%Y-%m-%d")
@@ -713,7 +858,7 @@ class SubscriptionView(View):
 
                 # get the form
                 form = EditSubscriptionForm(
-                    self.request.user, slug=self.request.POST['slug'])
+                    self.request.user, slug=slug)
 
                 context = {
                     'form': form,
@@ -727,7 +872,7 @@ class SubscriptionView(View):
             else:
                 try:
                     subscription = Subscription.objects.filter(
-                        user=self.request.user, slug=self.request.POST['slug'])
+                        user=self.request.user, slug=slug)
                     sub_date = ""
                     number_of_products = 0
 
@@ -742,7 +887,7 @@ class SubscriptionView(View):
 
                             # get the form
                             form = EditSubscriptionForm(
-                                self.request.user, slug=self.request.POST['slug'], n_o_p=number_of_products)
+                                self.request.user, slug=slug, n_o_p=number_of_products)
 
                             context = {
                                 'form': form,

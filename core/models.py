@@ -56,17 +56,19 @@ class Address(models.Model):
                              on_delete=models.CASCADE)
     street_address = models.CharField(max_length=100)
     apartment_address = models.CharField(max_length=100)
+    post_town = models.CharField(max_length=100, null=True)
     country = CountryField(multiple=False)
     zip = models.CharField(max_length=100)
     address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
     default = models.BooleanField(default=False)
+    slug = models.SlugField(default='address')
 
     def __str__(self):
         return self.user.username
 
     def get_absolute_url(self):
         return reverse("member:edit_address", kwargs={
-            'slug': self.id
+            'slug': self.slug
         })
 
     class Meta:
@@ -82,9 +84,15 @@ class CompanyInfo(models.Model):
         max_length=50, blank=True, null=True)
     addressID = models.ForeignKey(
         Address, on_delete=models.SET_NULL, blank=True, null=True)
+    slug = models.SlugField(default='company')
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:edit_companyInfo", kwargs={
+            'slug': self.slug
+        })
 
 
 class UserInfo(models.Model):
@@ -98,20 +106,27 @@ class UserInfo(models.Model):
     company = models.BooleanField(default=False)
     companyID = models.ForeignKey(CompanyInfo,
                                   on_delete=models.SET_NULL, blank=True, null=True)
+    slug = models.SlugField(default='userinfo')
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:edit_userInfo", kwargs={
+            'slug': self.slug
+        })
 
 
 class Item(models.Model):
     title = models.CharField(max_length=100)
     price = models.FloatField()
     discount_price = models.FloatField(blank=True, null=True)
-    category = models.CharField(choices=CATEGORY_CHOICES, max_length=2)
+    category = models.CharField(
+        choices=CATEGORY_CHOICES, max_length=2, default='TS')
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
-    slug = models.SlugField()
     description = models.TextField()
     image = models.ImageField()
+    slug = models.SlugField(default='item')
 
     def __str__(self):
         return self.title
@@ -187,6 +202,7 @@ class Order(models.Model):
     received = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
+    slug = models.SlugField(default='order')
 
     '''
     1. Item added to cart
@@ -212,7 +228,7 @@ class Order(models.Model):
 
     def get_absolute_url_member(self):
         return reverse("member:my_order", kwargs={
-            'slug': self.id
+            'slug': self.slug
         })
 
 
@@ -224,7 +240,7 @@ class Payment(models.Model):
     timestamp = models.DateTimeField(default=datetime.now, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return self.stripe_charge_id
 
 
 class Coupon(models.Model):
@@ -255,11 +271,17 @@ class SupportThread(models.Model):
     firstSent = models.DateTimeField(default=datetime.now, blank=True)
     done = models.BooleanField(default=False)
     doneDate = models.DateTimeField(default=datetime.now, blank=True)
+    slug = models.SlugField(default='support')
 
     objects = models.Manager()
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:my_errand", kwargs={
+            'slug': self.slug
+        })
 
 
 class SupportResponces(models.Model):

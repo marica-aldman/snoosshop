@@ -58,8 +58,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="errand.ref_code" name="lookAt">
+                            <form method="POST" action="{{ errand.get_absolute_url }}">
+                                <button type="submit">
                                     Se ärende
                                 </button>
                             </form>
@@ -119,8 +119,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="errand.ref_code" name="lookAt">
+                            <form method="POST" action="{{ errand.get_absolute_url }}">
+                                <button type="submit">
                                     Se ärende
                                 </button>
                             </form>

@@ -232,7 +232,7 @@ class NewAddressForm(forms.Form):
     street_address = forms.CharField(max_length=100, required=True)
     apartment_address = forms.CharField(max_length=100, required=False)
     post_town = forms.CharField(max_length=100, required=True)
-    post_code = forms.CharField(max_length=100, required=True)
+    zip = forms.CharField(max_length=100, required=True)
     country = CountryField(blank_label='(select country)').formfield(
         required=False,
         widget=CountrySelectWidget(attrs={
@@ -246,7 +246,7 @@ class NewAddressForm(forms.Form):
         self.fields['street_address'].label = ""
         self.fields['apartment_address'].label = ""
         self.fields['post_town'].label = ""
-        self.fields['post_code'].label = ""
+        self.fields['zip'].label = ""
         self.fields['country'].label = ""
         self.fields['address_type'].label = ""
 
@@ -305,27 +305,32 @@ class InitialSupportForm(forms.ModelForm):
     message = forms.CharField(widget=forms.Textarea)
 
 
-class addressForm(forms.ModelForm):
-    def __init__(self, id, *args, **kwargs):
-        super(addressForm, self).__init__(*args, **kwargs)
+class addressForm(forms.Form):
 
-        # check if there is an address, get the address and place in object then create the fields from the object if there is one
+    def __init__(self, address, *args, **kwargs):
+        super(addressForm, self).__init__(*args, **kwargs)
+        print(type(address))
 
         try:
-            address = Address.objects.filter(
-                user=self.request.user, id=self.id)
-        except ObjectDoesNotExist:
-            address = {}
-
-        self.street_address = forms.CharField(
-            max_length=100, initial=address.street_address)
-        self.apartment_address = forms.CharField(
-            max_length=100, initial=address.apartment_address)
-        self.country = CountryField(multiple=False, initial=address.country)
-        self.zip = forms.CharField(max_length=100, initial=address.zip)
-        self.address_type = forms.CharField(
-            max_length=1, choices=ADDRESS_CHOICES, initial=address.address_type)
-        self.default = forms.BooleanField(default=address.default)
+            self.fields['street_address'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.street_address)
+            self.fields['apartment_address'] = forms.CharField(
+                max_length=100, required=False, label='', initial=address.apartment_address)
+            self.fields['post_town'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.post_town)
+            self.fields['zip'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.zip)
+            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
+        except AttributeError(address):
+            self.fields['street_address'] = forms.CharField(
+                max_length=100, required=True, label='')
+            self.fields['apartment_address'] = forms.CharField(
+                max_length=100, required=False, label='')
+            self.fields['post_town'] = forms.CharField(
+                max_length=100, required=True, label='')
+            self.fields['zip'] = forms.CharField(
+                max_length=100, required=True, label='')
+            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
 
 
 class InitialForm(forms.ModelForm):
