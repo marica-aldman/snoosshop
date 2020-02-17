@@ -6,17 +6,14 @@ from django.shortcuts import reverse
 from datetime import datetime
 from django_countries.fields import CountryField
 
+class fake_class(models.Model):
+    test = models.CharField(max_length= 42)
+
 
 CATEGORY_CHOICES = (
     ('TS', 'Tobaksfritt Snus'),
     ('KS', 'Klassikt Snus'),
     ('TB', 'Tillbehör')
-)
-
-LABEL_CHOICES = (
-    ('P', 'primary'),
-    ('S', 'secondary'),
-    ('D', 'danger')
 )
 
 ADDRESS_CHOICES = (
@@ -46,6 +43,7 @@ class UserProfile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
     one_click_purchasing = models.BooleanField(default=False)
+    user_status = models.IntegerField(default=1, blank=False, null=False)
 
     def __str__(self):
         return self.user.username
@@ -119,9 +117,12 @@ class UserInfo(models.Model):
 
 class Category(models.Model):
     title = models.CharField(max_length=100)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True, blank=False)
     description = models.TextField()
     discount_price = models.IntegerField()
+
+    def __str__(self):
+        return self.title
 
     def get_absolute_cat_url(self):
         return reverse("core:category", kwargs={
@@ -132,18 +133,14 @@ class Category(models.Model):
 class Item(models.Model):
     title = models.CharField(max_length=100)
     price = models.FloatField()
-<<<<<<< HEAD
-    discount_price = models.IntegerField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-=======
+
     discount_price = models.FloatField(blank=True, null=True)
-    category = models.CharField(
-        choices=CATEGORY_CHOICES, max_length=2, default='TS')
->>>>>>> memberpages
-    label = models.CharField(choices=LABEL_CHOICES, max_length=1)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True)
+
     description = models.TextField()
     image = models.ImageField()
-    slug = models.SlugField(default='item', unique=true)
+    slug = models.SlugField(default='item', unique=True)
 
     def __str__(self):
         return self.title

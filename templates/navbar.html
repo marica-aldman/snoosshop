@@ -105,9 +105,13 @@
               {% endcomment %}
 
           <li class="nav-item">
-            <a class="nav-link waves-effect" href="{% url 'account_logout' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Logout </span>
-            </a>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+              {% endif %}
+              <button class='btn shadow-none' type="submit">Logga Ut</button>
+            </form>
           </li>
           {% else %}
 
@@ -133,7 +137,7 @@
           </li>
 
               {% comment %}
-                Login
+                Logga in
               {% endcomment %}
 
           <li class="nav-item">
@@ -143,7 +147,7 @@
           </li>
 
               {% comment %}
-                Signup
+                Registrera
               {% endcomment %}
 
           <li class="nav-item">

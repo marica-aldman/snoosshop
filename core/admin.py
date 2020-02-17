@@ -1,10 +1,5 @@
 from django.contrib import admin
-
-<<<<<<< HEAD
-from .models import Item, OrderItem, Order, Payment, Coupon, Refund, Address, UserProfile, Category
-=======
-from .models import Item, OrderItem, Order, Payment, Coupon, Refund, Address, UserProfile, Subscription, SubscriptionItem, UserInfo, CompanyInfo
->>>>>>> memberpages
+from .models import *
 
 
 def make_refund_accepted(modeladmin, request, queryset):
