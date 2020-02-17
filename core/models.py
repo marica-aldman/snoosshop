@@ -56,17 +56,19 @@ class Address(models.Model):
                              on_delete=models.CASCADE)
     street_address = models.CharField(max_length=100)
     apartment_address = models.CharField(max_length=100)
+    post_town = models.CharField(max_length=100, null=True)
     country = CountryField(multiple=False)
     zip = models.CharField(max_length=100)
     address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
     default = models.BooleanField(default=False)
+    slug = models.SlugField(default='address')
 
     def __str__(self):
         return self.user.username
 
     def get_absolute_url(self):
         return reverse("member:edit_address", kwargs={
-            'slug': self.id
+            'slug': self.slug
         })
 
     class Meta:
@@ -80,10 +82,17 @@ class CompanyInfo(models.Model):
     company = models.CharField(max_length=50, blank=True, null=True)
     organisation_number = models.CharField(
         max_length=50, blank=True, null=True)
-    addressID = models.ForeignKey(Address, on_delete=models.CASCADE)
+    addressID = models.ForeignKey(
+        Address, on_delete=models.SET_NULL, blank=True, null=True)
+    slug = models.SlugField(default='company')
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:edit_companyInfo", kwargs={
+            'slug': self.slug
+        })
 
 
 class UserInfo(models.Model):
@@ -96,10 +105,16 @@ class UserInfo(models.Model):
     telephone = models.CharField(max_length=50, blank=True, null=True)
     company = models.BooleanField(default=False)
     companyID = models.ForeignKey(CompanyInfo,
-                                  on_delete=models.CASCADE)
+                                  on_delete=models.SET_NULL, blank=True, null=True)
+    slug = models.SlugField(default='userinfo')
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:edit_userInfo", kwargs={
+            'slug': self.slug
+        })
 
 
 class Category(models.Model):
@@ -117,12 +132,18 @@ class Category(models.Model):
 class Item(models.Model):
     title = models.CharField(max_length=100)
     price = models.FloatField()
+<<<<<<< HEAD
     discount_price = models.IntegerField(blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+=======
+    discount_price = models.FloatField(blank=True, null=True)
+    category = models.CharField(
+        choices=CATEGORY_CHOICES, max_length=2, default='TS')
+>>>>>>> memberpages
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
-    slug = models.SlugField()
     description = models.TextField()
     image = models.ImageField()
+    slug = models.SlugField(default='item', unique=true)
 
     def __str__(self):
         return self.title
@@ -147,8 +168,13 @@ class OrderItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     ordered = models.BooleanField(default=False)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item = models.ForeignKey(
+        Item, on_delete=models.SET_NULL, blank=True, null=True)
+    title = models.CharField(max_length=100, blank=True, null=True)
     quantity = models.IntegerField(default=1)
+    price = models.FloatField(blank=True, null=True)
+    discount_price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -173,10 +199,14 @@ class Order(models.Model):
                              on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
-    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    total_price = models.FloatField(blank=True, null=True)
+    freight = models.FloatField(blank=True, null=True)
+    sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)
+    subscription_order = models.BooleanField(default=False)
+    being_read = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
@@ -189,6 +219,7 @@ class Order(models.Model):
     received = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
+    slug = models.SlugField(default='order')
 
     '''
     1. Item added to cart
@@ -212,6 +243,11 @@ class Order(models.Model):
             total -= self.coupon.amount
         return total
 
+    def get_absolute_url_member(self):
+        return reverse("member:my_order", kwargs={
+            'slug': self.slug
+        })
+
 
 class Payment(models.Model):
     stripe_charge_id = models.CharField(max_length=50)
@@ -221,7 +257,7 @@ class Payment(models.Model):
     timestamp = models.DateTimeField(default=datetime.now, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return self.stripe_charge_id
 
 
 class Coupon(models.Model):
@@ -233,7 +269,8 @@ class Coupon(models.Model):
 
 
 class Refund(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(
+        Order, on_delete=models.SET_NULL, blank=True, null=True)
     reason = models.TextField()
     accepted = models.BooleanField(default=False)
     email = models.EmailField()
@@ -251,11 +288,17 @@ class SupportThread(models.Model):
     firstSent = models.DateTimeField(default=datetime.now, blank=True)
     done = models.BooleanField(default=False)
     doneDate = models.DateTimeField(default=datetime.now, blank=True)
+    slug = models.SlugField(default='support')
 
     objects = models.Manager()
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse("member:my_errand", kwargs={
+            'slug': self.slug
+        })
 
 
 class SupportResponces(models.Model):
@@ -272,10 +315,12 @@ class Subscription(models.Model):
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
-    next_order = models.ForeignKey(Order, related_name='next_order', on_delete=models.SET_NULL, blank=True, null=True)
+    next_order = models.IntegerField(default=1)
     intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
-    shipping_address = models.ForeignKey(Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
-    billing_address = models.ForeignKey(Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
+    shipping_address = models.ForeignKey(
+        Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
+    billing_address = models.ForeignKey(
+        Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
     active = models.BooleanField(default=True)
     number_of_items = models.PositiveIntegerField()
     slug = models.SlugField(max_length=20, null=False, unique=True)
@@ -292,9 +337,16 @@ class Subscription(models.Model):
 class SubscriptionItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    subscription = models.ForeignKey(Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    subscription = models.ForeignKey(
+        Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
+    item = models.ForeignKey(
+        Item, on_delete=models.SET_NULL, blank=True, null=True)
+    item_title = models.CharField(
+        max_length=100, default="Somethings wrong, contact support")
     quantity = models.PositiveIntegerField()
+    price = models.FloatField(blank=True, null=True)
+    discount_price = models.FloatField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
 
 
 class Cookies(models.Model):
@@ -307,6 +359,7 @@ class Cookies(models.Model):
 
     def __str__(self):
         return self.user.username
+
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
     if created:

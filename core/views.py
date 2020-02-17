@@ -297,7 +297,19 @@ class PaymentView(View):
 
                 order.ordered = True
                 order.payment = payment
-                order.ref_code = create_ref_code()
+
+                # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                ref_code = create_ref_code()
+                ref_test = True
+
+                while ref_test:
+                    testOrder = Order.objects.filter(ref_code=ref_code)
+                    if testOrder is not None:
+                        refcode = create_ref_code()
+                    else:
+                        ref_test = False
+
+                order.ref_code = ref_code
                 order.save()
 
                 messages.success(self.request, "Your order was successful!")
