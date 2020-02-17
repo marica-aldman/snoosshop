@@ -126,7 +126,7 @@ class Item(models.Model):
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
     description = models.TextField()
     image = models.ImageField()
-    slug = models.SlugField(default='item')
+    slug = models.SlugField(default='item', unique=true)
 
     def __str__(self):
         return self.title
