@@ -252,6 +252,36 @@ class NewAddressForm(forms.Form):
         self.fields['address_type'].label = ""
 
 
+class UserInformationForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=50, label="", required=True)
+    last_name = forms.CharField(
+        max_length=50, label="", required=True)
+    email = forms.EmailField(
+        label="", required=True)
+    telephone = forms.CharField(
+        max_length=50, label="", required=False)
+
+    class Meta:
+        model = UserInfo
+        fields = ['first_name', 'last_name', 'email',
+                  'telephone']
+
+    def __init__(self, *args, **kwargs):
+        super(UserInformationForm, self).__init__(*args, **kwargs)
+
+        # get the user info and place in object
+        print('yay')
+        self.fields['first_name'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+        self.fields['last_name'].widget.attrs.update(
+            {'class': 'form-control emailinput mt-2 mb-2'})
+        self.fields['email'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+        self.fields['telephone'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+
+
 class UserInfoForm(forms.Form):
     def __init__(self, the_User, *args, **kwargs):
         super(UserInfoForm, self).__init__(*args, **kwargs)
@@ -346,5 +376,26 @@ class InitialForm(forms.ModelForm):
         self.zip2 = forms.CharField(max_length=100)
         self.default2 = forms.BooleanField(default=False)
 
+
+# generic support form
+
+class GenericSupportForm(forms.ModelForm):
+    email = forms.EmailField(required=True, label="")
+    subject = forms.CharField(max_length=200, required=True, label="")
+    message = forms.CharField(widget=forms.Textarea, label="")
+    sent_date = forms.DateTimeField(required=False)
+    slug = forms.SlugField(required=False)
+
+    # sort this meta class out for generic model
+    class Meta:
+        model = GenericSupport
+        fields = ['email', 'subject', 'message', 'sent_date', 'slug']
+
+    def __init__(self, *args, **kwargs):
+        super(GenericSupportForm, self).__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update(
+            {'class': 'form-control emailinput mt-2 mb-2'})
+        self.fields['subject'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
 
 # add cookie settings and settings as well as further contact form for support

@@ -18,6 +18,9 @@
                             Beställd
                         </th>
                         <th>
+                            Prenumeration
+                        </th>
+                        <th>
                             Status
                         </th>
                         <th>
@@ -35,6 +38,13 @@
                             {{ order.ordered_date }}
                         </td>
                         <td>
+                            {% if order.subscription_order %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if order.being_delivered %}
                                 Skickad
                             {% else %}
@@ -42,8 +52,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="order.id" name="lookAtOrder">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>
@@ -66,6 +77,9 @@
                             Beställd
                         </th>
                         <th>
+                            Prenumeration
+                        </th>
+                        <th>
                             Status
                         </th>
                         <th>
@@ -83,11 +97,19 @@
                             {{ order.ordered_date }}
                         </td>
                         <td>
+                            {% if order.subscription_order %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
                             Levererad
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="order.id" name="lookAtOrder">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>
@@ -100,7 +122,7 @@
                 Ordrar avslutade seanste veckan.
             </div>
         </div>
-        <!--support-->
+        {% comment %} <!--support-->
         <!--active-->
         <div class="border rounded mb-3">
             <h3>Aktiva support ärenden</h3>
@@ -197,7 +219,7 @@
             <div>
                 Avslutade ärenden senaste veckan.
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
 
 </main>

@@ -36,6 +36,11 @@
               
               {% comment %}
                 Menues logged in
+                Check user type
+              {% endcomment %}  
+
+              {% comment %}
+                Moderator menu
               {% endcomment %}
               
               {% comment %}
@@ -57,11 +62,11 @@
                     Mina ordrar
                   </span>
                 </a>
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_support' %}">
+                {% comment %} <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_support' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Min support
                   </span>
-                </a>
+                </a> {% endcomment %}
                 <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Min profil
@@ -77,6 +82,9 @@
                     Mina premunationer
                   </span>
                 </a>
+                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
+                  <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+                </a>
             </div>
           </li>
           
@@ -87,9 +95,9 @@
               
           <li class="nav-item">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
-              <span class="badge red z-depth-1 mr-1"> {{ request.user|cart_item_count }} </span>
+              <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
-              <span class="clearfix d-none d-sm-inline-block"> Cart </span>
+              <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
             </a>
           </li>
 
@@ -99,7 +107,7 @@
 
           <li class="nav-item">
             <a class="nav-link waves-effect" href="{% url 'account_logout' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Logout </span>
+              <span class="clearfix d-none d-sm-inline-block"> Logga ut </span>
             </a>
           </li>
           {% else %}
@@ -109,29 +117,46 @@
               {% endcomment %}
               
               {% comment %}
+                Cart
+              {% endcomment %}
+              
+          <li class="nav-item">
+            <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
+              <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
+              <i class="fas fa-shopping-cart"></i>
+              <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
+            </a>
+          </li>
+              
+              {% comment %}
                 User
               {% endcomment %}
 
-          <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-user"></i>
-            </div>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:cookie_settings' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Mina inställningar
-                  </span>
-                </a>
-            </div>
-          </li>
+              <li class="nav-item">
+                <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
+                    <span class="clearfix d-none d-sm-inline-block">
+                      Mina inställningar
+                    </span>
+                  </a>
+              </li>
+
+              {% comment %}
+                Support
+              {% endcomment %}
               
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'member:support' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+            </a>
+          </li>
+
               {% comment %}
                 Login
               {% endcomment %}
 
           <li class="nav-item">
             <a class="nav-link waves-effect" href="{% url 'account_login' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Login </span>
+              <span class="clearfix d-none d-sm-inline-block"> Logga in </span>
             </a>
           </li>
               
@@ -141,7 +166,7 @@
 
           <li class="nav-item">
             <a class="nav-link waves-effect" href="{% url 'account_signup' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Signup </span>
+              <span class="clearfix d-none d-sm-inline-block"> Skaffa konto </span>
             </a>
           </li>
           {% endif %}

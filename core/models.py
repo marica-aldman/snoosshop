@@ -292,6 +292,23 @@ class SupportResponces(models.Model):
     responceSent = models.DateTimeField(default=datetime.now, blank=True)
 
 
+class GenericSupport(models.Model):
+    email = models.EmailField(default="test@test.se", blank=False, null=False)
+    subject = models.CharField(
+        max_length=200, default="subject", null=False, blank=False)
+    message = models.TextField(default="Text", null=False, blank=False)
+    sent_date = models.DateTimeField(default=datetime.now, blank=True)
+    slug = models.SlugField(default="support")
+
+    def __str__(self):
+        return self.slug
+
+    def get_absolute_url(self):
+        return reverse("member:support", kwargs={
+            'slug': self.slug
+        })
+
+
 class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)

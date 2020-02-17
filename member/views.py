@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail, BadHeaderError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
@@ -10,8 +11,8 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
-from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem
-from .forms import UserInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm
+from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem, GenericSupport
+from .forms import UserInfoForm, UserInformationForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
 from slugify import slugify
@@ -441,13 +442,16 @@ class Profile(View):
         try:
             # get user info
             try:
-                info = UserInfo.objects.filter(user=self.request.user)
+                info = UserInfo.objects.get(user=self.request.user)
+                print(self.request.user)
             except ObjectDoesNotExist:
-                info = {'company': False}
+                info = UserInfo()
+                info.company = False
+                print('oh dear')
 
             # company info
             try:
-                company = CompanyInfo.objects.filter(user=self.request.user)
+                company = CompanyInfo.objects.get(user=self.request.user)
             except ObjectDoesNotExist:
                 company = {}
 
@@ -490,7 +494,7 @@ class InfoView(View):
         try:
             # get form for this using the user id
 
-            form = UserInfoForm(the_User=self.request.user)
+            form = UserInformationForm(the_User=self.request.user)
 
             # check if there is a company connected
             try:
@@ -511,13 +515,45 @@ class InfoView(View):
 
     def post(self, *args, **kwargs):
         try:
-            form = UserInfoForm(self.request.POST)
-            print(self.request.POST)
+            form = UserInformationForm(self.request.POST)
+
+            if 'edit' in self.request.POST.keys():
+                print('hey2')
+                # get form
+
+                form = UserInformationForm(self.request.POST)
+
+                # check if there is a company connected
+                try:
+                    info = UserInfo.objects.get(user=self.request.user)
+                except ObjectDoesNotExist:
+                    info = UserInfo()
+
+                context = {
+                    'form': form,
+                    'info': info,
+                }
+
+                return render(self.request, "member/my_info.html", context)
 
             if form.is_valid():
+                print('hey!')
+                print(self.request.user)
+                try:
+                    info = UserInfo.objects.get(user=self.request.user)
+                    info.first_name = form.cleaned_data.get('first_name')
+                    info.last_name = form.cleaned_data.get('last_name')
+                    info.email = form.cleaned_data.get('email')
+                    info.telephone = form.cleaned_data.get('telephone')
 
-                info = UserInfo.objects.get(user)
+                    info.save()
+                    messages.info(
+                        self.request, "User information saved.")
+                    return redirect("member:my_profile")
+                except ObjectDoesNotExist:
+                    info = UserInfo()
 
+                info.user = self.request.user
                 info.first_name = form.cleaned_data.get('first_name')
                 info.last_name = form.cleaned_data.get('last_name')
                 info.email = form.cleaned_data.get('email')
@@ -537,6 +573,7 @@ class InfoView(View):
                     'form': form,
                     'info': info,
                 }
+
                 messages.info(
                     self.request, "Missing certain information.")
 
@@ -604,12 +641,10 @@ class Editaddress(View):
             slug = where_am_i(self)
             # get the address
             address = Address.objects.get(slug=slug)
-            # print(address)
             # get the form
             form = addressForm(data=self.request.POST, address=address)
             # check form
             if form.is_valid():
-                # print(address)
 
                 address.street_address = form.cleaned_data.get(
                     'street_address')
@@ -1272,18 +1307,128 @@ class CookieSettingsView(View):
         try:
             # turn into form
             # get cookie model, fill in with previous info if there is any
-
+            user = self.request.user
             try:
-                cookie_settings = Cookies.objects.filter(
-                    user=self.request.user)
+                if str(user) == 'AnonymousUser':
+                    cookie_settings = Cookies()
+                else:
+                    cookie_settings = Cookies.objects.get(user=user)
             except ObjectDoesNotExist:
-                cookie_settings = {}
+                cookie_settings = Cookies()
 
             context = {
                 'cookie_settings': cookie_settings,
             }
 
             return render(self.request, "cookie_settings.html", context)
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            return redirect("core:home")
+
+
+class GenericSupportFormView(View):
+    def get(self, *args, **kwargs):
+        try:
+            # get a form
+            form = GenericSupportForm()
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/support.html", context)
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            return redirect("core:home")
+
+    def post(self, *args, **kwargs):
+        try:
+            # get a form
+            form = GenericSupportForm(self.request.POST)
+
+            if form.is_valid():
+                # take in data
+
+                support = GenericSupport()
+                support.email = form.cleaned_data.get('email')
+                support.subject = form.cleaned_data.get('subject')
+                support.message = form.cleaned_data.get('message')
+                support.sent_date = datetime.now()
+
+                makingSlug = str(support.email) + str(support.sent_date)
+                testMakingSlug = makingSlug
+                slug_test = True
+                i = 1
+
+                while slug_test:
+                    try:
+                        test = GenericSupport.objects.filter(
+                            slug=testMakingSlug).count()
+                    except ObjectDoesNotExist:
+                        test = 10
+
+                    if test > 0:
+                        testMakingSlug = makingSlug + "_" + str(i)
+                        i += 1
+                    else:
+                        slug_test = False
+                        makingSlug = testMakingSlug
+
+                support.slug = makingSlug
+
+                # send email to support and copy to customer
+                # support
+                # dont forget to check for bad header etc
+
+                try:
+                    send_mail(
+                        support.subject,
+                        support.message,
+                        'marica.aldman@gmail.com',
+                        ['marica.aldman@gmail.com'],
+                        fail_silently=False,
+                    )
+
+                except BadHeaderError:
+                    messages.warning(
+                        'Ämnet innehåller icke tillåtna karaktärer.')
+
+                    context = {
+                        'form': form,
+                    }
+
+                    return render(self.request, "member/support.html", context)
+
+                # customer
+                # make a can not reply message
+                # take this from language database later
+                canNotReply = '\n\nPs. Do not reply to this message. This is just a copy of the message you placed in the form. Support will respond to you within X buisness days. Ds.'
+
+                send_mail(
+                    "Copy: " + support.subject,
+                    support.message + canNotReply,
+                    'contact@snoosshop.com',
+                    [support.email],
+                    fail_silently=False,
+                )
+                # if you got this far save to database
+
+                support.save()
+
+                messages.info(
+                    self.request, 'Ärendet skickat. En kopia har skickats till din angivna emailadress.')
+                return redirect("core:home")
+
+            # form isn't valid rerender
+            print("not valid")
+
+            context = {
+                'form': form,
+            }
+
+            return render(self.request, "member/support.html", context)
         except ObjectDoesNotExist:
             messages.info(
                 self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")

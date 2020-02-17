@@ -81,3 +81,14 @@ LOGIN_REDIRECT_URL = '/'
 # CRISPY FORMS
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Email CHANGE THIS TO THE WEBSITE SMTP PROPERLY !!!!
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'marica.aldman@gmail.com'
+EMAIL_HOST_PASSWORD = 'CzWN3471'
+DEFAULT_FROM_EMAIL = 'marica.aldman@gmail.com'
+DEFAULT_TO_EMAIL = 'to email'
