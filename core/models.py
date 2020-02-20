@@ -126,7 +126,7 @@ class Item(models.Model):
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
     description = models.TextField()
     image = models.ImageField()
-    slug = models.SlugField(default='item', unique=true)
+    slug = models.SlugField(default='item', unique=True)
 
     def __str__(self):
         return self.title
@@ -352,10 +352,8 @@ class SubscriptionItem(models.Model):
 class Cookies(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    functional = models.BooleanField(default=False)
-    directed_ads = models.BooleanField(default=False)
-    measurement = models.BooleanField(default=False)
-    onOff = models.BooleanField(default=False)
+    functional = models.BooleanField(default=True)
+    addapted_adds = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

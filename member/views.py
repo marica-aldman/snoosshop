@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem, GenericSupport
-from .forms import UserInfoForm, UserInformationForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm
+from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
 from slugify import slugify
@@ -25,6 +25,14 @@ def test_slug_address(slug):
     test = False
     addressQuery = Address.objects.filter(slug=slug)
     if len(addressQuery) > 0:
+        test = True
+    return test
+
+
+def test_slug_company(slug):
+    test = False
+    companyQuery = CompanyInfo.objects.filter(slug=slug)
+    if len(companyQuery) > 0:
         test = True
     return test
 
@@ -134,18 +142,234 @@ def save_subItems_and_orderItems(sub, amount, product):
 class Setup(View):
     def get(self, *args, **kwargs):
         try:
-            form = InitialForm()
+            form_user = UserInformationForm()
+            form_company = CompanyInfoForm()
+            form_address = NewAddressForm()
 
             context = {
-                'form': form,
+                'userForm': form_user,
+                'companyForm': form_company,
+                'addressForm': form_address,
             }
 
-            return render(self.request, "member/setup.html", form)
+            return render(self.request, "member/setup.html", context)
 
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+                self.request, "Något gick fel när vi försökte ladda formuläret för din information. Var vänlig kontakta supporten för hjälp.")
             return redirect("core:home")
+
+    def post(self, *args, **kwargs):
+        try:
+
+            # Sort out all the save functions and what kind of adress etc
+
+            theUser = self.request.user
+            form_user = UserInformationForm(self.request.POST)
+            form_company = CompanyInfoForm(self.request.POST)
+            form_address = NewAddressForm(self.request.POST)
+            hasCompany = False
+
+            if 'hasCompany' in self.request.POST.keys():
+                if self.request.POST['hasCompany'] == 'on':
+                    hasCompany = True
+
+            if form_user.is_valid():
+                # check that we dont already have info on this user
+                try:
+                    userInfo = UserInfo.objects.get(user=theUser)
+                except ObjectDoesNotExist:
+                    userInfo = UserInfo()
+
+                userInfo.user = theUser
+                userInfo.first_name = form_user.cleaned_data.get('first_name')
+                userInfo.last_name = form_user.cleaned_data.get('last_name')
+                userInfo.email = form_user.cleaned_data.get('email')
+                userInfo.telephone = form_user.cleaned_data.get('telephone')
+                if hasCompany:
+                    # check that we dont already have company info on this user
+                    try:
+                        companyInfo = CompanyInfo.objects.get(user=theUser)
+                    except ObjectDoesNotExist:
+                        companyInfo = CompanyInfo()
+                    try:
+                        address = Address.objects.get(user=theUser)
+                    except ObjectDoesNotExist:
+                        address = Address()
+                    if form_address.is_valid() and form_company.is_valid():
+                        userInfo.company = True
+
+                        address.user = theUser
+                        address.street_address = form_address.cleaned_data.get(
+                            'street_address')
+                        address.apartment_address = form_address.cleaned_data.get(
+                            'apartment_address')
+                        address.post_town = form_address.cleaned_data.get(
+                            'post_town')
+                        address.zip = form_address.cleaned_data.get('zip')
+                        address.country = "Sverige"
+                        address.address_type = "B"
+                        address.default = True
+
+                        # create a slug
+
+                        toSlug = address.street_address + \
+                            "B" + str(address.user.id)
+                        testSlug = slugify(toSlug)
+                        existingSlug = test_slug_address(testSlug)
+                        i = 1
+                        while existingSlug:
+                            toSlug = address.street_address + \
+                                "B" + str(address.user.id) + "_" + str(i)
+                            testSlug = slugify(toSlug)
+                            existingSlug = test_slug_address(testSlug)
+                            i += 1
+
+                        address.slug = testSlug
+                        address.save()
+
+                        companyInfo.user = theUser
+                        companyInfo.company = form_company.cleaned_data.get(
+                            'company')
+                        companyInfo.organisation_number = form_company.cleaned_data.get(
+                            'organisation_number')
+                        companyInfo.addressID = address
+                        slug = companyInfo.company + str(companyInfo.user.id)
+                        makeSlug = slugify(slug)
+                        test = test_slug_company(makeSlug)
+                        i = 1
+                        while test:
+                            slug = companyInfo.company + \
+                                str(companyInfo.user.id) + str(i)
+                            makeSlug = slugify(slug)
+                            test = test_slug_company(makeSlug)
+                            i += 1
+                        companyInfo.slug = makeSlug
+                        companyInfo.save()
+
+                        userInfo.companyID = companyInfo
+                        userInfo.save()
+
+                        messages.info(
+                            self.request, "Uppgifter sparade. Du kan uppdatera och lägga till information under din profil")
+                        return redirect("member:my_overview")
+                    else:
+
+                        context = {
+                            'userForm': form_user,
+                            'companyForm': form_company,
+                            'addressForm': form_address,
+                        }
+                        messages.info(
+                            self.request, "2 Det saknas information i något av de obligatoriska fälten.")
+                        return render(self.request, "member/setup.html", context)
+                else:
+                    userInfo.company = False
+                    userInfo.save()
+
+                    messages.info(
+                        self.request, "Uppgifter sparade. Du kan uppdatera och lägga till information under din profil")
+                    return redirect("member:my_overview")
+            else:
+
+                context = {
+                    'userForm': form_user,
+                    'companyForm': form_company,
+                    'addressForm': form_address,
+                }
+
+                messages.info(
+                    self.request, "1 Det saknas information i något av de obligatoriska fälten.")
+                return render(self.request, "member/setup.html", context)
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Något gick fel när vi försökte ställa in ditt konto. Kontakta supporten för hjälp.")
+            return redirect("core:home")
+
+
+class CompanyView(View):
+    def get(self, *args, **kwargs):
+
+        # get form
+        theUser = self.request.user
+        form = CompanyInfoForm()
+        form.populate(theUser)
+
+        # get the users adresses incase they have moved the company
+
+        addresses = Address.objects.filter(user=theUser, address_type="B")
+
+        # check which one is the current one
+
+        compInfo = CompanyInfo.objects.get(user=theUser)
+
+        context = {
+            'form': form,
+            'addresses': addresses,
+            'addressID': compInfo.id,
+        }
+
+        return render(self.request, "member/company.html", context)
+
+    def post(self, *args, **kwargs):
+
+        theUser = self.request.user
+        form = CompanyInfoForm(self.request.POST)
+
+        if form.is_valid():
+            compInfo = CompanyInfo.objects.get(user=theUser)
+
+            compInfo.company = form.cleaned_data.get('company')
+            compInfo.organisation_number = form.cleaned_data.get(
+                'organisation_number')
+
+            # check for an address change
+
+            addressID = self.request.POST['address']
+            try:
+                addressTest = Address.objects.get(id=addressID)
+
+                if addressTest.id == compInfo.addressID.id:
+                    # no change in adress just save and redirect
+                    compInfo.save()
+                    messages.info(
+                        self.request, "Informationen sparad.")
+                    return redirect("member:my_profile")
+                else:
+                    compInfo.addressID = addressTest
+                    compInfo.save()
+                    messages.info(
+                        self.request, "Informationen sparad.")
+                    return redirect("member:my_profile")
+            except ObjectDoesNotExist:
+                # something is wrong here rerender the form, with message
+
+                messages.info(
+                    self.request, "Någonting gick fel. Kontakta support för assistans.")
+
+                addresses = Address.objects.filter(user=theUser)
+
+                context = {
+                    'form': form,
+                    'addresses': addresses
+                }
+
+                return render(self.request, "member/company.html", context)
+
+        else:
+            # form not valid rerender
+
+            messages.info(
+                self.request, "Något i formuläret saknas Var god fyll i hela formuläret.")
+
+            addresses = Address.objects.filter(user=theUser)
+
+            context = {
+                'form': form,
+                'addresses': addresses
+            }
+
+            return render(self.request, "member/company.html", context)
 
 
 class Overview(View):
@@ -443,28 +667,15 @@ class Profile(View):
             # get user info
             try:
                 info = UserInfo.objects.get(user=self.request.user)
-                print(self.request.user)
             except ObjectDoesNotExist:
                 info = UserInfo()
                 info.company = False
-                print('oh dear')
 
             # company info
             try:
                 company = CompanyInfo.objects.get(user=self.request.user)
             except ObjectDoesNotExist:
                 company = {}
-
-            # get company address
-            company_address = ""
-            """
-            if info.company:
-                try:
-                    address = Address.objects.filter(id = company.addressID)
-                except ObjectDoesNotExist:
-                    address = {'street_address': ''}
-
-                company_address = address.street_address """
 
             # get user addresses
 
@@ -478,7 +689,6 @@ class Profile(View):
             context = {
                 'info': info,
                 'company': company,
-                'company_address': company_address,
                 'addresses': addresses,
             }
 
@@ -518,10 +728,6 @@ class InfoView(View):
             form = UserInformationForm(self.request.POST)
 
             if 'edit' in self.request.POST.keys():
-                print('hey2')
-                # get form
-
-                form = UserInformationForm(self.request.POST)
 
                 # check if there is a company connected
                 try:
@@ -537,8 +743,6 @@ class InfoView(View):
                 return render(self.request, "member/my_info.html", context)
 
             if form.is_valid():
-                print('hey!')
-                print(self.request.user)
                 try:
                     info = UserInfo.objects.get(user=self.request.user)
                     info.first_name = form.cleaned_data.get('first_name')
@@ -583,25 +787,6 @@ class InfoView(View):
             messages.info(
                 self.request, "Something went wrong when saving your information. Contact the support for assistance.")
             return redirect("member:my_profile")
-
-
-class CompanyView(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get form for this using the user id
-
-            form = CompanyForm()
-            form = form.__init__(form, user=self.request.user)
-
-            context = {
-                'form': form,
-            }
-
-            return render(self.request, "member/company_info.html", context)
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the company info. Contact the support for assistance.")
-            return redirect("member:my_overview")
 
 
 class Editaddress(View):
@@ -655,25 +840,34 @@ class Editaddress(View):
                 address.country = "Sverige"
                 if address.address_type == self.request.POST['address_type']:
                     if address.default is True:
-                        if self.request.POST['default_address'] == 'on':
-                            address.default = True
+                        if 'default_address' in self.request.POST.keys():
+                            if self.request.POST['default_address'] == 'on':
+                                address.default = True
+                            else:
+                                address.default = False
                         else:
                             address.default = False
                     else:
                         address.default = False
                 else:
-                    if self.request.POST['default_address'] == 'on':
-                        changeAdressTypeQuery = Address.objects.filter(
-                            address_type=form.cleaned_data('address_type'))
-                        for addressOfType in changeAdressTypeQuery:
-                            addressOfType = False
-                        address.default = True
-                        address.address_type = form.cleaned_data(
-                            'address_type')
+                    if 'default_address' in self.request.POST.keys():
+                        if self.request.POST['default_address'] == 'on':
+                            changeAdressTypeQuery = Address.objects.filter(
+                                address_type=form.cleaned_data('address_type'))
+                            for addressOfType in changeAdressTypeQuery:
+                                addressOfType = False
+                            address.default = True
+                            address.address_type = form.cleaned_data(
+                                'address_type')
+                        else:
+                            address.default = False
+                            address.address_type = form.cleaned_data(
+                                'address_type')
                     else:
                         address.default = False
                         address.address_type = form.cleaned_data(
                             'address_type')
+
                 testString = address.street_address + \
                     address.address_type + str(address.user.id)
                 toSlug = slugify(testString)
@@ -734,8 +928,11 @@ class Newaddress(View):
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
                 address.country = "Sverige"
-                if self.request.POST['default_address'] == 'on':
-                    address.default = True
+                if 'default_address' in self.request.POST.keys():
+                    if self.request.POST['default_address'] == 'on':
+                        address.default = True
+                    else:
+                        address.default = False
                 else:
                     address.default = False
 
@@ -753,8 +950,11 @@ class Newaddress(View):
                     address2.post_town = form.cleaned_data.get('post_town')
                     address2.zip = form.cleaned_data.get('zip')
                     address2.country = "Sverige"
-                    if self.request.POST['default_address'] == 'on':
-                        address2.default = True
+                    if 'default_address' in self.request.POST.keys():
+                        if self.request.POST['default_address'] == 'on':
+                            address2.default = True
+                        else:
+                            address2.default = False
                     else:
                         address2.default = False
                     address2.address_type = "S"
@@ -1308,6 +1508,10 @@ class CookieSettingsView(View):
             # turn into form
             # get cookie model, fill in with previous info if there is any
             user = self.request.user
+            form = CookieSettingsForm()
+            if str(user) != 'AnonymousUser':
+                form.populate(user)
+
             try:
                 if str(user) == 'AnonymousUser':
                     cookie_settings = Cookies()
@@ -1318,12 +1522,59 @@ class CookieSettingsView(View):
 
             context = {
                 'cookie_settings': cookie_settings,
+                'form': form,
             }
 
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            message = "Något gick fel vid laddningen av sidan. Kontakta support för hjälp."
+            messages.warning(self.request, message)
+            return redirect("core:home")
+
+    def post(self, *args, **kwargs):
+        try:
+            user = self.request.user
+            form = CookieSettingsForm(self.request.POST)
+            message = ""
+            if form.is_valid():
+                if str(user) == 'AnonymousUser':
+                    cookie_settings = Cookies()
+                else:
+                    try:
+                        cookie_settings = Cookies.objects.get(user=user)
+                    except ObjectDoesNotExist:
+                        cookie_settings = Cookies()
+
+                    cookie_settings.addapted_adds = form.cleaned_data.get(
+                        'addapted_adds')
+                    cookie_settings.save()
+
+                    if not cookie_settings.addapted_adds:
+                        # turn off addaptive adds and delete cookies here
+                        test = ""
+
+                    messages.info(
+                        self.request, "Dina inställningar har sparats.")
+                    return redirect("core:home")
+            else:
+                try:
+                    if str(user) == 'AnonymousUser':
+                        cookie_settings = Cookies()
+                    else:
+                        cookie_settings = Cookies.objects.get(user=user)
+                except ObjectDoesNotExist:
+                    cookie_settings = Cookies()
+
+                context = {
+                    'cookie_settings': cookie_settings,
+                    'form': form,
+                }
+
+                return render(self.request, "cookie_settings.html", context)
+
+        except ObjectDoesNotExist:
+            message = "Något gick fel vid sparandet av dina inställningar. Kontakta support för hjälp."
+            messages.warning(self.request, message)
             return redirect("core:home")
 
 
@@ -1422,7 +1673,6 @@ class GenericSupportFormView(View):
                 return redirect("core:home")
 
             # form isn't valid rerender
-            print("not valid")
 
             context = {
                 'form': form,

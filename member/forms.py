@@ -239,7 +239,8 @@ class NewAddressForm(forms.Form):
         widget=CountrySelectWidget(attrs={
             'class': 'custom-select d-block w-100',
         }))
-    address_type = forms.ChoiceField(choices=ADDRESS_CHOICES_EXTENDED)
+    address_type = forms.ChoiceField(
+        choices=ADDRESS_CHOICES_EXTENDED, required=False)
 
     def __init__(self, *args, **kwargs):
         super(NewAddressForm, self).__init__(*args, **kwargs)
@@ -271,7 +272,6 @@ class UserInformationForm(forms.ModelForm):
         super(UserInformationForm, self).__init__(*args, **kwargs)
 
         # get the user info and place in object
-        print('yay')
         self.fields['first_name'].widget.attrs.update(
             {'class': 'form-control textinput textInput mt-2 mb-2'})
         self.fields['last_name'].widget.attrs.update(
@@ -280,36 +280,6 @@ class UserInformationForm(forms.ModelForm):
             {'class': 'form-control textinput textInput mt-2 mb-2'})
         self.fields['telephone'].widget.attrs.update(
             {'class': 'form-control textinput textInput mt-2 mb-2'})
-
-
-class UserInfoForm(forms.Form):
-    def __init__(self, the_User, *args, **kwargs):
-        super(UserInfoForm, self).__init__(*args, **kwargs)
-
-        try:
-            # get the user info and place in object
-            try:
-                info = UserInfo.objects.get(user=the_User)
-            except ObjectDoesNotExist or TypeError:
-                info = UserInfo()
-
-            # make the fields
-            self.fields['first_name'] = forms.CharField(
-                max_length=50, label="", initial=info.first_name, required=False)
-            self.fields['last_name'] = forms.CharField(
-                max_length=50, label="", initial=info.last_name, required=False)
-            self.fields['email'] = forms.EmailField(
-                label="", initial=info.email, required=False)
-            self.fields['telephone'] = forms.CharField(
-                max_length=50, label="", initial=info.telephone, required=False)
-        except TypeError:
-            self.fields['first_name'] = forms.CharField(
-                max_length=50, label="", required=False)
-            self.fields['last_name'] = forms.CharField(
-                max_length=50, label="", required=False)
-            self.fields['email'] = forms.EmailField(label="", required=False)
-            self.fields['telephone'] = forms.CharField(
-                max_length=50, label="", required=False)
 
 
 class InitialSupportForm(forms.ModelForm):
@@ -344,6 +314,28 @@ class addressForm(forms.Form):
             self.fields['zip'] = forms.CharField(
                 max_length=100, required=True, label='')
             # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
+
+
+class CompanyInfoForm(forms.ModelForm):
+    class Meta:
+        model = CompanyInfo
+        fields = ['company', 'organisation_number']
+
+    def __init__(self, *args, **kwargs):
+        super(CompanyInfoForm, self).__init__(*args, **kwargs)
+        self.fields['company'].label = ''
+        self.fields['company'].widget.attrs.update(
+            {"class": "form-control textinput textInput mt-2 mb-2"})
+        self.fields['organisation_number'].label = ''
+        self.fields['organisation_number'].widget.attrs.update(
+            {"class": "form-control textinput textInput mt-2 mb-2"})
+
+    def populate(self, theUser, *args, **kwargs):
+        companyInfo = CompanyInfo.objects.get(user=theUser)
+        self.fields['company'].widget.attrs.update(
+            {'value': companyInfo.company})
+        self.fields['organisation_number'].widget.attrs.update(
+            {'value': companyInfo.organisation_number})
 
 
 class InitialForm(forms.ModelForm):
@@ -399,3 +391,22 @@ class GenericSupportForm(forms.ModelForm):
             {'class': 'form-control textinput textInput mt-2 mb-2'})
 
 # add cookie settings and settings as well as further contact form for support
+
+
+class CookieSettingsForm(forms.ModelForm):
+
+    class Meta:
+        model = Cookies
+        fields = ['functional', 'addapted_adds']
+
+    def __init__(self, *args, **kwargs):
+        super(CookieSettingsForm, self).__init__(*args, **kwargs)
+        self.fields['addapted_adds'].label = ''
+        self.fields['addapted_adds'].widget.attrs.update(
+            {"style": "width: 20px; height: 20px; margin-top: 2px;"})
+
+    def populate(self, theUser, *args, **kwargs):
+        cookie_settings = Cookies.objects.get(user=theUser)
+        if cookie_settings.addapted_adds:
+            self.fields['addapted_adds'].widget.attrs.update(
+                {'checked': ""})

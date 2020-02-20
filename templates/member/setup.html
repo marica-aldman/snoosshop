@@ -1,16 +1,119 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
+
+<script>
+$(document).ready(function(){
+    $('input[type="checkbox"]').click(function(){
+        var element = document.getElementById('hasCompany1')
+        element.classList.toggle('collapse')
+    });
+});
+</script>
 
 <main>
     <div class="container">
     <!--orders-->
     <!--active-->
         <div class="border rounded mb-3">
-            <h3>Ställ in ditt konto</h3>
+            <h3>Din information</h3>
             <form method="POST">
                 {% csrf_token %}
-                {{ form|crispy }}
+                <table id="UserInfoTable" class="table-striped table-hover w-100  mb-2">
+                    <tbody>
+                        <tr>
+                            <td>Förnamn
+                            </td>
+                            <td>{{ userForm.first_name }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Efternamn
+                            </td>
+                            <td>{{ userForm.last_name }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Email
+                            </td>
+                            <td>{{ userForm.email }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Telefonnummer
+                            </td>
+                            <td>{{ userForm.telephone }}
+                            </td>
+                        </tr>
+                        <tr style="height:56px;">
+                            <td>Handla som företag:
+                            </td>
+                            <td><input type="checkbox" id="hasCompany" name="hasCompany">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="hasCompany1" class="panel-collapse collapse">
+                    <table id="UserInfoTable" class="table-striped table-hover w-100  mb-2">
+                        <tbody>
+                            <tr>
+                            </tr>
+                            <tr>
+                                <td>Företagetsnamn
+                                </td>
+                                <td>{{ companyForm.company }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Företagetsorganisationsnummer
+                                </td>
+                                <td>{{ companyForm.organisation_number }}
+                                </td>
+                            </tr>
+                            <tr style="height:56px;">
+                                <td>
+                                    Företagetsaddress:
+                                </td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Gatuadress:
+                                </td>
+                                <td>
+                                    {{ addressForm.street_address|as_crispy_field }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Lägenhetsnummer:
+                                </td>
+                                <td>
+                                    {{ addressForm.apartment_address|as_crispy_field }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Postadress:
+                                </td>
+                                <td>
+                                    {{ addressForm.post_town|as_crispy_field }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Postkod:
+                                </td>
+                                <td>
+                                    {{ addressForm.zip|as_crispy_field }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <button type='submit' class='btn btn-primary'>Spara</button>
             </form>
         </div>
