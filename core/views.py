@@ -1,3 +1,4 @@
+from django.views.generic import TemplateView
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,7 +9,7 @@ from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
-from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile
+from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, Category
 from .filters import ItemFilter
 
 import random
@@ -25,7 +26,8 @@ def create_ref_code():
 
 def products(request):
     context = {
-        'items': Item.objects.all()
+        'items': Item.objects.all(),
+        'category_choices': Categories.objects.all(),
     }
     return render(request, "products.html", context)
 
@@ -363,6 +365,12 @@ class HomeView(ListView):
     paginate_by = 10
     template_name = "home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = Category.objects.all()
+        context['category_choices'] = categories
+        return context
+
 
 class OrderSummaryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
@@ -380,6 +388,12 @@ class OrderSummaryView(LoginRequiredMixin, View):
 class ItemDetailView(DetailView):
     model = Item
     template_name = "product.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = Category.objects.all()
+        context['category_choices'] = categories
+        return context
 
 
 @login_required
@@ -531,3 +545,16 @@ class RequestRefundView(View):
                 return redirect("core:request-refund")
 
 #Category views
+
+class CategoryView(View):
+    def get(self, slug, *args, **kwargs):
+        try:
+            print(slug)
+            categoryquery = Category.objects.filter(slug="TS")
+            context = {
+                'object_list': categoryquery
+            }
+            return render(self.request, "category.html", context)
+        except ObjectDoesNotExist:
+            message.info(self.request, "Something went wrong, contact support")
+            return redirect("core:home")

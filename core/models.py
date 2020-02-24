@@ -117,12 +117,29 @@ class UserInfo(models.Model):
         })
 
 
+class Category(models.Model):
+    title = models.CharField(max_length=100)
+    slug = models.SlugField()
+    description = models.TextField()
+    discount_price = models.IntegerField()
+
+    def get_absolute_cat_url(self):
+        return reverse("core:category", kwargs={
+            'slug': self.slug
+        })
+
+
 class Item(models.Model):
     title = models.CharField(max_length=100)
     price = models.FloatField()
+<<<<<<< HEAD
+    discount_price = models.IntegerField(blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+=======
     discount_price = models.FloatField(blank=True, null=True)
     category = models.CharField(
         choices=CATEGORY_CHOICES, max_length=2, default='TS')
+>>>>>>> memberpages
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
     description = models.TextField()
     image = models.ImageField()
