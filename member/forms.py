@@ -253,6 +253,30 @@ class NewAddressForm(forms.Form):
         self.fields['address_type'].label = ""
 
 
+class SetupAddressForm(forms.Form):
+    street_address = forms.CharField(max_length=100, required=False)
+    apartment_address = forms.CharField(max_length=100, required=False)
+    post_town = forms.CharField(max_length=100, required=False)
+    zip = forms.CharField(max_length=100, required=False)
+    country = CountryField(blank_label='(select country)').formfield(
+        required=False,
+        widget=CountrySelectWidget(attrs={
+            'class': 'custom-select d-block w-100',
+        }))
+    address_type = forms.ChoiceField(
+        choices=ADDRESS_CHOICES_EXTENDED, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(SetupAddressForm, self).__init__(*args, **kwargs)
+
+        self.fields['street_address'].label = ""
+        self.fields['apartment_address'].label = ""
+        self.fields['post_town'].label = ""
+        self.fields['zip'].label = ""
+        self.fields['country'].label = ""
+        self.fields['address_type'].label = ""
+
+
 class UserInformationForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=50, label="", required=True)

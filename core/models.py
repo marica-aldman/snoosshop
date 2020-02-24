@@ -46,6 +46,7 @@ class UserProfile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
     one_click_purchasing = models.BooleanField(default=False)
+    user_type = models.IntegerField(default=1)
 
     def __str__(self):
         return self.user.username
@@ -132,14 +133,9 @@ class Category(models.Model):
 class Item(models.Model):
     title = models.CharField(max_length=100)
     price = models.FloatField()
-<<<<<<< HEAD
     discount_price = models.IntegerField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-=======
-    discount_price = models.FloatField(blank=True, null=True)
-    category = models.CharField(
-        choices=CATEGORY_CHOICES, max_length=2, default='TS')
->>>>>>> memberpages
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True)
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
     description = models.TextField()
     image = models.ImageField()

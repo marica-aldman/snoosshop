@@ -2,220 +2,179 @@
 
 {% block content %}
 
-<!--orders-->
-<!--active-->
-<div class="h-25">
-  .
-</div>
 <div class="container h-75">
-  <div class="row">
+    <div class="row">
 
-    <div class="col">
+        <div class="col m-2">
 
-      <div class="row border border-warning" >
-        <h1>Aktiva ordrar</h1>
-        <h4>_____________________________________</h4>
+            {% comment %}<div class="row border border-warning rounded mb-3 p-2" >
+                <h3>Obesvarade support ärenden</h3>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                        Order Ref
-                    </th>
-                    <th>
-                        Beställd
-                    </th>
-                    <th>
-                        Status
-                    </th>
-                    <th>
-                        Titta på ordern
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-        {% for order in order_a %}
-                <tr>
-                    <td>
-                        {{ order.ref_code }}
-                    </td>
-                    <td>
-                        {{ order.ordered_date }}
-                    </td>
-                    <td>
-                        {% if order.being_delivered %}
-                            Skickad
-                        {% else %}
-                            Under behandling
-                        {% endif %}
-                    </td>
-                    <td>
+                <table class="table-striped table-hover w-100  mb-2">
+                    <thead class="mdb-color lighten-5">
+                        <tr>
+                            <th>
+                                Ref
+                            </th>
+                            <th>
+                                Ämne
+                            </th>
+                            <th>
+                                Från
+                            </th>
+                            <th>
+                                &nbsp;
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% for errand in support %}
+                        <tr>
+                            <td>
+                                {{ errand.ref_code }}
+                            </td>
+                            <td>
+                                {{ errand.subject }}
+                            </td>
+                            <td>
+                                {{ errand.user.username }}
+                            </td>
+                            <td>
+                                <form method="POST">
+                                    <button type="submit" value="{{ errand.ref_code }}" name="seeErrand">
+                                        Se ärende
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+            <div>
+
+                <ul class="pagination">
+                    <li class="page-item">
                         <form method="POST">
-                            <button type="submit" value="order.ref_code" name="lookAtOrder">
-                                Se order
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="True" name="previousPageSupport" {% if current_page_support == support.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                                <
                             </button>
                         </form>
-                    </td>
-                </tr>
-        {% endfor %}
-            </tbody>
-        </table>
+                    </li>
+                    {% for support in more_support %}
+                    <li class="page-item">
+                        <form method="POST">
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="{{ support.number }}" name="whichPageSupport" {% if current_page_support == support.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                                {{support.number}}
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item">
+                        <form method="POST">
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="True" name="nextPageSupport" {% if current_page_support == support.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                                >
+                            </button>
+                        </form>
+                    </li>
+                </ul>
 
-      </div>
+            </div>
+        
+        </div>{% endcomment %}
+        
+        <div class="col m-2">
 
     <!--recently completed-->
-      <div class="row border border-dark">
-          <h1>Avslutade ordrar</h1>
-          <h4>Ordrar avslutade seanste veckan.</h4>
-          <table>
-              <thead>
-                  <tr>
-                      <th>
-                          Order Ref
-                      </th>
-                      <th>
-                          Beställd
-                      </th>
-                      <th>
-                          Status
-                      </th>
-                      <th>
-                          Titta på ordern
-                      </th>
-                  </tr>
-              </thead>
-              <tbody>
+            <div class="row border border-dark mb-3 p-2">
+                <h3>Icke skickade ordrar</h3>
+                <table class="table-striped table-hover w-100  mb-2">
+                    <thead class="mdb-color lighten-5">
+                        <tr>
+                            <th>
+                                Order Ref
+                            </th>
+                            <th>
+                                Beställd
+                            </th>
+                            <th>
+                                Titta på ordern
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
           {% for order in order_r %}
-                  <tr>
-                      <td>
-                          {{ order.ref_code }}
-                      </td>
-                      <td>
-                          {{ order.ordered_date }}
-                      </td>
-                      <td>
-                          Levererad
-                      </td>
-                      <td>
-                          <form method="POST">
-                              <button type="submit" value="order.id" name="lookAtOrder">
-                                  Se order
-                              </button>
-                          </form>
-                      </td>
-                  </tr>
+                        <tr>
+                            <td>
+                                {{ order.ref_code }}
+                            </td>
+                            <td>
+                                {{ order.ordered_date }}
+                            </td>
+                            <td>
+                                <form method="POST">
+                                    <button type="submit" value="order.id" name="lookAtOrder">
+                                        Se order
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
           {% endfor %}
-              </tbody>
-          </table>
-      </div>
-      <div class="row border">
-      <h4>Äldre Ordrar</h4>
-      </div>
-  </div>
-<!--support-->
-<!--active-->
-  <div class="col">
-    <div class="row border border-warning">
+                    </tbody>
+                </table>
+            </div>
 
-      <h1>Aktiva support ärenden</h1>
-      <table>
-        <thead>
-            <tr>
-                <th>
-                    Ärende Ref
-                </th>
-                <th>
-                    Ämne
-                </th>
-                <th>
-                    Status
-                </th>
-                <th>
-                    Titta på Ärendet
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for errand in errand_a %}
-            <tr>
-                <td>
-                    {{ errand.ref_code }}
-                </td>
-                <td>
-                    {{ errand.subject}}
-                </td>
-                <td>
-                    {% for responce in responce_a %}
-                        {% if responce.lastReply == 'customer'  %}
-                            Obesvarat
-                        {% else %}
-                            Besvarat
-                        {% endif %}
+      
+            <div>
+                <ul class="pagination">
+                    <li class="page-item">
+                        <form method="POST">
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="True" name="previousPageOrder" class="page-link">
+                                <
+                            </button>
+                        </form>
+                    </li>
+                    {% for order in more_orders %}
+                    <li class="page-item">
+                        <form method="POST">
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="{{ order.number }}" name="nextPageOrder" {% if current_page_orders == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                                {{order.number}}
+                            </button>
+                        </form>
+                    </li>
                     {% endfor %}
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="order.id" name="lookAtSupport">
-                            Se Ärende
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-      </table>
-    </div>
-<!--recently closed-->
-    <div class="row border">
-    <h1>Avslutade support ärenden</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Ärende Ref
-                </th>
-                <th>
-                    Ämne
-                </th>
-                <th>
-                    Datum för avslut
-                </th>
-                <th>
-                    Titta på Ärendet
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for errand in errand_r %}
-            <tr>
-                <td>
-                    {{ errand.ref_code }}
-                </td>
-                <td>
-                    {{ errand.subject}}
-                </td>
-                <td>
-                    {{ errand.doneDate }}
-                </td>
-                <td>
-                    <form method="POST">
-                        <button type="submit" value="order.id" name="lookAtSupport">
-                            Se Ärende
-                        </button>
-                    </form>
-                </td>
-            </tr>
-    {% endfor %}
-        </tbody>
-    </table>
-    <div>
-        Avslutade ärenden senaste veckan.
-    </div>
+                    <li class="page-item">
+                        <form method="POST">
+                        {% csrf_token %}
+                            <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                            <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                            <button type="submit" value="True" name="nextPageOrder" class="page-link">
+                                >
+                            </button>
+                        </form>
+                    </li>
+                </ul>
 
-    </div>
+            </div>
 
-  </div>
-</div>
+        </div>
+    </div>
 </div>
 
 

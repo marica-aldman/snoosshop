@@ -34,14 +34,32 @@
         <!-- Right -->
         <ul class="navbar-nav nav-flex-icons">
           {% if request.user.is_authenticated %}
+          {% for group in request.user.groups.values_list %}
+          {% if group.1 == 'moderator' %}
+          <li class="nav-item dropdown" style="top: 10px">
+            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:overview' %}">
+                  Översikt
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:orders' %}">
+                  Order Sökning
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:search_users' %}">
+                  Användar Sökning
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:profile' %}">
+                  Min Profil
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:settings' %}">
+                  Mina inställningar
+              </a>
+            </div>
+          </li>
 
-          {% if user.is_superuser %}
-            <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:mod_overview' %}">
-              <span class="clearfix d-none d-sm-inline-block">
-                Moderator översikt
-              </span>
-            </a>
-          {% endif %}
+          {% elif group.1 != 'moderator' %}
               {% comment %}
                 Menues logged in
                 Check user type
@@ -60,12 +78,12 @@
               <i class="fas fa-user"></i>
             </div>
               <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-<!--                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}"> -->
+                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Min översikt
                   </span>
                 </a>
-<!--                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">   -->
+                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Mina ordrar
                   </span>
@@ -81,12 +99,12 @@
                     Min profil
                   </span>
                 </a>
-<!--                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">  -->
+                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Mina inställningar
                   </span>
                 </a>
-<!--                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_subscriptions' %}">  -->
+                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_subscriptions' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Mina premunationer
                   </span>
@@ -96,7 +114,8 @@
                 </a>
             </div>
           </li>
-
+          {% endif %}
+          {% endfor %}
               {% comment %}
                 Cart
               {% endcomment %}
@@ -140,19 +159,6 @@
                 User
               {% endcomment %}
 
-<<<<<<< HEAD
-          <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-user"></i>
-            </div>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-<!--                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:cookie_settings' %}">  -->
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Mina inställningar
-                  </span>
-                </a>
-            </div>
-=======
               <li class="nav-item">
                 <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
                     <span class="clearfix d-none d-sm-inline-block">
@@ -169,7 +175,6 @@
             <a class="nav-link waves-effect" href="{% url 'member:support' %}">
               <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
             </a>
->>>>>>> memberpages
           </li>
 
               {% comment %}

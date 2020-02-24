@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container h-75">
+
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST">
+        {% csrf_token %}
+            {{form}}
+            <button type="submit" name="search">Sök</button>
+        </form>
+    </div>
+    <!-- results or all orders -->
+    <div class="row border border-dark mb-3 p-2">
+        <h3>Ordrar</h3>
+        <table class="table-striped table-hover w-100  mb-2">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th>
+                        Order Ref
+                    </th>
+                    <th>
+                        Beställd
+                    </th>
+                    <th>
+                        Titta på ordern
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {% for order in order_r %}
+                <tr>
+                    <td>
+                        {{ order.ref_code }}
+                    </td>
+                    <td>
+                        {{ order.ordered_date }}
+                    </td>
+                    <td>
+                        <form method="POST">
+                            <button type="submit" value="order.id" name="lookAtOrder">
+                                Se order
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+    {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div>
+        <ul class="pagination">
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                    <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                    <button type="submit" value="True" name="previousPageOrder" class="page-link">
+                        <
+                    </button>
+                </form>
+            </li>
+            {% for order in more_orders %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                    <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                    <button type="submit" value="{{ order.number }}" name="nextPageOrder" {% if current_page_orders == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{order.number}}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page_support}}" name="current_page_support">
+                    <input type="hidden" value="{{current_page_orders}}" name="current_page_orders">
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link">
+                        >
+                    </button>
+                </form>
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+
+{% endblock content %}

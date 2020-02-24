@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem, GenericSupport
-from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm
+from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm, SetupAddressForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
 from slugify import slugify
@@ -144,7 +144,7 @@ class Setup(View):
         try:
             form_user = UserInformationForm()
             form_company = CompanyInfoForm()
-            form_address = NewAddressForm()
+            form_address = SetupAddressForm()
 
             context = {
                 'userForm': form_user,
@@ -167,7 +167,7 @@ class Setup(View):
             theUser = self.request.user
             form_user = UserInformationForm(self.request.POST)
             form_company = CompanyInfoForm(self.request.POST)
-            form_address = NewAddressForm(self.request.POST)
+            form_address = SetupAddressForm(self.request.POST)
             hasCompany = False
 
             if 'hasCompany' in self.request.POST.keys():
