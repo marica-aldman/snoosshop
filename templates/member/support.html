@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<!-- add create new button -->
+<!--support errands-->
+<!--active-->
+<main>
+    <div class="container">
+    <!-- generic support form -->
+        <div class="border rounded mb-3 pb-5">
+            <h3>Kontakta vår support</h3>
+            <form action="." method="POST">
+                {% csrf_token %}
+                <table class="table-striped table-hover w-100  mb-0">
+                    <tr>
+                        <td>
+                            Emailadress:
+                        </td>
+                        <td>
+                            {{ form.email }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Ämne:
+                        </td>
+                        <td>
+                            {{ form.subject }}
+                        </td>
+                    </tr>
+                </table>
+                <table class="table-striped table-hover w-100  mb-0">
+                    <tr>
+                        <td class="pt-3 pb-3">
+                            Meddelande:
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ form.message|as_crispy_field }}
+                        </td>
+                    </tr>
+                </table>
+                <div class="mb-2 pt-0">
+                    <button class="btn btn-primary float-right mt-0" type="submit" value="submit" name="contact">
+                        Skicka
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+{% endblock content %}

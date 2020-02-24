@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            <form method="POST">
+                {% csrf_token %}
+                <table id="UserInfoTable" class="table-striped table-hover w-100  mb-2">
+                    <tbody>
+                        <tr>
+                        </tr>
+                        <tr>
+                            <td>Företagetsnamn
+                            </td>
+                            <td>{{ form.company }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Företagetsorganisationsnummer
+                            </td>
+                            <td>{{ form.organisation_number }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Address
+                            </td>
+                            <td>
+                                <select name="address">
+                                {% for address in addresses %}
+                                    <option value="{{address.id}}" {% if address.id == addressID %}selected {% endif %}>{{address.street_address}}
+                                    </option>
+                                {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type='submit' class='btn btn-primary'>Spara</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+{% endblock content %}

@@ -1,12 +1,61 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 
+<!-- all subscriptions-->
 <main>
     <div class="container">
         <div class="border rounded mb-3">
+            {% if info.company %}
+            <h3>Ändra kontaktpersonsinformation</h3>
+            {% else %}
+            <h3>Ändra min information</h3>
+            {% endif %}
+            <form method="POST">
+                {% csrf_token %}
+
+                <table class="table-striped table-hover w-100  mb-2">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Förnamn:
+                            </td>
+                            <td>
+                                {{ form.first_name|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Efternamn:
+                            </td>
+                            <td>
+                                {{ form.last_name|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Email:
+                            </td>
+                            <td>
+                                {{ form.email|as_crispy_field }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Telefonnummer:
+                            </td>
+                            <td>
+                                {{ form.telephone|as_crispy_field }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type='submit' class='btn btn-primary'>Spara</button>
+            </form>
         </div>
     </div>
+
 </main>
 
 {% endblock content %}

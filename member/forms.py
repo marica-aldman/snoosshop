@@ -2,6 +2,7 @@ from django import forms
 from datetime import datetime
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
+from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
 
 
@@ -32,27 +33,16 @@ INTERVALL_CHOICES = (
 
 
 class EditSubscriptionForm(forms.Form):
-    start_date = forms.DateTimeField(required=True)
-    intervall = forms.ChoiceField(choices=INTERVALL_CHOICES, required=True)
+    start_date = forms.DateTimeField()
+    intervall = forms.ChoiceField(choices=INTERVALL_CHOICES)
 
-    def __init__(self, theUser, slug, *args, **kwargs):
+    def __init__(self, theUser, slug='save', n_o_p="1", *args, **kwargs):
         super(EditSubscriptionForm, self).__init__(*args, **kwargs)
-        # check if the slug is for a new or editing an old sub and if it is an old one get the old one
-        initialornot = True
-        if slug == "new":
-            initialornot = False
-            subcription = Subscription()
-            subcription.id = -1
-        elif slug == "newSave":
-            initialornot = True
-            subscription = Subscription()
-            subcription.id = -2
-        else:
-            initialornot = True
-            subcription = Subscription.objects.filter(user=theUser, slug=slug)
+        # do everything that should be done regardless if it is a new or old subscription
+
         # remove labels for the current fields
         self.fields['start_date'].label = ''
-        self.fields['intervall'].label = ""
+        self.fields['intervall'].label = ''
 
         # get the users shipping and billing adresses
         addresses_s = Address.objects.filter(user=theUser, address_type="S")
@@ -60,14 +50,14 @@ class EditSubscriptionForm(forms.Form):
         # create a list for each adress type
         the_s_adresses = []
         for adress in addresses_s:
-            the_s_adresses.append((adress.id, 'test'))
+            the_s_adresses.append((adress.id, adress.street_address))
         the_b_adresses = []
         for adress in addresses_b:
-            the_b_adresses.append((adress.id, 'test'))
+            the_b_adresses.append((adress.id, adress.street_address))
         # make the lists to tuples for use with choicefield
         addresses_s_tuple = tuple(the_s_adresses)
         addresses_b_tuple = tuple(the_b_adresses)
-        
+
         # get all available products
         all_products = Item.objects.all()
         # create a list for the products
@@ -77,45 +67,98 @@ class EditSubscriptionForm(forms.Form):
         # make the list a touple for use with the product ChoiceField
         product_tuple = tuple(products)
 
-        i = 1
-        for sub in subcription:
-            # first name a hidden field for new or edit check
-            if sub.slug == 'new':
-                self.fields['new_or_old'] = forms.CharField(widget=forms.HiddenInput(), initial='newSave')
-            subscriptionItems = SubscriptionItem.objects.filter(subscription=sub.id)
+        # make a JSON with all the products
+        products_html = "["
 
-            # if we have items they will be in subItems
-            for item in subscriptionItems:
-                # create fields for all products in the subscription including initial value if it shouls have one
-                field_name1 = 'product%s' % (i,)
-                self.fields[field_name1] = forms.ChoiceField(choices=product_tuple, required=False, initial=item.item)
-                # remove label
-                self.fields[field_name1].label = ""
+        for product in all_products:
+            id = str(product.id)
+            title = str(product.title)
+            products_html = products_html + \
+                "{&quot;id&quot;: &quot" + id + \
+                "&quot, &quot;title&quot;: &quot" + title + "&quot},"
 
-                # create fields for all amounts in the subscription including initial value
-                field_name2 = 'amount%s' % (i,)
-                self.fields[field_name2] = forms.IntegerField(min_value=1, required=False, initial=item.amount)
-                # remove label
-                self.fields[field_name2].label = ""
-                # increment i
+        products_html = products_html + "]"
+
+        # add a hidden field with the json for use with JS
+
+        self.fields['list_of_products'] = forms.CharField(
+            widget=forms.HiddenInput(), initial='products_html')
+
+        # check if the slug is for a new or editing an old sub
+        if slug == "new":
+            # add all the neccessary fields that are left no initial value
+            i = 1
+            for i in range(int(n_o_p)):
                 i += 1
-            # otherwise we need to add one set of these fields
-            if not initialornot:
-                self.fields['product1'] = forms.ChoiceField(choices=product_tuple, required=False)
-                self.fields['amount1'] = forms.IntegerField(min_value=1, required=False)
-            # create the adress choice fields and remove the labels
-            if initialornot:
-                self.fields['shipping'] = forms.ChoiceField(choices=addresses_s_tuple, required=False, initial=sub.shipping_address)
-            else:
-                self.fields['shipping'] = forms.ChoiceField(choices=addresses_s_tuple, required=False)
-            self.fields['shipping'].label = ""
-            if initialornot:
-                self.fields['billing'] = forms.ChoiceField(choices=addresses_b_tuple, required=False, initial=sub.billing_address)
-            else:
-                self.fields['billing'] = forms.ChoiceField(choices=addresses_b_tuple, required=False)
-            self.fields['shipping'].label = ""
-            # set initials for the other fields if needed
-            if initialornot:
+                field_name1 = 'product%s' % (i,)
+                self.fields[field_name1] = forms.ChoiceField(
+                    choices=product_tuple, required=False)
+                self.fields[field_name1].label = ""
+                field_name2 = 'amount%s' % (i,)
+                self.fields[field_name2] = forms.IntegerField(
+                    min_value=1, required=False)
+                self.fields[field_name2].label = ""
+            self.fields['shipping_address'] = forms.ChoiceField(
+                choices=addresses_s_tuple, required=False)
+            self.fields['shipping_address'].label = ""
+            self.fields['billing_address'] = forms.ChoiceField(
+                choices=addresses_b_tuple, required=False)
+            self.fields['billing_address'].label = ""
+            # add hidden fields for checking if it is a new or old save
+            self.fields['new_or_old'] = forms.CharField(
+                widget=forms.HiddenInput(), initial='new')
+            # add a hidden field for number of products
+            self.fields['number_of_products'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=n_o_p)
+        else:
+            subcription = Subscription.objects.filter(user=theUser, slug=slug)
+            print('in form')
+            i = 1
+            for sub in subcription:
+                subscriptionItems = SubscriptionItem.objects.filter(
+                    subscription=sub)
+                print('in sub')
+
+                # if we have items they will be in subItems
+                for subItem in subscriptionItems:
+                    item = subItem.item
+                    # create fields for all products in the subscription including initial value if it shouls have one
+                    field_name1 = 'product%s' % (i,)
+                    self.fields[field_name1] = forms.ChoiceField(
+                        choices=product_tuple, required=False, initial=item.id)
+                    # remove label
+                    self.fields[field_name1].label = ""
+
+                    # create fields for all amounts in the subscription including initial value
+                    field_name2 = 'amount%s' % (i,)
+                    self.fields[field_name2] = forms.IntegerField(
+                        min_value=1, required=False, initial=subItem.quantity)
+                    # remove label
+                    self.fields[field_name2].label = ""
+                    # increment i
+                    i += 1
+
+                # add hidden fields for checking if it is a new or old save
+                self.fields['new_or_old'] = forms.CharField(
+                    widget=forms.HiddenInput(), initial='old')
+
+                # add a hidden field for number of products
+                i = i - 1
+                self.fields['number_of_products'] = forms.CharField(
+                    widget=forms.HiddenInput(), initial=i)
+                # add a hidden field for the subscription id
+                self.fields['id'] = forms.CharField(
+                    widget=forms.HiddenInput(), initial=sub.id)
+
+                # create the adress choice fields and remove the labels
+                self.fields['shipping_address'] = forms.ChoiceField(
+                    choices=addresses_s_tuple, required=False, initial=sub.shipping_address)
+                self.fields['shipping_address'].label = ""
+                self.fields['billing_address'] = forms.ChoiceField(
+                    choices=addresses_b_tuple, required=False, initial=sub.billing_address)
+                self.fields['billing_address'].label = ""
+
+                # set initials for the other fields
                 self.fields['intervall'].initial = sub.intervall
                 self.fields['start_date'].initial = sub.start_date
 
@@ -123,7 +166,7 @@ class EditSubscriptionForm(forms.Form):
         for field_name in self.fields:
             if field_name.startswith('product'):
                 yield self[field_name]
-    
+
     def get_amount_fields(self):
         for field_name in self.fields:
             if field_name.startswith('amount'):
@@ -156,6 +199,7 @@ class EditSubscriptionForm(forms.Form):
             field_name = 'amount%s' % (i,)
         self.cleaned_data['amounts'] = amounts
 
+
 class NewSubscriptionForm(forms.Form):
     start_date = forms.DateTimeField(required=True)
     intervall = forms.ChoiceField(choices=INTERVALL_CHOICES, required=True)
@@ -163,14 +207,14 @@ class NewSubscriptionForm(forms.Form):
 
     # get all available products and place in an object for later
 
-    all_products = Item.objects.all()
+    """all_products = Item.objects.all()"""
 
     # create a choice list from the available products
 
     products = []
 
-    for product in all_products:
-        products.append((product.id, product.title))
+    """for product in all_products:
+        products.append((product.id, product.title))"""
 
     product_tuple = tuple(products)
 
@@ -189,13 +233,14 @@ class NewAddressForm(forms.Form):
     street_address = forms.CharField(max_length=100, required=True)
     apartment_address = forms.CharField(max_length=100, required=False)
     post_town = forms.CharField(max_length=100, required=True)
-    post_code = forms.CharField(max_length=100, required=True)
+    zip = forms.CharField(max_length=100, required=True)
     country = CountryField(blank_label='(select country)').formfield(
         required=False,
         widget=CountrySelectWidget(attrs={
             'class': 'custom-select d-block w-100',
         }))
-    address_type = forms.ChoiceField(choices=ADDRESS_CHOICES_EXTENDED)
+    address_type = forms.ChoiceField(
+        choices=ADDRESS_CHOICES_EXTENDED, required=False)
 
     def __init__(self, *args, **kwargs):
         super(NewAddressForm, self).__init__(*args, **kwargs)
@@ -203,56 +248,38 @@ class NewAddressForm(forms.Form):
         self.fields['street_address'].label = ""
         self.fields['apartment_address'].label = ""
         self.fields['post_town'].label = ""
-        self.fields['post_code'].label = ""
+        self.fields['zip'].label = ""
         self.fields['country'].label = ""
         self.fields['address_type'].label = ""
 
 
-class ProfileForm(forms.ModelForm):
-    def __init__(self, id, *args, **kwargs):
-        super(ProfileForm, self).__init__(*args, **kwargs)
+class UserInformationForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=50, label="", required=True)
+    last_name = forms.CharField(
+        max_length=50, label="", required=True)
+    email = forms.EmailField(
+        label="", required=True)
+    telephone = forms.CharField(
+        max_length=50, label="", required=False)
+
+    class Meta:
+        model = UserInfo
+        fields = ['first_name', 'last_name', 'email',
+                  'telephone']
+
+    def __init__(self, *args, **kwargs):
+        super(UserInformationForm, self).__init__(*args, **kwargs)
 
         # get the user info and place in object
-
-        user = UserInfo()
-        user = user.objects.get(id=id)
-
-        # get all addresses
-
-        all_addresses = Address()
-        all_addresses = all_addresses.objects.get(user=user.user)
-
-        # make a choice variable from the addresses
-
-        addresses = {}
-
-        for address in all_addresses:
-            addresses.append({'id': address.id, 'street': address.street_address})
-
-        self.first_name = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.first_name)
-        self.last_name = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.last_name)
-        self.email = forms.EmailField(initial=user.email)
-        self.telephone = forms.CharField(
-            max_length=50, blank=True, null=True, initial=user.telephone)
-
-        # check if there is a company
-
-        is_company = False
-        if user.companyID:
-            is_company = True
-
-        if is_company:
-            company = CompanyInfo()
-            company = CompanyInfo(id=user.companyID)
-            self.company_name = forms.CharField(
-                max_length=50, blank=True, null=True, initial=company.company)
-            self.company_org = forms.CharField(
-                max_length=50, blank=True, null=True, initial=company.organisation_number)
-
-            self.company_address = forms.ChoiceField(
-                choices=addresses, max_length=3, initial=company. addressID)
+        self.fields['first_name'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+        self.fields['last_name'].widget.attrs.update(
+            {'class': 'form-control emailinput mt-2 mb-2'})
+        self.fields['email'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+        self.fields['telephone'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
 
 
 class InitialSupportForm(forms.ModelForm):
@@ -261,27 +288,54 @@ class InitialSupportForm(forms.ModelForm):
     message = forms.CharField(widget=forms.Textarea)
 
 
-class addressForm(forms.ModelForm):
-    def __init__(self, id, *args, **kwargs):
-        super( addressForm, self).__init__(*args, **kwargs)
+class addressForm(forms.Form):
 
-        # check if there is an address, get the address and place in object then create the fields from the object if there is one
+    def __init__(self, address, *args, **kwargs):
+        super(addressForm, self).__init__(*args, **kwargs)
+        print(type(address))
 
         try:
-            address = Address.objects.filter(
-                user=self.request.user, id=self.id)
-        except ObjectDoesNotExist:
-            address = {}
+            self.fields['street_address'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.street_address)
+            self.fields['apartment_address'] = forms.CharField(
+                max_length=100, required=False, label='', initial=address.apartment_address)
+            self.fields['post_town'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.post_town)
+            self.fields['zip'] = forms.CharField(
+                max_length=100, required=True, label='', initial=address.zip)
+            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
+        except AttributeError(address):
+            self.fields['street_address'] = forms.CharField(
+                max_length=100, required=True, label='')
+            self.fields['apartment_address'] = forms.CharField(
+                max_length=100, required=False, label='')
+            self.fields['post_town'] = forms.CharField(
+                max_length=100, required=True, label='')
+            self.fields['zip'] = forms.CharField(
+                max_length=100, required=True, label='')
+            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
 
-        self.street_address = forms.CharField(
-            max_length=100, initial= address.street_address)
-        self.apartment_address = forms.CharField(
-            max_length=100, initial= address.apartment_address)
-        self.country = CountryField(multiple=False, initial= address.country)
-        self.zip = forms.CharField(max_length=100, initial= address.zip)
-        self.address_type = forms.CharField(
-            max_length=1, choices=ADDRESS_CHOICES, initial= address.address_type)
-        self.default = forms.BooleanField(default= address.default)
+
+class CompanyInfoForm(forms.ModelForm):
+    class Meta:
+        model = CompanyInfo
+        fields = ['company', 'organisation_number']
+
+    def __init__(self, *args, **kwargs):
+        super(CompanyInfoForm, self).__init__(*args, **kwargs)
+        self.fields['company'].label = ''
+        self.fields['company'].widget.attrs.update(
+            {"class": "form-control textinput textInput mt-2 mb-2"})
+        self.fields['organisation_number'].label = ''
+        self.fields['organisation_number'].widget.attrs.update(
+            {"class": "form-control textinput textInput mt-2 mb-2"})
+
+    def populate(self, theUser, *args, **kwargs):
+        companyInfo = CompanyInfo.objects.get(user=theUser)
+        self.fields['company'].widget.attrs.update(
+            {'value': companyInfo.company})
+        self.fields['organisation_number'].widget.attrs.update(
+            {'value': companyInfo.organisation_number})
 
 
 class InitialForm(forms.ModelForm):
@@ -315,4 +369,44 @@ class InitialForm(forms.ModelForm):
         self.default2 = forms.BooleanField(default=False)
 
 
+# generic support form
+
+class GenericSupportForm(forms.ModelForm):
+    email = forms.EmailField(required=True, label="")
+    subject = forms.CharField(max_length=200, required=True, label="")
+    message = forms.CharField(widget=forms.Textarea, label="")
+    sent_date = forms.DateTimeField(required=False)
+    slug = forms.SlugField(required=False)
+
+    # sort this meta class out for generic model
+    class Meta:
+        model = GenericSupport
+        fields = ['email', 'subject', 'message', 'sent_date', 'slug']
+
+    def __init__(self, *args, **kwargs):
+        super(GenericSupportForm, self).__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update(
+            {'class': 'form-control emailinput mt-2 mb-2'})
+        self.fields['subject'].widget.attrs.update(
+            {'class': 'form-control textinput textInput mt-2 mb-2'})
+
 # add cookie settings and settings as well as further contact form for support
+
+
+class CookieSettingsForm(forms.ModelForm):
+
+    class Meta:
+        model = Cookies
+        fields = ['functional', 'addapted_adds']
+
+    def __init__(self, *args, **kwargs):
+        super(CookieSettingsForm, self).__init__(*args, **kwargs)
+        self.fields['addapted_adds'].label = ''
+        self.fields['addapted_adds'].widget.attrs.update(
+            {"style": "width: 20px; height: 20px; margin-top: 2px;"})
+
+    def populate(self, theUser, *args, **kwargs):
+        cookie_settings = Cookies.objects.get(user=theUser)
+        if cookie_settings.addapted_adds:
+            self.fields['addapted_adds'].widget.attrs.update(
+                {'checked': ""})

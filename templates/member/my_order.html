@@ -5,6 +5,7 @@
 
 <main>
     <div class="container">
+    {{test}}
 <!-- specific orders -->
         <div>
             <a href="{% url 'member:new_errand' %}">
@@ -15,20 +16,26 @@
         </div>
         {% if order.received %}
         <div>
-            <a href="{% url 'member:return_order' %}">
+            <form method="POST" action="../../member/returnOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
+                {% csrf_token %}
+                <input type="hidden" name="delete" value='yes'>
+                <input type="hidden" name="id" value={{order.id}}>
                 <button type="submit" class="btn btn-primary float-right">
                     Returnera hela ordern
                 </button>
-            </a>
+            </form>
         </div>
         {% endif %}
         {% if not order.being_delivered and not order.received %}
         <div>
-            <a href="{% url 'member:cancel_order' %}">
+            <form method="POST" action="../../member/cancelOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
+                {% csrf_token %}
+                <input type="hidden" name="delete" value='yes'>
+                <input type="hidden" name="id" value={{order.id}}>
                 <button type="submit" class="btn btn-primary float-right">
                     Avbeställ
                 </button>
-            </a>
+            </form>
         </div>
         {% endif %}
         <div class="border rounded mb-3">
@@ -55,7 +62,7 @@
                             Faktureringsadress
                         </td>
                         <td>
-                            {{ billing_adress }}
+                            {{ shipping_address.street_address }}
                         </td>
                     </tr>
                     <tr>
@@ -63,7 +70,7 @@
                             Leveransadress
                         </td>
                         <td>
-                            {{ shipping_adress }}
+                            {{ billing_address.street_address }}
                         </td>
                     </tr>
                     <tr>
@@ -71,12 +78,31 @@
                             Använda rabattkoder
                         </td>
                         <td>
-                            {% for coupon in coupons %}
-                                {% if foorloop.counter > 1 %}
-                                    <br>
-                                {% endif %}
-                                    {{coupon.code}}: {{coupon.amount}}
-                            {% endfor %}
+                            {{ coupons.code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Frakt
+                        </td>
+                        <td>
+                            {{ order.freight }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Använda rabattkoder
+                        </td>
+                        <td>
+                            {{ coupons.code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Totalkostnad
+                        </td>
+                        <td>
+                            {{ order.total_price }}
                         </td>
                     </tr>
                     <tr>
@@ -126,34 +152,27 @@
                             Kostnad per stock
                         </th>
                         <th>
-                            Rabatt
-                        </th>
-                        <th>
-                            Totalkostnad
+                            Totalkostnad per produkt
                         </th>
                     </tr>
                 </thead>
                 <tbody> <!-- available variables, all_order_items, all_items, discounts, coupon, payment -->
-                    {% for item in all_items %}
+                {% for orderItem in all_order_items %}
                     <tr>
                         <td>
-                            {{ item.title }}
+                            {{orderItem.item.title}}
                         </td>
                         <td>
-                            {{ item.quantity }}
+                            {{orderItem.quantity}}
                         </td>
                         <td>
-                            {{ item.price }}
+                            {{orderItem.price}}
                         </td>
                         <td>
-                            {{ item.discount }}
-                        </td>
-                        <td>
-                            {{ item.total_price }}
+                            {{orderItem.total_price}}
                         </td>
                     </tr>
-                    {% endfor %}
-                    
+                {% endfor %}
                 </tbody>
             </table>
         </div>

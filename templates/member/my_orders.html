@@ -5,7 +5,68 @@
 <!-- all orders -->
 <main>
     <div class="container">
+        {% if subscription %}
         <div class="border rounded mb-3">
+            <h3>
+                Ordrar via Prenumerationer
+            </h3>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead class="mdb-color lighten-5">
+                    <tr>
+                        <th>
+                            Order ref
+                        </th>
+                        <th>
+                            Ska skickas
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            &nbsp;
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for order in orders_s %}
+                    <tr>
+                        <td>
+                            {{ order.id }}
+                        </td>
+                        <td>
+                            {{ order.sub_out_date }}
+                        </td>
+                        <td>
+                            {% if order.being_delivered %}
+                                Skickad
+                            {% else %}
+                                Under behandling
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
+                                    Se order
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        <div class="border rounded mb-3">
+            {% if subscription %}
+            <h3>
+                Övriga Ordrar
+            </h3>
+            {% else %}
+            <h3>
+                Ordrar
+            </h3>
+            {% endif %}
             <table class="table-striped table-hover w-100  mb-2">
                 <thead class="mdb-color lighten-5">
                     <tr>
@@ -19,15 +80,15 @@
                             Status
                         </th>
                         <th>
-                            Titta på ordern
+                            &nbsp;
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-            {% for order in order_a %}
+            {% for order in orders_a %}
                     <tr>
                         <td>
-                            {{ order.ref_code }}
+                            {{ order.id }}
                         </td>
                         <td>
                             {{ order.ordered_date }}
@@ -40,15 +101,16 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="order.id" name="lookAtOrder">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>
                         </td>
                     </tr>
             {% endfor %}
-            {% for order in orders %}
+            {% for order in orders_r %}
                     <tr>
                         <td>
                             {{ order.ref_code }}
@@ -60,8 +122,9 @@
                             Levererad
                         </td>
                         <td>
-                            <form method="POST">
-                                <button type="submit" value="order.id" name="lookAtOrder">
+                            <form method="POST" action="{{ order.get_absolute_url_member }}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary float-right" type="submit" value="order.id" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>

@@ -7,7 +7,7 @@
 <main>
     <div class="container">
         <div class="border rounded mb-3">
-            <h3>Ny address</h3>
+            <h3>Ändra min address</h3>
             <form method="POST">
                 {% csrf_token %}
 
@@ -50,7 +50,11 @@
                                 Addresstyp:
                             </td>
                             <td>
-                                {{ form.address_type|as_crispy_field }}
+                                <select name="address_type" class="select form-control">
+                                    {% for choice_list in address_choices %}
+                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
+                                    {% endfor %}
+                                </select>
                             </td>
                         </tr>
                     </tbody>
@@ -58,11 +62,11 @@
                 <div class="form-group row">
                     <div class="col-10 col-sm-4">Huvudsaklig address:</div>
                     <div class="col-sm-1">
-                    <div class="form-check">
-                        <input class="form-check-input form-control" type="checkbox" id="gridCheck1" name="default_address" {% if address.default %}checked{% endif %}>
-                        <label class="form-check-label" for="gridCheck1">
-                        </label>
-                    </div>
+                        <div class="form-check">
+                            <input class="form-check-input form-control" type="checkbox" id="gridCheck1" name="default_address" {% if address.default %}checked{% endif %}>
+                            <label class="form-check-label" for="gridCheck1">
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <button type='submit' class='btn btn-primary'>Spara</button>

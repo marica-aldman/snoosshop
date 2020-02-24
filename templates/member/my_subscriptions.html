@@ -8,14 +8,14 @@
         <div>
                 <form method="POST" action="{{ newSub.get_absolute_url }}">
                     {% csrf_token %}
-                    <input type="hidden" name="slug" value='new'>
+                    <input type="hidden" name="new_or_old" value='new'>
                     <button type="submit" class="btn btn-primary float-right">
-                        Se premunation
+                        Ny prenumeration
                     </button>
                 </form>
         </div>
         <div class="border rounded mb-3">
-            <h3>Mina premunationer</h3>
+            <h3>Mina prenumerationer</h3>
             <table class="table-striped table-hover w-100  mb-2">
                 <thead class="mdb-color lighten-5">
                     <tr>
@@ -29,7 +29,10 @@
                             Datum för nästa utskick
                         </th>
                         <th>
-                            &nbsp;
+                            Se
+                        </th>
+                        <th>
+                            Ta bort
                         </th>
                     </tr>
                 </thead>
@@ -37,7 +40,7 @@
             {% for subscription in subscriptions %}
                     <tr>
                         <td>
-                            {{ subscription.ref }}
+                            {{ subscription.slug }}
                         </td>
                             {% if subscription.active %}
                         <td>
@@ -57,9 +60,18 @@
                         <td>
                             <form method="POST" action="{{ subscription.get_absolute_url }}">
                                 {% csrf_token %}
-                                <input type="hidden" name="slug" value={{subscription.slug}}>
                                 <button type="submit" class="btn btn-primary float-right">
-                                    Se premunation
+                                    Se prenumeration
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the subscription? This action can not be undone.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete" value='yes'>
+                                <input type="hidden" name="id" value={{subscription.id}}>
+                                <button type="submit" class="btn btn-primary float-right">
+                                    Ta bort prenumeration
                                 </button>
                             </form>
                         </td>

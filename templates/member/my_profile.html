@@ -5,15 +5,18 @@
 
 <main>
     <div class="container">
-    <!--orders-->
-    <!--active-->
-        <div class="border rounded mb-3">
+        <div class="w-100">
+            <a class="nav-link waves-effect float-right" href="{% url 'member:support' %}">
+                <span class="btn btn-primary"> Nytt supportärende </span>
+            </a>
+        </div>
+    <!--profile-->
+        <div class="border rounded mb-3 p-2">
         <h3>
             Min information
         </h3>
-        <form method="POST" action=".">
         {% csrf_token %}
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover w-100 table-bordered">
                 <tbody>
                     {% comment %}
                         Info
@@ -22,64 +25,62 @@
                     {% if info.company %}
                     
                     <tr>
-                        <td class="mdb-color lighten-5 w-25">
+                        <td class="mdb-color lighten-4 w-25 pl-1">
                             Företagets kontaktperson
                         </td>
-                        <td>
+                        <td class="pl-1">
                             &nbsp;
                         </td>
                     </tr>
 
                     {% endif %}
-                
                     <tr>
-                        <td class="mdb-color lighten-5 w-25">
+                        <td class="mdb-color lighten-5 w-25 pl-1">
                             Förnamn
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ info.first_name }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="mdb-color lighten-4">
+                        <td class="mdb-color lighten-4 pl-1">
                             Efternamn
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ info.last_name }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="mdb-color lighten-5">
+                        <td class="mdb-color lighten-5 pl-1">
                             Email
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ info.email }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="mdb-color lighten-4">
+                        <td class="mdb-color lighten-4 pl-1">
                             Telefon number
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ info.telephone }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="mdb-color lighten-4">
-                            &nbsp;
-                        </td>
-                        <td>
-                            <a class="" href="{% url 'member:my_support' %}">
-                                <button class="btn btn-primary float-right">
-                                    Ändra
-                                </button>
-                            </a>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            
+            <form method="POST" action="{% url 'member:my_info' %}" class="w-100 mb-2" style="height: 50px;">
+                {% csrf_token %}
+                <input type="hidden" value="edit" name="edit">
+                <input type="hidden" value="{{info.first_name}}" name="first_name">
+                <input type="hidden" value="{{info.last_name}}" name="last_name">
+                <input type="hidden" value="{{info.email}}" name="email">
+                <input type="hidden" value="{{info.telephone}}" name="telephone">
+                <button class="btn btn-primary float-right">
+                    Ändra
+                </button>
+            </form>
 
-        </form>
                     {% if info.company %}
                     {% comment %}
                         If company, company info
@@ -90,48 +91,47 @@
 
         <form method="POST" action=".">
         {% csrf_token %}
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover w-100  mb-2 table-bordered">
                 <tbody>
                     <tr>
-                        <td class="mdb-color lighten-5">
+                        <td class="mdb-color lighten-5 pl-1">
                             Företagets namn
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ company.company }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="mdb-color lighten-4">
+                        <td class="mdb-color lighten-4 pl-1">
                             Organisationnummer
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {{ company.organisation_number }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="mdb-color lighten-5">
+                        <td class="mdb-color lighten-5 pl-1">
                             Företagets address
                         </td>
-                        <td>
-                            {{ company_address }}
+                        <td class="pl-1">
+                            {{ company.addressID.street_address }}
                         </td>
                     </tr>
                     <tr>
                         <td class="mdb-color lighten-4">
                             &nbsp;
                         </td>
-                        <td>
-                            <a class="" href="{% url 'member:my_support' %}">
-                                <button class="btn btn-primary float-right">
+                        <td class="pl-1">
+                            <a class="" href="{% url 'member:company' %}">
+                                <div class="btn btn-primary float-right">
                                     Ändra
-                                </button>
+                                </div>
                             </a>
                         </td>
                     </tr>
 
                 </tbody>
             </table>
-        </form>
                     {% endif %}
                     {% comment %}
                          addresses
@@ -141,27 +141,27 @@
         </h3>
         <div>
             <a class="" href="{% url 'member:new_address' %}">
-                <button class="btn btn-primary float-right">
+                <div class="btn btn-primary float-right">
                     Lägg till ny
-                </button>
+                </div>
             </a>
         </div>
 
         <form method="POST" action=".">
         {% csrf_token %}
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover w-100  mb-2 table-bordered">
                 <thead class="mdb-color lighten-5">
                     <tr>
-                        <th>
+                        <th class="p-1">
                             Gatu address
                         </th>
-                        <th>
+                        <th class="p-1">
                             Typ
                         </th>
-                        <th>
+                        <th class="p-1">
                             Huvudsaklig
                         </th>
-                        <th>
+                        <th class="p-1">
                             &nbsp;
                         </th>
                     </tr>
@@ -169,7 +169,7 @@
                 <tbody>
                 {% for address in  addresses %}
                     <tr>
-                        <td class="mdb-color lighten-5">
+                        <td class="mdb-color lighten-5 pl-1">
                             {{  address.street_address }}
                         </td>
                         <td>
@@ -179,7 +179,7 @@
                                 Faktura address
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="pl-1">
                             {% if address.default %}
                                 Ja
                             {% else %}
@@ -187,10 +187,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a class="" href="{{ address.get_absolute_url }}">
-                                <button class="btn btn-primary float-right">
+                            <a class="pl-1" href="{{ address.get_absolute_url }}">
+                                <div class="btn btn-primary float-right">
                                     Ändra/Titta på
-                                </button>
+                                </div>
                             </a>
                         </td>
                     </tr>
