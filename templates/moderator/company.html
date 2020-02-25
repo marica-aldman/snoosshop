@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<!-- all subscriptions-->
+<main>
+    <div class="container">
+        <div class="border rounded mb-3">
+            {% if info.company %}
+            <h3>Ändra företagsinformation</h3>
+            {% else %}
+            <h3>Skapa företagsinformation</h3>
+            {% endif %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" value="{{person.id}}" name="theUser">
+
+                <table class="table-striped table-hover w-100  mb-2">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Företagets namn:
+                            </td>
+                            <td>
+                                {{ c_form.company }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Organisationsnummer:
+                            </td>
+                            <td>
+                                {{ c_form.organisation_number }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Address:
+                            </td>
+                            <td>
+                                <input type="hidden" name="newOrOld" value="{{ newOrOld }}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Gatuadress:
+                            </td>
+                            <td>
+                                {{ a_form.street_address }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Lägenhetsnummer:
+                            </td>
+                            <td>
+                                {{ a_form.apartment_address }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Postnummer:
+                            </td>
+                            <td>
+                                {{ a_form.zip }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Postort:
+                            </td>
+                            <td>
+                                {{ a_form.post_town }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type='submit' class='btn btn-primary' name="saveCompany">Spara</button>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+{% endblock content %}

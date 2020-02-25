@@ -22,7 +22,7 @@
     <!-- results or all orders -->
     <div class="row border border-dark mb-3 p-2">
         <h3>Ordrar</h3>
-        <table class="table-striped table-hover w-100  mb-2">
+        <table class="table-striped table-hover w-100  mb-2 table-bordered">
             <thead class="mdb-color lighten-5">
                 <tr>
                     <th>
@@ -72,7 +72,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:edit_user' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtProfile">
+                            <button type="submit" value="{{person.id}}" name="lookAtProfile" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -80,7 +80,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:edit_company' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtCompany">
+                            <button type="submit" value="{{person.id}}" name="lookAtCompany" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -88,7 +88,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:edit_addresses' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtAddresses">
+                            <button type="submit" value="{{person.id}}" name="lookAtAddresses" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -96,7 +96,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:user_settings' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSettings">
+                            <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -104,7 +104,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:subscriptions' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions">
+                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -112,7 +112,7 @@
                     {% comment %} <td>
                         <form method="POST" action="{% url 'moderator:support' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSupport">
+                            <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>

@@ -76,7 +76,7 @@ class Address(models.Model):
 
     def moderator_get_absolute_url(self):
         return reverse("moderator:edit_address", kwargs={
-            'slug': self.id
+            'slug': self.slug
         })
 
     class Meta:
@@ -95,7 +95,7 @@ class CompanyInfo(models.Model):
     slug = models.SlugField(default='company')
 
     def __str__(self):
-        return self.user.username
+        return self.id
 
     def get_absolute_url(self):
         return reverse("member:edit_companyInfo", kwargs={

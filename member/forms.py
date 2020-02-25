@@ -276,6 +276,39 @@ class SetupAddressForm(forms.Form):
         self.fields['country'].label = ""
         self.fields['address_type'].label = ""
 
+    def populate(self, theCompany, *args, **kwargs):
+        address = theCompany.addressID
+        self.fields['street_address'].widget.attrs.update(
+            {'value': address.street_address})
+        self.fields['apartment_address'].widget.attrs.update(
+            {'value': address.apartment_address})
+        self.fields['post_town'].widget.attrs.update(
+            {'value': address.post_town})
+        self.fields['zip'].widget.attrs.update(
+            {'value': address.zip})
+        self.fields['country'].widget.attrs.update(
+            {'value': address.country})
+        self.fields['address_type'].widget.attrs.update(
+            {'value': address.address_type})
+
+    def populate_from_slug(self, theSlug, *args, **kwargs):
+        try:
+            address = Address.objects.get(slug=theSlug)
+        except ObjectDoesNotExist:
+            address = Address()
+        self.fields['street_address'].widget.attrs.update(
+            {'value': address.street_address})
+        self.fields['apartment_address'].widget.attrs.update(
+            {'value': address.apartment_address})
+        self.fields['post_town'].widget.attrs.update(
+            {'value': address.post_town})
+        self.fields['zip'].widget.attrs.update(
+            {'value': address.zip})
+        self.fields['country'].widget.attrs.update(
+            {'value': address.country})
+        self.fields['address_type'].widget.attrs.update(
+            {'value': address.address_type})
+
 
 class UserInformationForm(forms.ModelForm):
     first_name = forms.CharField(

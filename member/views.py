@@ -801,6 +801,8 @@ class InfoView(View):
                 self.request, "Something went wrong when saving your information. Contact the support for assistance.")
             return redirect("member:my_profile")
 
+# switch this to SetupAddressForm
+
 
 class Editaddress(View):
     def get(self, *args, **kwargs):
@@ -1519,14 +1521,10 @@ class CookieSettingsView(View):
     def get(self, *args, **kwargs):
         try:
             # get cookie model, fill in with previous info if there is any
-            print("start")
             user = self.request.user
-            print(self.request.user)
             form = CookieSettingsForm()
-            print("form")
             if str(user) != 'AnonymousUser':
                 form.populate(user)
-            print("populate")
 
             try:
                 if str(user) == 'AnonymousUser':
@@ -1535,7 +1533,6 @@ class CookieSettingsView(View):
                     cookie_settings = Cookies.objects.get(user=user)
             except ObjectDoesNotExist:
                 cookie_settings = Cookies()
-            print("anonymous")
 
             context = {
                 'cookie_settings': cookie_settings,

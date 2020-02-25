@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<main>
+    <div class="container">
+    <!--profile-->
+        <div class="border rounded mb-3 p-2">
+        <h3>
+            Kundens addresser:
+        </h3>
+                    {% comment %}
+                         addresses
+                    {% endcomment %}
+        <div>
+            <form method="POST" action="{% url 'moderator:new_address' %}">
+                {% csrf_token %}
+                <input type="hidden" name="theClient" value="{{ person.id }}">
+                <button type="submit" class="btn btn-primary float-right">
+                    Lägg till ny
+                </button>
+            </form>
+        </div>
+
+        <table class="table-striped table-hover w-100  mb-2 table-bordered">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th class="p-1">
+                        Address id
+                    </th>
+                    <th class="p-1">
+                        Gatuaddress
+                    </th>
+                    <th class="p-1">
+                        Typ
+                    </th>
+                    <th class="p-1">
+                        Huvudsaklig
+                    </th>
+                    <th class="p-1">
+                        &nbsp;
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for address in  addresses %}
+                <tr>
+                    <td class="mdb-color lighten-5 pl-1">
+                        {{  address.id }}
+                    </td>
+                    <td>
+                        {{  address.street_address }}
+                    </td>
+                    <td>
+                        {% if address.address_type == "S"%}
+                            Leverans address
+                        {% else %}
+                            Faktura address
+                        {% endif %}
+                    </td>
+                    <td class="pl-1">
+                        {% if address.default %}
+                            Ja
+                        {% else %}
+                            Nej
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{address.moderator_get_absolute_url}}">
+                        {% csrf_token %}
+                            <input type="hidden" name="theClient" value="{{ person.id }}">
+                            <button class="btn btn-primary float-right">
+                                Ändra/Titta på
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+</main>
+
+{% endblock content %}

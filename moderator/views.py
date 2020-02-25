@@ -14,6 +14,23 @@ from member.forms import *
 from .forms import *
 
 
+def where_am_i(self):
+    path = self.request.get_full_path()
+    split_path = path.split("/")
+    page = split_path[-1]
+    if page == "":
+        page = split_path[-2]
+    return page
+
+
+def test_slug_company(slug):
+    test = False
+    companyQuery = CompanyInfo.objects.filter(slug=slug)
+    if len(companyQuery) > 0:
+        test = True
+    return test
+
+
 class Overview(View):
     def get(self, *args, **kwargs):
         try:
@@ -1804,26 +1821,320 @@ class EditUser(View):
 
 
 class EditCompany(View):
-    test = "test"
+    def post(self, *args, **kwargs):
+        if 'lookAtCompany' in self.request.POST.keys():
+            # take in the id nr
+            user_id = int(self.request.POST['lookAtCompany'])
+            # get the user
+            theUser = User.objects.get(id=user_id)
+            # check for company
+            try:
+                theCompany = CompanyInfo.objects.get(user=theUser)
+                newOrOld = True
+            except ObjectDoesNotExist:
+                newOrOld = False
+
+            # create the forms
+            c_form = CompanyInfoForm()
+            a_form = SetupAddressForm()
+            if newOrOld:
+                c_form.populate(theUser)
+                a_form.populate(theCompany)
+
+            context = {
+                'a_form': a_form,
+                'c_form': c_form,
+                'person': theUser,
+                'newOrOld': newOrOld,
+            }
+
+            return render(self.request, "moderator/company.html", context)
+        elif 'saveCompany' in self.request.POST.keys():
+            if 'theUser' in self.request.POST.keys():
+                user_id = int(self.request.POST['theUser'])
+                try:
+                    theUser = User.objects.get(id=user_id)
+                    if 'newOrOld' in self.request.POST.keys():
+                        newOrOld = self.request.POST['newOrOld']
+                        c_form = CompanyInfoForm(self.request.POST)
+                        a_form = SetupAddressForm(self.request.POST)
+                        if c_form.is_valid():
+                            if a_form.is_valid():
+                                if newOrOld:
+                                    # save in old instances
+                                    try:
+                                        theCompany = CompanyInfo.objects.get(
+                                            user=theUser)
+                                        print(theCompany.id)
+                                    except ObjectDoesNotExist:
+                                        messages.warning(
+                                            self.request, "Company does not seem to exist. Something is wrong in the change company info form. Contact IT support for assistance.")
+
+                                        return redirect("moderator:search_users")
+                                    print(theCompany.id)
+                                    address = theCompany.addressID
+                                    print(address)
+
+                                    theCompany.company = c_form.cleaned_data.get(
+                                        'company')
+                                    theCompany.organisation_number = c_form.cleaned_data.get(
+                                        'organisation_number')
+
+                                    address.street_address = a_form.cleaned_data.get(
+                                        'street_address')
+                                    address.apartment_address = a_form.cleaned_data.get(
+                                        'apartment_address')
+                                    address.zip = a_form.cleaned_data.get(
+                                        'zip')
+                                    address.post_town = a_form.cleaned_data.get(
+                                        'post_town')
+
+                                    address.save()
+                                    theCompany.save()
+                                    messages.info(
+                                        self.request, "Company information updated and saved.")
+
+                                    return redirect("moderator:search_users")
+
+                                else:
+                                    # create new
+                                    theCompany = CompanyInfo()
+                                    address = Address()
+
+                                    theCompany.user = theUser
+                                    theCompany.company = c_form.cleaned_data.get(
+                                        'company')
+                                    theCompany.organisation_number = c_form.cleaned_data.get(
+                                        'organisation_number')
+
+                                    address.user = theUser
+                                    address.street_address = a_form.cleaned_data.get(
+                                        'street_address')
+                                    address.apartment_address = a_form.cleaned_data.get(
+                                        'apartment_address')
+                                    address.zip = a_form.cleaned_data.get(
+                                        'zip')
+                                    address.post_town = a_form.cleaned_data.get(
+                                        'post_town')
+                                    address.default = True
+                                    address.address_type = "B"
+                                    address.country = "Sverige"
+                                    # create a slug
+
+                                    toSlug = address.street_address + \
+                                        "B" + str(address.user.id)
+                                    testSlug = slugify(toSlug)
+                                    existingSlug = test_slug_address(testSlug)
+                                    i = 1
+                                    while existingSlug:
+                                        toSlug = address.street_address + \
+                                            "B" + str(address.user.id) + \
+                                            "_" + str(i)
+                                        testSlug = slugify(toSlug)
+                                        existingSlug = test_slug_address(
+                                            testSlug)
+                                        i += 1
+
+                                    address.slug = testSlug
+                                    address.save()
+                                    # add this address to the company
+                                    theCompany.addressID = address
+                                    # company needs a slug
+                                    slug = theCompany.company + \
+                                        str(theCompany.user.id)
+                                    makeSlug = slugify(slug)
+                                    test = test_slug_company(makeSlug)
+                                    i = 1
+                                    while test:
+                                        slug = theCompany.company + \
+                                            str(theCompany.user.id) + str(i)
+                                        makeSlug = slugify(slug)
+                                        test = test_slug_company(makeSlug)
+                                        i += 1
+                                    theCompany.slug = makeSlug
+                                    theCompany.save()
+                                    messages.info(
+                                        self.request, "Company created and information saved.")
+                                    return redirect("moderator:search_users")
+
+                            else:
+
+                                context = {
+                                    'a_form': a_form,
+                                    'c_form': c_form,
+                                    'person': theUser,
+                                    'newOrOld': newOrOld,
+                                }
+                                messages.info(
+                                    self.request, "Check the address information. Something might be missing. If this problem persists contact IT support.")
+
+                                return render(self.request, "moderator/company.html", context)
+                        else:
+
+                            context = {
+                                'a_form': a_form,
+                                'c_form': c_form,
+                                'person': theUser,
+                                'newOrOld': newOrOld,
+                            }
+                            messages.info(
+                                self.request, "Check the company information. Something might be missing. If this problem persists contact IT support.")
+
+                            return render(self.request, "moderator/company.html", context)
+                except ObjectDoesNotExist:
+                    messages.warning(
+                        self.request, "Something is wrong in the change company info form. Contact IT support for assistance.")
+
+                    return redirect("moderator:search_users")
+
+
+class EditAdresses(View):
+    def post(self, *args, **kwargs):
+        try:
+            if 'lookAtAddresses' in self.request.POST.keys():
+                # get the client
+                user_id = int(self.request.POST['lookAtAddresses'])
+                theUser = User.objects.get(id=user_id)
+
+                # get the specific user's addresses
+                try:
+                    addresses = Address.objects.filter(user=theUser)
+                except ObjectDoesNotExist:
+                    addresses = {}
+
+                context = {
+                    'addresses': addresses,
+                    'person': theUser,
+                }
+
+                return render(self.request, "moderator/edit_addresses.html", context)
+            else:
+                messages.info(
+                    self.request, "Something went wrong when accessing this clients addresses. Contact IT support for assistance.")
+                return redirect("moderator:search_users")
+
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing this clients addresses. Contact IT support for assistance.")
+            return redirect("moderator:search_users")
 
 
 class EditAdress(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get the specific user's address
+    def post(self, *args, **kwargs):
+        if "theClient" in self.request.POST.keys():
+            user_id = int(self.request.POST['theClient'])
+            theUser = User.objects.get(id=user_id)
+            # which one are we looking for
+            where = where_am_i(self)
+            # get this address
+            hasAddress = False
+            try:
+                address = Address.objects.get(slug=where)
+                hasAddress = True
+            except ObjectDoesNotExist:
+                address = Address()
 
-            form = AdressForm()
-            form = form.__init__(form, user=self.request.user)
+            form = SetupAddressForm()
+            if hasAddress:
+                form.populate_from_slug(where)
+            else:
+                messages.info(
+                    self.request, "Something went wrong when accessing this clients address. Contact IT support for assistance.")
+                return redirect("moderator:search_users")
+
+            ADDRESS_CHOICES_EXTENDED = [
+                {'key': 'B', 'name': 'Fakturaaddress'},
+                {'key': 'S', 'name': 'Leveransaddress'},
+            ]
 
             context = {
                 'form': form,
+                'address': address,
+                'person': theUser,
+                'address_choices': ADDRESS_CHOICES_EXTENDED
             }
 
-            return render(self.request, "member/edit_my_adress.html", context)
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            return render(self.request, "moderator/edit_address.html", context)
+        elif 'saveAddress' in self.request.POST.keys():
+            # client
+            user_id = int(self.request.POST['theUser'])
+            theUser = User.objects.get(id=user_id)
+            # which one are we looking for
+            where = where_am_i(self)
+            # get this address
+            hasAddress = False
+            try:
+                address = Address.objects.get(slug=where)
+                hasAddress = True
+            except ObjectDoesNotExist:
+                address = Address()
+            form = SetupAddressForm(self.request.POST)
+
+            if form.is_valid():
+                if address.user == theUser:
+                    address.street_address = form.cleaned_data.get(
+                        'street_address')
+                    address.apartment_address = form.cleaned_data.get(
+                        'apartment_address')
+                    address.post_town = form.cleaned_data.get('post_town')
+                    address.zip = form.cleaned_data.get('zip')
+                    address_type = self.request.POST['address_type']
+                    if address_type == "B":
+                        address.address_type = "B"
+                    elif address_type == "S":
+                        address.address_type = "S"
+                    else:
+                        messages.info(
+                            self.request, "Something is amiss. Contact IT support for assistance.")
+                        return redirect("moderator:search_users")
+                    if 'default' in self.request.POST.keys():
+                        default = self.request.POST['default']
+                        if default == "on":
+                            # set this address to default
+                            address.default = True
+                            # remove default from any other default address of the same type
+                            otherAddresses = Address.objects.filter(
+                                address_type=address.address_type, default=True)
+                            for otherAddress in otherAddresses:
+                                otherAddresses.default = False
+                                otherAddresses.save()
+                    else:
+                        address.default = False
+
+                    # save address and notify user
+                    address.save()
+                    messages.info(
+                        self.request, "Address updated and saved")
+                    return redirect("moderator:search_users")
+                else:
+                    messages.info(
+                        self.request, "Something is amiss. Contact IT support for assistance.")
+                    return redirect("moderator:search_users")
+            else:
+
+                ADDRESS_CHOICES_EXTENDED = [
+                    {'key': 'B', 'name': 'Fakturaaddress'},
+                    {'key': 'S', 'name': 'Leveransaddress'},
+                ]
+
+                context = {
+                    'form': form,
+                    'address': address,
+                    'person': theUser,
+                    'address_choices': ADDRESS_CHOICES_EXTENDED
+                }
+
+                messages.info(
+                    self.request, "Something information is incorrect or missing.")
+                return render(self.request, "moderator/edit_address.html", context)
+        else:
+            messages.warning(
+                self.request, "Something went wrong when saving. Contact IT support.")
             return redirect("moderator:search_users")
+
+
+class NewAddress(View):
+    test = "test"
 
 
 class SettingsView(View):
