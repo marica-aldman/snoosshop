@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save
+from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
@@ -46,7 +47,6 @@ class UserProfile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
     one_click_purchasing = models.BooleanField(default=False)
-    user_type = models.IntegerField(default=1)
 
     def __str__(self):
         return self.user.username
@@ -72,6 +72,13 @@ class Address(models.Model):
             'slug': self.slug
         })
 
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:edit_address", kwargs={
+            'slug': self.id
+        })
+
     class Meta:
         verbose_name_plural = 'Addresses'
 
@@ -95,6 +102,13 @@ class CompanyInfo(models.Model):
             'slug': self.slug
         })
 
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:edit_company", kwargs={
+            'slug': self.slug
+        })
+
 
 class UserInfo(models.Model):
     # user, first name, last name, company, email, phone
@@ -114,6 +128,13 @@ class UserInfo(models.Model):
 
     def get_absolute_url(self):
         return reverse("member:edit_userInfo", kwargs={
+            'slug': self.slug
+        })
+
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:edit_user", kwargs={
             'slug': self.slug
         })
 
@@ -296,6 +317,13 @@ class SupportThread(models.Model):
             'slug': self.slug
         })
 
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:errand", kwargs={
+            'slug': self.slug
+        })
+
 
 class SupportResponces(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -346,6 +374,13 @@ class Subscription(models.Model):
             'slug': self.slug
         })
 
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:edit_subscription", kwargs={
+            'slug': self.slug
+        })
+
 
 class SubscriptionItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -370,6 +405,13 @@ class Cookies(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    # for the moderator
+
+    def moderator_get_absolute_url(self):
+        return reverse("moderator:user_settings", kwargs={
+            'slug': self.id
+        })
 
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):

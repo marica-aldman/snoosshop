@@ -26,6 +26,10 @@ INTERVALL_CHOICES = (
 
 
 class searchOrderForm(forms.Form):
-    order_ref = forms.CharField(max_length=20)
-    order_id = forms.IntegerField()
-    user_id = forms.IntegerField()
+    order_ref = forms.CharField(max_length=20, required=False, label="")
+    order_id = forms.IntegerField(required=False, label="")
+    user_id = forms.IntegerField(required=False, label="")
+
+
+class searchUserForm(forms.Form):
+    user_id = forms.IntegerField(required=False, label="")

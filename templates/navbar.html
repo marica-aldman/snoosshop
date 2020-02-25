@@ -34,8 +34,15 @@
         <!-- Right -->
         <ul class="navbar-nav nav-flex-icons">
           {% if request.user.is_authenticated %}
+              {% comment %}
+                Menues logged in
+                Check user type
+              {% endcomment %} 
           {% for group in request.user.groups.values_list %}
           {% if group.1 == 'moderator' %}
+              {% comment %}
+                Moderator menu
+              {% endcomment %}
           <li class="nav-item dropdown" style="top: 10px">
             <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="fas fa-user"></i>
@@ -59,15 +66,7 @@
             </div>
           </li>
 
-          {% elif group.1 != 'moderator' %}
-              {% comment %}
-                Menues logged in
-                Check user type
-              {% endcomment %}  
-
-              {% comment %}
-                Moderator menu
-              {% endcomment %}
+          {% elif group.1 == 'client' %}
 
               {% comment %}
                 User menu

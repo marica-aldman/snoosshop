@@ -8,12 +8,13 @@
     <div class="container">
         <div class="border rounded mb-3">
             {% if info.company %}
-            <h3>Ändra Kundens Kontaktpersonsinformation</h3>
+            <h3>Ändra kontaktpersonsinformation</h3>
             {% else %}
-            <h3>Ändra Kundens profil</h3>
+            <h3>Ändra min information</h3>
             {% endif %}
             <form method="POST">
                 {% csrf_token %}
+                <input type="hidden" value="{{person.id}}" name="theUser">
 
                 <table class="table-striped table-hover w-100  mb-2">
                     <tbody>
@@ -51,7 +52,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <button type='submit' class='btn btn-primary'>Spara</button>
+                <button type='submit' class='btn btn-primary' name="saveProfile">Spara</button>
             </form>
         </div>
     </div>

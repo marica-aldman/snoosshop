@@ -11,7 +11,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
-from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, CompanyInfo, UserInfo, SupportThread, SupportResponces, Subscription, Cookies, SubscriptionItem, GenericSupport
+from core.models import *
 from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm, SetupAddressForm
 from django.utils.dateparse import parse_datetime
 from core.views import create_ref_code
@@ -175,15 +175,25 @@ class Setup(View):
                     hasCompany = True
 
             if form_user.is_valid():
+                # set this users group to client
+                try:
+                    theUser.groups.add(Group.objects.get(name="client"))
+                except ObjectDoesNotExist:
+                    # skip this
+                    groups = 0
                 # check that we dont already have info on this user
                 try:
                     userInfo = UserInfo.objects.get(user=theUser)
                 except ObjectDoesNotExist:
                     userInfo = UserInfo()
 
+                # set values in user info AND user model
+
                 userInfo.user = theUser
                 userInfo.first_name = form_user.cleaned_data.get('first_name')
+                theUser.first_name = form_user.cleaned_data.get('first_name')
                 userInfo.last_name = form_user.cleaned_data.get('last_name')
+                theUser.last_name = form_user.cleaned_data.get('last_name')
                 userInfo.email = form_user.cleaned_data.get('email')
                 userInfo.telephone = form_user.cleaned_data.get('telephone')
                 if hasCompany:
@@ -249,6 +259,9 @@ class Setup(View):
 
                         userInfo.companyID = companyInfo
                         userInfo.save()
+
+                        # save user too
+                        theUser.save()
 
                         messages.info(
                             self.request, "Uppgifter sparade. Du kan uppdatera och lägga till information under din profil")
@@ -1505,12 +1518,15 @@ class DeleteOrder(View):
 class CookieSettingsView(View):
     def get(self, *args, **kwargs):
         try:
-            # turn into form
             # get cookie model, fill in with previous info if there is any
+            print("start")
             user = self.request.user
+            print(self.request.user)
             form = CookieSettingsForm()
+            print("form")
             if str(user) != 'AnonymousUser':
                 form.populate(user)
+            print("populate")
 
             try:
                 if str(user) == 'AnonymousUser':
@@ -1519,12 +1535,14 @@ class CookieSettingsView(View):
                     cookie_settings = Cookies.objects.get(user=user)
             except ObjectDoesNotExist:
                 cookie_settings = Cookies()
+            print("anonymous")
 
             context = {
                 'cookie_settings': cookie_settings,
                 'form': form,
             }
 
+            print("context")
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
             message = "Något gick fel vid laddningen av sidan. Kontakta support för hjälp."

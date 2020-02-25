@@ -295,7 +295,6 @@ class UserInformationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserInformationForm, self).__init__(*args, **kwargs)
 
-        # get the user info and place in object
         self.fields['first_name'].widget.attrs.update(
             {'class': 'form-control textinput textInput mt-2 mb-2'})
         self.fields['last_name'].widget.attrs.update(
@@ -304,6 +303,18 @@ class UserInformationForm(forms.ModelForm):
             {'class': 'form-control textinput textInput mt-2 mb-2'})
         self.fields['telephone'].widget.attrs.update(
             {'class': 'form-control textinput textInput mt-2 mb-2'})
+
+    def populate(self, the_user, *args, **kwargs):
+        userInfo = UserInfo.objects.get(user=the_user)
+        # get the user info and place in object
+        self.fields['first_name'].widget.attrs.update(
+            {'value': userInfo.first_name})
+        self.fields['last_name'].widget.attrs.update(
+            {'value': userInfo.last_name})
+        self.fields['email'].widget.attrs.update(
+            {'value': userInfo.email})
+        self.fields['telephone'].widget.attrs.update(
+            {'value': userInfo.telephone})
 
 
 class InitialSupportForm(forms.ModelForm):
@@ -430,7 +441,12 @@ class CookieSettingsForm(forms.ModelForm):
             {"style": "width: 20px; height: 20px; margin-top: 2px;"})
 
     def populate(self, theUser, *args, **kwargs):
-        cookie_settings = Cookies.objects.get(user=theUser)
+        try:
+            cookie_settings = Cookies.objects.get(user=theUser)
+        except ObjectDoesNotExist:
+            cookie_settings = Cookies()
+            cookie_settings.user = theUser
+            cookie_settings.save()
         if cookie_settings.addapted_adds:
             self.fields['addapted_adds'].widget.attrs.update(
                 {'checked': ""})

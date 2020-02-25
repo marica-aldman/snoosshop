@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container h-75">
+
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST" class="w-100">
+            <input type="hidden" value="{{current_page}}" name="current_page">
+        {% csrf_token %}
+            <div class="d-flex justify-content-around">
+                <div>
+                    Kund id: {{form.user_id|as_crispy_field}}
+                </div>
+                <div>
+                    <button type="submit" name="search" class='btn btn-primary mt-3'>Sök</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- results or all orders -->
+    <div class="row border border-dark mb-3 p-2">
+        <h3>Ordrar</h3>
+        <table class="table-striped table-hover w-100  mb-2">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th>
+                        Kund id
+                    </th>
+                    <th>
+                        Förnamn
+                    </th>
+                    <th>
+                        Efternamn
+                    </th>
+                    <th>
+                        Profil
+                    </th>
+                    <th>
+                        Företag
+                    </th>
+                    <th>
+                        Addresser
+                    </th>
+                    <th>
+                        Inställningar
+                    </th>
+                    <th>
+                        Prenumerationer
+                    </th>
+                    {% comment %} <th>
+                        Support
+                    </th> {% endcomment %}
+                </tr>
+            </thead>
+            <tbody>
+    {% if multiple %}
+        {% for person in users %}
+            {% for group in person.groups.values_list %}
+                {% if group.1 == 'client' %}
+                <tr>
+                    <td>
+                        {{ person.id }}
+                    </td>
+                    <td>
+                        {{ person.first_name }}
+                    </td>
+                    <td>
+                        {{ person.last_name }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_user' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtProfile">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_company' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtCompany">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtAddresses">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:user_settings' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSettings">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    {% comment %} <td>
+                        <form method="POST" action="{% url 'moderator:support' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSupport">
+                                Se
+                            </button>
+                        </form>
+                    </td> {% endcomment %}
+                </tr>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% else %}
+                <tr>
+                    <td>
+                        {{ person.id }}
+                    </td>
+                    <td>
+                        {{ person.first_name }}
+                    </td>
+                    <td>
+                        {{ person.last_name }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_user' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtProfile">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_company' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtCompany">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtAddresses">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:user_settings' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtSettings">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions">
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    {% comment %} <td>
+                        <form method="POST" action="{% url 'moderator:support' %}">
+                            <button type="submit" value="{{person.id}}" name="lookAtSupport">
+                                Se
+                            </button>
+                        </form>
+                    </td> {% endcomment %}
+                </tr>
+    {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div>
+        <ul class="pagination">
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="previousPageOrder" class="page-link">
+                        <
+                    </button>
+                </form>
+            </li>
+            {% for order in more_orders %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="{{ order.number }}" name="nextPageOrder" {% if current_page_orders == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{order.number}}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link">
+                        >
+                    </button>
+                </form>
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+
+{% endblock content %}
