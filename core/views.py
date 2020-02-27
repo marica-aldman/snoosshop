@@ -10,12 +10,11 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
 from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, Category
-from .filters import ItemFilter
+
 
 import random
 import string
 import stripe
-import django_filters
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 

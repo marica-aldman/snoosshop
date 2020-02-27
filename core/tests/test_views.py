@@ -8,7 +8,8 @@ class TestViews(TestCase):
     def setUp(self):
         self.client = Client()
         self.home_url = reverse('core:home')
-        self.prod_url = reverse("core:product", args=['p1'])
+        self.prod_url = reverse('core:product', args=['p1'])
+        self.add2cart_url = reverse('core:add-to-cart', args=['p1'])
         self.cat = Category.objects.create(
         title='Cat1',
         slug='C1',
@@ -44,6 +45,9 @@ class TestViews(TestCase):
 
     def test_products_GET(self):
         response = self.client.get(self.prod_url)
-
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'product.html')
+
+    def test_addToCart_GET(self):
+        response= self.client.get(self.add2cart_url)
+        self.assertEquals(response.status_code, 302)
