@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<main>
+    <div class="container">
+    <!--profile-->
+        <div class="border rounded mb-3 p-2">
+        <h3>
+            Kundens Prenumerationer:
+        </h3>
+                    {% comment %}
+                         subscriptions
+                    {% endcomment %}
+
+        <table class="table-striped table-hover w-100  mb-2 table-bordered">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th class="p-1">
+                        Prenumerationens id
+                    </th>
+                    <th class="p-1">
+                        Referensnummer
+                    </th>
+                    <th class="p-1">
+                        Status
+                    </th>
+                    <th class="p-1">
+                        Datum för nästa utskick
+                    </th>
+                    <th class="p-1">
+                        &nbsp;
+                    </th>
+                    <th class="p-1">
+                        &nbsp;
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for subscription in subscriptions %}
+                <tr>
+                    <td>
+                        {{ subscription.id }}
+                    </td>
+                    <td>
+                        {{ subscription.slug }}
+                    </td>
+                        {% if subscription.active %}
+                    <td>
+                            Aktiv
+                    </td>
+                    <td>
+                        {{ subscription.next_order_date }}
+                    </td>
+                        {% else %}
+                    <td>
+                            Pausad
+                    </td>
+                    <td>
+                            ---
+                    </td>
+                        {% endif %}
+                    <td>
+                        <form method="POST" action="{{ subscription.moderator_get_absolute_url }}">
+                            <input type="hidden" name="u_id" value="{{person.id}}">
+                            <input type="hidden" name="id" value={{subscription.id}}>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary float-right" name="see" value="True">
+                                Se 
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the subscription? This action can not be undone.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete" value='yes'>
+                            <input type="hidden" name="theUser" value="{{person.id}}">
+                            <input type="hidden" name="id" value={{subscription.id}}>
+                            <button type="submit" class="btn btn-primary float-right">
+                                Ta bort 
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+</main>
+
+{% endblock content %}

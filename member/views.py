@@ -29,6 +29,39 @@ def test_slug_address(slug):
     return test
 
 
+def test_slug_address_of_user(slug, theUser):
+    test = False
+    addressQuery = Address.objects.filter(user=theUser, slug=slug)
+    if len(addressQuery) > 0:
+        test = True
+    return test
+
+
+def create_slug_address(address):
+    toSlug = address.street_address + \
+        "B" + str(address.user.id)
+    testSlug = slugify(toSlug)
+    existingSlug = test_slug_address(testSlug)
+    i = 1
+    while existingSlug:
+        toSlug = address.street_address + \
+            "B" + str(address.user.id) + "_" + str(i)
+        testSlug = slugify(toSlug)
+        existingSlug = test_slug_address(testSlug)
+        i += 1
+
+    return testSlug
+
+
+def new_address_default(address):
+    # remove default from any other default address of the same type
+    otherAddresses = Address.objects.filter(
+        address_type=address.address_type, default=True)
+    for otherAddress in otherAddresses:
+        otherAddress.default = False
+        otherAddress.save()
+
+
 def test_slug_company(slug):
     test = False
     companyQuery = CompanyInfo.objects.filter(slug=slug)
@@ -102,15 +135,19 @@ def get_next_order_date(subdate, intervall):
 
 def save_subItems_and_orderItems(sub, amount, product):
     # create a subscription item object
-    subscription_item = SubscriptionItem()
-    # set basic values
-    subscription_item.user = sub.user
-    subscription_item.subscription = sub
-    subscription_item.quantity = amount
-    # set product values
-    subscription_item.item_title = product.title
-    subscription_item.price = product.price
-    subscription_item.item = product
+    subItem = SubscriptionItem()
+    subItem.user = sub.user
+    subItem.subscription = sub
+    subItem.item = product
+    subItem.item_title = product.title
+    subItem.price = product.price
+    discount_price = 1
+    if product.discount_price is not None:
+        discount_price = product.discount_price
+    subItem.discount_price = discount_price
+    subItem.quantity = amount
+    total_price = product.price * discount_price * amount
+    subItem.total_price = total_price
 
     # new orderItem object
     orderItem = OrderItem()
@@ -119,23 +156,14 @@ def save_subItems_and_orderItems(sub, amount, product):
     orderItem.ordered = True
     orderItem.item = product
     orderItem.title = product.title
-    orderItem.quantity = subscription_item.quantity
+    orderItem.quantity = subItem.quantity
     orderItem.price = product.price
-    if product.discount_price is not None:
-        orderItem.discount_price = product.discount_price
-        subscription_item.discount_price = product.discount_price
-        # set calculated values
-        orderItem.total_price = orderItem.get_final_price
-        subscription_item.total_price = orderItem.total_price
-    else:
-        orderItem.discount_price = 1
-        subscription_item.discount_price = 1
-        orderItem.total_price = orderItem.price
-        subscription_item.total_price = orderItem.price
+    orderItem.discount_price = discount_price
+    orderItem.total_price = total_price
     # save orderitem
     orderItem.save()
     # save subitems
-    subscription_item.save()
+    subItem.save()
     return orderItem
 
 
@@ -222,20 +250,7 @@ class Setup(View):
                         address.default = True
 
                         # create a slug
-
-                        toSlug = address.street_address + \
-                            "B" + str(address.user.id)
-                        testSlug = slugify(toSlug)
-                        existingSlug = test_slug_address(testSlug)
-                        i = 1
-                        while existingSlug:
-                            toSlug = address.street_address + \
-                                "B" + str(address.user.id) + "_" + str(i)
-                            testSlug = slugify(toSlug)
-                            existingSlug = test_slug_address(testSlug)
-                            i += 1
-
-                        address.slug = testSlug
+                        address.slug = create_slug_address(address)
                         address.save()
 
                         companyInfo.user = theUser
@@ -711,6 +726,52 @@ class Profile(View):
                 self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
             return redirect("member:my_overview")
 
+    def post(self, *args, **kwargs):
+        if 'delete' in self.request.POST.keys():
+            # deleting adress
+            if 'id' in self.request.POST.keys():
+                a_id = int(self.request.POST['id'])
+                theAddress = Address.objects.get(id=a_id)
+                # check that this address isn't connected to a company
+                addressUnconnected = False
+                try:
+                    numberOfCompanies = CompanyInfo.objects.filter(
+                        addressID=theAddress).count()
+                    if numberOfCompanies >= 1:
+                        # a company with that address exists
+                        messages.info(
+                            self.request, "This address is connected to your company. Please change your companys address before deleting this address.")
+                        return redirect("member:my_profile")
+                    else:
+                        # no companies with that address
+                        addressUnconnected = True
+                except ObjectDoesNotExist:
+                    # no companies with that address
+                    addressUnconnected = True
+                # check that this address isn't connected to a subscription
+                try:
+                    numberOfSubscriptionsShipping = Subscription.objects.filter(
+                        shipping_address=theAddress).count()
+                    numberOfSubscriptionsBilling = Subscription.objects.filter(
+                        billing_address=theAddress).count()
+                    if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
+                        # a subscription is tied to this address
+                        messages.info(
+                            self.request, "This address is connected to at least one of your subscriptions. Please change your subscriptions address before deleting this address.")
+                        return redirect("member:my_profile")
+                    else:
+                        # no subsriptions with that address set conenction to true
+                        addressUnconnected = True
+
+                except ObjectDoesNotExist:
+                    # no subscriptions with that address
+                    addressUnconnected = True
+
+                theAddress.delete()
+                messages.info(
+                    self.request, "Address deleted")
+                return redirect("member:my_profile")
+
 
 class InfoView(View):
     def get(self, *args, **kwargs):
@@ -820,7 +881,6 @@ class Editaddress(View):
                 ADDRESS_CHOICES_EXTENDED = [
                     {'key': 'B', 'name': 'Billing'},
                     {'key': 'S', 'name': 'Shipping'},
-                    {'key': 'A', 'name': 'BOTH'},
                 ]
 
                 context = {
@@ -841,6 +901,8 @@ class Editaddress(View):
             slug = where_am_i(self)
             # get the address
             address = Address.objects.get(slug=slug)
+            # get the user
+            theUser = self.request.user
             # get the form
             form = addressForm(data=self.request.POST, address=address)
             # check form
@@ -853,47 +915,43 @@ class Editaddress(View):
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
                 address.country = "Sverige"
-                if address.address_type == self.request.POST['address_type']:
-                    if address.default is True:
-                        if 'default_address' in self.request.POST.keys():
-                            if self.request.POST['default_address'] == 'on':
-                                address.default = True
-                            else:
-                                address.default = False
-                        else:
-                            address.default = False
+                if 'address_type' in self.request.POST.keys():
+                    address_type = self.request.POST['address_type']
+                    if address_type == "B":
+                        address.address_type = "B"
+                    elif address_type == "S":
+                        address.address_type = "B"
                     else:
-                        address.default = False
+                        # someone is manipulating the code
+                        messages.info(
+                            self.request, "Something went wrong when saving the address. Contact IT support for assistance.")
+                        return redirect("member:my_profile")
                 else:
+                    # rerender form
+                    ADDRESS_CHOICES_EXTENDED = [
+                        {'key': 'B', 'name': 'Billing'},
+                        {'key': 'S', 'name': 'Shipping'},
+                    ]
+
+                    context = {
+                        'form': form,
+                        'address': address,
+                        'address_choices': ADDRESS_CHOICES_EXTENDED
+                    }
+
+                    return render(self.request, "member/edit_address.html", context)
+                if address.default is True:
                     if 'default_address' in self.request.POST.keys():
-                        if self.request.POST['default_address'] == 'on':
-                            changeAdressTypeQuery = Address.objects.filter(
-                                address_type=form.cleaned_data('address_type'))
-                            for addressOfType in changeAdressTypeQuery:
-                                addressOfType = False
-                            address.default = True
-                            address.address_type = form.cleaned_data(
-                                'address_type')
-                        else:
-                            address.default = False
-                            address.address_type = form.cleaned_data(
-                                'address_type')
-                    else:
-                        address.default = False
-                        address.address_type = form.cleaned_data(
-                            'address_type')
+                        address.default = True
+                        new_address_default(address)
 
                 testString = address.street_address + \
                     address.address_type + str(address.user.id)
                 toSlug = slugify(testString)
                 if toSlug != address.slug:
-                    testVariable = test_slug_address(toSlug)
-                    if testVariable:
-                        messages.info(
-                            self.request, "You already have this address saved.")
-                        return redirect("member:my_profile")
-                    else:
-                        address.slug = toSlug
+                    # street address has changed. Create new slug
+
+                    address.slug = create_slug_address(address)
 
                 # save the address and return to list
                 address.save()
@@ -901,12 +959,23 @@ class Editaddress(View):
                 messages.info(self.request, "Address have been saved.")
                 return redirect("member:my_profile")
             else:
-                messages.info(
-                    self.request, "Something is wrong, contact support.")
-                return redirect("member:my_profile")
+                # rerender form
+                ADDRESS_CHOICES_EXTENDED = [
+                    {'key': 'B', 'name': 'Billing'},
+                    {'key': 'S', 'name': 'Shipping'},
+                ]
+
+                context = {
+                    'form': form,
+                    'address': address,
+                    'address_choices': ADDRESS_CHOICES_EXTENDED
+                }
+
+                return render(self.request, "member/edit_address.html", context)
+
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+                self.request, "Something went wrong when accessing your address. Contact the support for assistance.")
             return redirect("member:my_overview")
 
 
@@ -929,13 +998,47 @@ class Newaddress(View):
     def post(self, *args, **kwargs):
         try:
             form = NewAddressForm(self.request.POST or None)
+            theUser = self.request.user
 
             if form.is_valid():
+                # start by checking that we dont already have this address
+                sameBilling = 0
+                sameShipping = 0
+                addresses = Address.objects.filter(user=theUser)
+                for anAddress in addresses:
+                    if form.cleaned_data.get(
+                            'street_address') == anAddress.street_address:
+                        if form.cleaned_data.get(
+                                'post_town') == anAddress.post_town:
+                            if form.cleaned_data.get('address_type') == "A":
+                                if anAddress.address_type == "S":
+                                    sameShipping = anAddress.id
+                                elif anAddress.address_type == "B":
+                                    sameBilling = anAddress.id
+                            elif anAddress.address_type == form.cleaned_data.get('address_type'):
+                                message = "Address already exists"
+                                if 'default_address' in self.request.POST.keys() and not anAddress.default:
+                                    # remove default from other addresses of same type
 
+                                    compAddresses = Address.objects.filter(
+                                        user=theUser, address_type=anAddress.address_type)
+                                    for sameAddress in compAddresses:
+                                        if sameAddress.default:
+                                            sameAddress.default = False
+                                            sameAddress.save()
+                                            testAddress = Address.objects.get(
+                                                id=sameAddress.id)
+                                    # add default to this address
+                                    anAddress.default = True
+                                    anAddress.save()
+                                    message = "Address already exists. Default changed."
+                                messages.info(
+                                    self.request, message)
+                                return redirect("member:my_profile")
                 # get values
                 address = Address()
 
-                address.user = self.request.user
+                address.user = theUser
                 address.street_address = form.cleaned_data.get(
                     'street_address')
                 address.apartment_address = form.cleaned_data.get(
@@ -943,16 +1046,49 @@ class Newaddress(View):
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
                 address.country = "Sverige"
-                if 'default_address' in self.request.POST.keys():
-                    if self.request.POST['default_address'] == 'on':
-                        address.default = True
-                    else:
-                        address.default = False
-                else:
-                    address.default = False
 
-                # check that if we want the address to be both shipping and billing
+                # check what kind of address we have
                 address_type = form.cleaned_data.get('address_type')
+
+                # confirm that it isn't the same type as we already have (this only happens when we save both) set the values to the one we don't already have unless we have both saved
+                if sameBilling > 0 and sameShipping > 0:
+                    # test for defaulting
+                    testShipping = Address.objects.get(id=sameShipping)
+                    testBilling = Address.objects.get(id=sameBilling)
+                    message = "You already have these addresses saved."
+                    if 'default_address' in self.request.POST.keys():
+                        addresses = Address.objects.filter(user=theUser)
+                        if not testShipping.default:
+                            # remove default from other addresses of same type
+                            for sameAddress in addresses:
+                                if sameAddress.address_type == 'S':
+                                    if sameAddress.default:
+                                        sameAddress.default = False
+                                        sameAddress.save()
+                            # change the test one to true here
+                            testShipping.default = True
+                            testShipping.save()
+                        if not testBilling.default:
+                            testBilling.default = True
+                            testBilling.save()
+                            # remove default from other addresses of same type
+                            for sameAddress in addresses:
+                                if sameAddress.address_type == 'B':
+                                    if sameAddress.default:
+                                        sameAddress.default = False
+                                        sameAddress.save()
+                            # change the thest one to true here
+                            testBilling.default = True
+                            testBilling.save()
+                        message = message + " Default changed."
+
+                    messages.info(
+                        self.request, message)
+                    return redirect("member:my_profile")
+                elif sameBilling > 0:
+                    address_type = "S"
+                elif sameShipping > 0:
+                    address_type = "B"
 
                 if address_type == "A":
                     # we want two copies of this address
@@ -966,56 +1102,23 @@ class Newaddress(View):
                     address2.zip = form.cleaned_data.get('zip')
                     address2.country = "Sverige"
                     if 'default_address' in self.request.POST.keys():
-                        if self.request.POST['default_address'] == 'on':
-                            address2.default = True
-                        else:
-                            address2.default = False
-                    else:
-                        address2.default = False
-                    address2.address_type = "S"
-                    # check if this is set as the default address if it is remove default from all of this users addresses in the database
+                        address2.default = True
+                        new_address_default(address2)
 
-                    if address.default:
-                        addresses = Address.objects.filter(
-                            user=self.request.user, default=True)
-                        for address1 in addresses:
-                            address1.default = False
-                            address1.save()
+                    address2.address_type = "S"
+                    address2.slug = create_slug_address(address2)
 
                     # save the second copy of the address
-
-                    toSlug = address2.street_address + \
-                        address2.address_type + str(address2.user.id)
-                    testSlug = slugify(toSlug)
-                    existingSlug = test_slug_address(testSlug)
-                    if existingSlug:
-                        messages.info(self.request, "Address already exists.")
-                        return redirect("member:my_profile")
-                    else:
-                        address2.slug = testSlug
                     address2.save()
                     address.address_type = "B"
                 else:
                     address.address_type = address_type
 
-                    # if this is the default remove default of the same address type from the users addresses
-                    if address.default:
-                        addresses = Address.objects.filter(
-                            user=self.request.user, default=True, address_type=address_type)
-                        for address1 in addresses:
-                            address1.default = False
-                            address1.save()
+                if 'default_address' in self.request.POST.keys():
+                    address.default = True
+                    new_address_default(address)
                 # create a slug
-
-                toSlug = address.street_address + \
-                    address.address_type + str(address.user.id)
-                testSlug = slugify(toSlug)
-                existingSlug = test_slug_address(testSlug)
-                if existingSlug:
-                    messages.info(self.request, "Address already exists.")
-                    return redirect("member:my_profile")
-                else:
-                    address.slug = testSlug
+                address.slug = create_slug_address(address)
                 # save the address and return to list
                 address.save()
 
@@ -1091,13 +1194,12 @@ class SubscriptionsView(View):
                     user=self.request.user, id=int(self.request.POST['id']),)
                 # enter the query
                 for sub in subscription:
-                    # check that there is an order connected
-                    if sub.next_order > 0:
+                    # check if there is an order connected
+                    if sub.active:
                         # get the order
-                        orderQuery = Order.objects.filter(id=sub.next_order)
-                        # enter the query
-                        for order in orderQuery:
-                            # get the orderItem
+                        try:
+                            order = Order.objects.get(
+                                id=sub.next_order)  # get the orderItem
                             orderItemQuery = order.items.all()
                             # enter the query
                             for orderItem in orderItemQuery:
@@ -1108,29 +1210,36 @@ class SubscriptionsView(View):
                             # delete subscription
                             sub.delete()
                             message = 'subscription and corresponding order deleted'
+                        except ObjectDoesNotExist:
+                            orderQuery = {}
+                            message = "Subscription was active but had no connected order. If you still see an order under your orders that should be connected to this one contact support for assitance."
                     else:
                         # delete subscription
                         sub.delete()
                         message = 'subscription deleted'
-            # get all subscriptions
-            try:
-                subscriptions = Subscription.objects.filter(
-                    user=self.request.user,)
-            except ObjectDoesNotExist:
-                subscriptions = {}
+                # get all subscriptions
+                try:
+                    subscriptions = Subscription.objects.filter(
+                        user=self.request.user,)
+                except ObjectDoesNotExist:
+                    subscriptions = {}
 
-            # make a subscription object and give it new as slog for the new button
-            newSub = Subscription()
-            newSub.slug = 'new'
+                # make a subscription object and give it new as slog for the new button
+                newSub = Subscription()
+                newSub.slug = 'new'
 
-            context = {
-                'subscriptions': subscriptions,
-                'newSub': newSub,
-            }
+                context = {
+                    'subscriptions': subscriptions,
+                    'newSub': newSub,
+                }
 
-            messages.info(self.request, message)
+                messages.info(self.request, message)
 
-            return render(self.request, "member/my_subscriptions.html", context)
+                return render(self.request, "member/my_subscriptions.html", context)
+            else:
+                messages.info(
+                    self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+                return redirect("member:my_overview")
         except ObjectDoesNotExist:
             messages.info(
                 self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
@@ -1140,48 +1249,51 @@ class SubscriptionsView(View):
 class SubscriptionView(View):
     def post(self, *args, **kwargs):
         try:
-            # if we are editing get the specific Subscription otherwise set values for new
-            slug = where_am_i(self)
-            if slug == 'new':
+            if 'see' in self.request.POST.keys():
+                # get the user
+                theUser = self.request.user
+                # where are we
+                path = self.request.get_full_path()
+                # if we are editing get the specific Subscription otherwise set values for new
+                slug = where_am_i(self)
+                if slug == 'new':
 
-                # set additional values
-                sub_date = datetime.now().strftime("%Y-%m-%d")
-                number_of_products = 1
-                old = False
-                subscription = Subscription()
+                    # set additional values
+                    sub_date = datetime.now().strftime("%Y-%m-%d")
+                    number_of_products = 1
+                    old = False
+                    active = False
+                    subscription = Subscription()
 
-                # get the form
-                form = EditSubscriptionForm(
-                    self.request.user, slug=slug)
+                    # get the form
+                    form = EditSubscriptionForm()
+                    form.populate(theUser, subscription, old)
 
-                context = {
-                    'form': form,
-                    'sub_date': sub_date,
-                    'number_of_products': number_of_products,
-                    'old': old,
-                    'subscription': subscription,
-                }
+                    context = {
+                        'form': form,
+                        'sub_date': sub_date,
+                        'number_of_products': number_of_products,
+                        'old': old,
+                        'subscription': subscription,
+                        'path': path,
+                        'active': active,
+                        'person': theUser,
+                    }
 
-                return render(self.request, "member/my_subscription.html", context)
-            else:
-                try:
-                    subscription = Subscription.objects.filter(
-                        user=self.request.user, slug=slug)
-                    sub_date = ""
-                    number_of_products = 0
-
-                    if subscription is not None:
-                        for sub in subscription:
-                            if sub.active:
-                                old = True
-                            else:
-                                old = False
+                    return render(self.request, "member/my_subscription.html", context)
+                else:
+                    try:
+                        sub = Subscription.objects.get(
+                            user=theUser, slug=slug)
+                        if sub is not None:
+                            old = True
+                            active = sub.active
                             sub_date = sub.start_date.strftime("%Y-%m-%d")
                             number_of_products = sub.number_of_items
 
                             # get the form
-                            form = EditSubscriptionForm(
-                                self.request.user, slug=slug, n_o_p=number_of_products)
+                            form = EditSubscriptionForm()
+                            form.populate(theUser, sub, old)
 
                             context = {
                                 'form': form,
@@ -1189,275 +1301,368 @@ class SubscriptionView(View):
                                 'subscription': sub,
                                 'number_of_products': number_of_products,
                                 'old': old,
+                                'active': active,
+                                'path': path,
+                                'person': theUser,
                             }
 
                             return render(self.request, "member/my_subscription.html", context)
-                    else:
+                        else:
+                            messages.info(
+                                self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+                            return redirect("member:my_subscriptions")
+
+                    except ObjectDoesNotExist:
                         messages.info(
                             self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
                         return redirect("member:my_subscriptions")
 
-                except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
-                    return redirect("member:my_subscriptions")
+            elif 'saveSubscription' in self.request.POST.keys():
+                # saving subscription
+                # get the user
+                u_id = 0
+                if 'u_id' in self.request.POST.keys():
+                    u_id = int(self.request.POST['u_id'])
+                theUser = User.objects.get(id=u_id)
+                sub_id = 0
+                if 'sub_id' in self.request.POST.keys():
+                    sub_id = int(self.request.POST['sub_id'])
+                # where are we
+                path = self.request.get_full_path()
+                # validate
+                form = EditSubscriptionForm(self.request.POST)
+                if form.is_valid():
+                    # check if new or old
+                    if self.request.POST['new_or_old'] == 'old':
+                        # get the old subscription
+                        try:
+                            sub = Subscription.objects.get(id=sub_id)
+                            message = ''
+                            # take in the data
 
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
-            return redirect("member:my_overview")
-
-
-class SaveSubscriptionView(View):
-    def post(self, *args, **kwargs):
-        if 'saveSubscription' in self.request.POST.keys():
-            # saving subscription
-            # check if new or old
-            if self.request.POST['new_or_old'] == 'old':
-
-                # get the old subscription
-                subscription = Subscription.objects.filter(
-                    user=self.request.user, id=int(self.request.POST['id']),)
-                message = ''
-                # access query set
-                for sub in subscription:
-                    # take in the data
-                    # user
-                    sub.user = self.request.user
-
-                    # start date
-                    # make sure the date is in the correct format
-                    sub.start_date = make_aware(datetime.strptime(
-                        self.request.POST['start_date'], '%Y-%m-%d'))
-                    # intervall
-                    sub.intervall = self.request.POST['intervall']
-                    # all user addresses
-                    addresses = Address.objects.filter(user=self.request.user)
-                    # shipping_address
-                    shipping_address = self.request.POST['shipping_address']
-                    # billing_address
-                    billing_address = self.request.POST['billing_address']
-                    for address in addresses:
-                        if address.id == int(shipping_address):
-                            sub.shipping_address = address
-                        elif address.id == int(billing_address):
-                            sub.billing_address = address
-                    # number_of_products
-                    sub.number_of_items = int(
-                        self.request.POST['number_of_products'])
-
-                    # calcuate the rest of the data
-                    sub.updated_date = make_aware(datetime.now())
-                    sub.active = True
-                    sub.next_order_date = get_next_order_date(
-                        sub.start_date, sub.intervall)
-
-                    # save subscription
-                    sub.save()
-
-                    if sub.next_order > 0:
-                        theOrderQuery = Order.objects.filter(
-                            id=sub.next_order)
-                        for theOrder in theOrderQuery:
-                            theOrder.subscription_order = True
-                            theOrder.subscription_date = sub.next_order_date
-                            theOrder.updated_date = make_aware(datetime.now())
-                            theOrder.ordered_date = make_aware(datetime.now())
-                            theOrder.sub_out_date = sub.start_date
-                            theOrder.ordered = True
-                            theOrder.received = False
-                            theOrder.being_delivered = False
+                            # start date
+                            # make sure the date is in the correct format
+                            sub.start_date = form.cleaned_data.get(
+                                'start_date')
+                            # intervall
+                            sub.intervall = form.cleaned_data.get('intervall')
+                            # all user addresses
+                            addresses = Address.objects.filter(
+                                user=self.request.user)
+                            # shipping_address
+                            shipping_address = form.cleaned_data.get(
+                                'shipping_address')
+                            # billing_address
+                            billing_address = form.cleaned_data.get(
+                                'billing_address')
                             for address in addresses:
-                                if address.id == int(shipping_address):
-                                    theOrder.shipping_address = address
-                                elif address.id == int(billing_address):
-                                    theOrder.billing_address = address
-                            theOrder.save()
-                            sub.next_order = theOrder.id
+                                if address.id == shipping_address:
+                                    sub.shipping_address = address
+                                elif address.id == billing_address:
+                                    sub.billing_address = address
+                            # number_of_products
+                            sub.number_of_items = int(
+                                self.request.POST['number_of_products'])
+
+                            # calcuate the rest of the data
+                            sub.updated_date = make_aware(datetime.now())
+                            sub.active = True
+                            sub.next_order_date = get_next_order_date(
+                                sub.start_date, sub.intervall)
+
+                            # save subscription
                             sub.save()
 
-                            # remove old order items and subitems
-                            orderItems = theOrder.items.all()
-                            for item in orderItems:
-                                item.delete()
+                            # get the connected order
+                            if sub.next_order > 0:
+                                theOrder = Order.objects.get(
+                                    id=sub.next_order)
 
-                            sub_items = SubscriptionItem.objects.filter(
-                                subscription=sub)
-                            for item in sub_items:
-                                item.delete()
+                                theOrder.subscription_date = sub.next_order_date
+                                theOrder.updated_date = make_aware(
+                                    datetime.now())
+                                theOrder.sub_out_date = sub.start_date
+                                theOrder.ordered = True
+                                theOrder.received = False
+                                theOrder.being_delivered = False
+                                theOrder.shipping_address = sub.shipping_address
+                                theOrder.billing_address = sub.shipping_address
+                                theOrder.save()
 
-                            # and then make new the order items, and subItems
+                                # remove old order items and subitems
+                                orderItems = theOrder.items.all()
+                                for item in orderItems:
+                                    item.delete()
+                                subItems = SubscriptionItem.objects.filter(
+                                    subscription=sub.id)
+                                for subItem in subItems:
+                                    subItem.delete()
 
-                            i = 1
+                                # and then make new the order and sub items
 
-                            for i in range(sub.number_of_items):
-                                i += 1
-                                p_string = 'product%s' % (i,)
-                                a_string = 'amount%s' % (i,)
-                                product_id = int(self.request.POST[p_string])
-                                amount = int(self.request.POST[a_string])
-                                products = Item.objects.filter(id=product_id)
-                                # enter the product query set for easy handling when saving subscription and order items
-                                for product in products:
+                                i = 1
+                                for i in range(sub.number_of_items):
+                                    i += 1
+                                    p_string = 'product%s' % (i,)
+                                    a_string = 'amount%s' % (i,)
+                                    product_id = int(
+                                        self.request.POST[p_string])
+                                    amount = int(self.request.POST[a_string])
+                                    product = Item.objects.get(
+                                        id=product_id)
+                                    # saving subscription and order items
+
                                     orderItem = save_subItems_and_orderItems(
                                         sub, amount, product)
                                     theOrder.items.add(orderItem)
                                     message = "Subscription saved and activated."
+                                    messages.info(self.request, message)
+                                    return redirect("member:my_subscriptions")
 
+                            else:
+                                # it isn't so we make a new one
+                                theOrder = Order()
+
+                                theOrder.user = sub.user
+
+                                # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                                ref_code = create_ref_code()
+                                ref_test = True
+
+                                while ref_test:
+                                    try:
+                                        numberofOrders = Order.objects.filter(
+                                            ref_code=ref_code).count()
+                                        if numberofOrders >= 1:
+                                            refcode = create_ref_code()
+                                        else:
+                                            ref_test = False
+                                    except ObjectDoesNotExist:
+                                        ref_test = False
+
+                                theOrder.ref_code = ref_code
+                                theOrder.subscription_order = True
+                                theOrder.subscription_date = sub.next_order_date
+                                theOrder.updated_date = make_aware(
+                                    datetime.now())
+                                theOrder.sub_out_date = sub.start_date
+                                theOrder.ordered_date = sub.start_date
+                                theOrder.sub_out_date = sub.start_date
+                                theOrder.ordered = True
+                                theOrder.received = False
+                                theOrder.being_delivered = False
+                                theOrder.shipping_address = sub.shipping_address
+                                theOrder.billing_address = sub.shipping_address
+                                theOrder.save()
+                                sub.next_order = theOrder.id
+                                sub.save()
+
+                                # remove old subitems
+                                subItems = SubscriptionItem.objects.filter(
+                                    subscription=sub.id)
+                                for subItem in subItems:
+                                    subItem.delete()
+
+                                i = 1
+                                for i in range(sub.number_of_items):
+                                    i += 1
+                                    p_string = 'product%s' % (i,)
+                                    a_string = 'amount%s' % (i,)
+                                    product_id = int(
+                                        self.request.POST[p_string])
+                                    amount = int(self.request.POST[a_string])
+                                    product = Item.objects.get(id=product_id)
+                                    # saving subscription and order items
+                                    orderItem = save_subItems_and_orderItems(
+                                        sub, amount, product)
+                                    theOrder.items.add(orderItem)
+                                    message = "Subscription saved and activated."
+                                    messages.info(self.request, message)
+                                    return redirect("member:my_subscriptions")
+                        except ObjectDoesNotExist:
+                            message = "We can't access your subscription right now. Please contact support for assistance."
+                            messages.info(self.request, message)
+                            return redirect("member:my_subscriptions")
                     else:
-                        # it isn't so we make a new one
+                        message = ''
+
+                        # make a subscription object
+                        sub = Subscription()
+                        # take in the data
+                        # user
+                        sub.user = theUser
+
+                        # start date
+                        # make sure the date is in the correct format
+                        sub.start_date = form.cleaned_data.get('start_date')
+                        # intervall
+                        sub.intervall = form.cleaned_data.get('intervall')
+                        # all user addresses
+                        addresses = Address.objects.filter(
+                            user=self.request.user)
+                        # shipping_address
+                        shipping_address = int(
+                            self.request.POST['shipping_address'])
+                        # billing_address
+                        billing_address = int(
+                            self.request.POST['billing_address'])
+                        for address in addresses:
+                            if address.id == shipping_address:
+                                sub.shipping_address = address
+                            elif address.id == billing_address:
+                                sub.billing_address = address
+                        # number of products
+                        sub.number_of_items = int(
+                            self.request.POST['number_of_products'])
+
+                        # calcuate the rest of the data
+                        sub.updated_date = make_aware(datetime.now())
+                        sub.active = True
+
+                        # get_next_order_date
+                        sub.next_order_date = get_next_order_date(
+                            sub.start_date, sub.intervall)
+
+                        # temp slug
+                        sub.slug = "temp2"
+
+                        # save subscription
+                        sub.save()
+
+                        # set unique slug
+                        sub.slug = "s" + str(sub.id) + \
+                            "u" + str(self.request.user.id)
+
+                        # resave
+                        sub.save()
+
+                        # save the order
+                        # first create the order
+
                         theOrder = Order()
 
                         theOrder.user = sub.user
-
                         # create a reference code and check that there isnt already one before setting the orders ref code to the code
                         ref_code = create_ref_code()
                         ref_test = True
 
                         while ref_test:
-                            testOrder = Order.objects.filter(ref_code=ref_code)
-                            if testOrder is None:
-                                refcode = create_ref_code()
-                            else:
+                            try:
+                                numberofOrders = Order.objects.filter(
+                                    ref_code=ref_code).count()
+                                if numberofOrders >= 1:
+                                    refcode = create_ref_code()
+                                else:
+                                    ref_test = False
+                            except ObjectDoesNotExist:
                                 ref_test = False
 
                         theOrder.ref_code = ref_code
                         theOrder.subscription_order = True
-                        theOrder.subscription_date = sub.next_order_date
                         theOrder.updated_date = make_aware(datetime.now())
                         theOrder.ordered_date = make_aware(datetime.now())
                         theOrder.sub_out_date = sub.start_date
+                        theOrder.ordered_date = sub.start_date
                         theOrder.ordered = True
                         theOrder.received = False
                         theOrder.being_delivered = False
-                        for address in addresses:
-                            if address.id == int(shipping_address):
-                                theOrder.shipping_address = address
-                            elif address.id == int(billing_address):
-                                theOrder.billing_address = address
+                        theOrder.shipping_address = sub.shipping_address
+                        theOrder.billing_address = sub.billing_address
                         theOrder.save()
+
                         sub.next_order = theOrder.id
                         sub.save()
 
-                        i = 1
+                        # create subscription items and corresponding orderItems
 
+                        i = 1
                         for i in range(sub.number_of_items):
                             i += 1
                             p_string = 'product%s' % (i,)
                             a_string = 'amount%s' % (i,)
                             product_id = int(self.request.POST[p_string])
                             amount = int(self.request.POST[a_string])
-                            products = Item.objects.filter(id=product_id)
-                            # enter the product query set for easy handling when saving subscription and order items
-                            for product in products:
-                                orderItem = save_subItems_and_orderItems(
-                                    sub, amount, product)
-                                theOrder.items.add(orderItem)
-                                message = "Subscription saved and activated."
-                    messages.info(self.request, message)
-                    return redirect("member:my_subscriptions")
+                            product = Item.objects.get(id=product_id)
+                            # saving subscription and order items
+                            orderItem = save_subItems_and_orderItems(
+                                sub, amount, product)
+                            theOrder.items.add(orderItem)
+                            message = "Subscription saved and activated."
+                        messages.info(self.request, message)
+                        return redirect("member:my_subscriptions")
+                else:
+                    # figure out how to rerender the form here
+                    subscription = Subscription.objects.get(id=sub_id)
+                    active = subscription.active
+                    form.populate_from_submit(self.request.POST)
+                    sub_date = make_aware(datetime.strptime(
+                        self.request.POST['start_date'], '%Y-%m-%d'))
+                    number_of_products = self.request.POST['number_of_products']
+                    old = self.request.POST['new_or_old']
 
-            else:
-                message = ''
+                    context = {
+                        'form': form,
+                        'sub_date': sub_date,
+                        'number_of_products': number_of_products,
+                        'old': old,
+                        'subscription': subscription,
+                        'path': path,
+                        'person': theUser,
+                        'active': active,
+                    }
 
-                # make a subscription object
-                sub = Subscription()
-                # take in the data
-                # user
-                sub.user = self.request.user
+                    return render(self.request, "member/my_subscription.html", context)
 
-                # start date
-                # make sure the date is in the correct format
-                sub.start_date = make_aware(datetime.strptime(
-                    self.request.POST['start_date'], '%Y-%m-%d'))
-                # intervall
-                sub.intervall = self.request.POST['intervall']
-                # all user addresses
-                addresses = Address.objects.filter(user=self.request.user)
-                # shipping_address
-                shipping_address = self.request.POST['shipping_address']
-                # billing_address
-                billing_address = self.request.POST['billing_address']
-                for address in addresses:
-                    if address.id == int(shipping_address):
-                        sub.shipping_address = address
-                    elif address.id == int(billing_address):
-                        sub.billing_address = address
-                # number of products
-                sub.number_of_items = int(
-                    self.request.POST['number_of_products'])
+            elif 'deactivateSubscription' in self.request.POST.keys():
+                user_id = 0
+                if 'u_id' in self.request.POST.keys():
+                    user_id = int(self.request.POST['u_id'])
+                theUser = User.objects.get(id=user_id)
 
-                # calcuate the rest of the data
-                sub.updated_date = make_aware(datetime.now())
-                sub.active = True
-
-                # get_next_order_date
-                sub.next_order_date = get_next_order_date(
-                    sub.start_date, sub.intervall)
-
-                # temp slug
-                sub.slug = "temp2"
-
-                # save subscription
-                sub.save()
-
-                # set unique slug
-                sub.slug = "s" + str(sub.id) + "u" + str(self.request.user.id)
-
-                # resave
-                sub.save()
-
-                # save the order
-                # first create the order
-
-                theOrder = Order()
-
-                theOrder.user = sub.user
-                # create a reference code and check that there isnt already one before setting the orders ref code to the code
-                ref_code = create_ref_code()
-                ref_test = True
-
-                while ref_test:
-                    testOrder = Order.objects.filter(ref_code=ref_code)
-                    if testOrder is None:
-                        refcode = create_ref_code()
+                if 'sub_id' in self.request.POST.keys():
+                    sub_id = int(self.request.POST['sub_id'])
+                    sub = Subscription.objects.get(
+                        user=theUser, id=sub_id)
+                    # deactivate subscription
+                    if sub.active is False:
+                        messages.info(
+                            self.request, "Subscription already deactivated")
+                        return redirect("member:my_subscriptions")
                     else:
-                        ref_test = False
+                        sub.active = False
 
-                theOrder.ref_code = ref_code
-                theOrder.subscription_order = True
-                theOrder.updated_date = make_aware(datetime.now())
-                theOrder.ordered_date = make_aware(datetime.now())
-                theOrder.sub_out_date = sub.start_date
-                theOrder.ordered = True
-                theOrder.received = False
-                theOrder.being_delivered = False
-                theOrder.shipping_address = sub.shipping_address
-                theOrder.billing_address = sub.billing_address
-                theOrder.save()
+                        try:
+                            # delete the order connected to the sub
+                            theOrder = Order.objects.get(id=sub.next_order)
+                            # first get the list of items
+                            theOrderItems = theOrder.items.all()
+                            # then go through the items one by one
+                            for item in theOrderItems:
+                                # delete the items
+                                item.delete()
+                            # delete order
+                            theOrder.delete()
+                            message = "Subscription deactivated."
+                        except ObjectDoesNotExist:
+                            message = "Subscription deactivated no order detected."
+                        sub.next_order = 0
+                        sub.save()
 
-                sub.next_order = theOrder.id
-                sub.save()
-
-                # create subscription items and corresponding orderItems
-
-                i = 1
-
-                for i in range(sub.number_of_items):
-                    i += 1
-                    p_string = 'product%s' % (i,)
-                    a_string = 'amount%s' % (i,)
-                    product_id = int(self.request.POST[p_string])
-                    amount = int(self.request.POST[a_string])
-                    products = Item.objects.filter(id=product_id)
-                    # enter the product query set for easy handling when saving subscription and order items
-                    for product in products:
-                        orderItem = save_subItems_and_orderItems(
-                            sub, amount, product)
-                        theOrder.items.add(orderItem)
-                        message = "Subscription saved and activated."
-                messages.info(self.request, message)
+                        messages.info(
+                            self.request, message)
+                        return redirect("member:my_subscriptions")
+                else:
+                    messages.info(
+                        self.request, "Something is wrong with the subscription deactivation. Please contact support for assistance.")
+                    return redirect("member:my_subscriptions")
+            else:
+                messages.info(
+                    self.request, "Something is wrong with the subscription deactivation. Please contact support for assistance.")
                 return redirect("member:my_subscriptions")
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+            return redirect("member:my_subscriptions")
 
 
 class DeactivateSubscriptionView(View):
@@ -1539,7 +1744,6 @@ class CookieSettingsView(View):
                 'form': form,
             }
 
-            print("context")
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
             message = "Något gick fel vid laddningen av sidan. Kontakta support för hjälp."

@@ -8,7 +8,7 @@
         <div>
                 <form method="POST" action="{{ newSub.get_absolute_url }}">
                     {% csrf_token %}
-                    <input type="hidden" name="new_or_old" value='new'>
+                    <input type="hidden" name="see" value='new'>
                     <button type="submit" class="btn btn-primary float-right">
                         Ny prenumeration
                     </button>
@@ -60,7 +60,7 @@
                         <td>
                             <form method="POST" action="{{ subscription.get_absolute_url }}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-primary float-right">
+                                <button type="submit" class="btn btn-primary float-right" name="see" value="True">
                                     Se prenumeration
                                 </button>
                             </form>

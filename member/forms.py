@@ -36,7 +36,7 @@ class EditSubscriptionForm(forms.Form):
     start_date = forms.DateTimeField()
     intervall = forms.ChoiceField(choices=INTERVALL_CHOICES)
 
-    def __init__(self, theUser, slug='save', n_o_p="1", *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(EditSubscriptionForm, self).__init__(*args, **kwargs)
         # do everything that should be done regardless if it is a new or old subscription
 
@@ -44,6 +44,64 @@ class EditSubscriptionForm(forms.Form):
         self.fields['start_date'].label = ''
         self.fields['intervall'].label = ''
 
+        # get all available products
+        all_products = Item.objects.all()
+
+        # make a JSON with all the products
+        products_html = "["
+
+        for product in all_products:
+            id = str(product.id)
+            title = str(product.title)
+            products_html = products_html + \
+                "{&quot;id&quot;: &quot" + id + \
+                "&quot, &quot;title&quot;: &quot" + title + "&quot},"
+
+        products_html = products_html + "]"
+
+        # add a hidden field with the json for use with JS
+
+        self.fields['list_of_products'] = forms.CharField(
+            widget=forms.HiddenInput(), initial='products_html')
+
+    def get_product_fields(self):
+        for field_name in self.fields:
+            if field_name.startswith('product'):
+                yield self[field_name]
+
+    def get_amount_fields(self):
+        for field_name in self.fields:
+            if field_name.startswith('amount'):
+                yield self[field_name]
+
+    def clean(self):
+        products = set()
+        i = 1
+        field_name = 'product%s' % (i,)
+        while self.cleaned_data.get(field_name):
+            products = self.cleaned_data[field_name]
+            if product in products:
+                self.add_error(field_name, 'Duplicate')
+            else:
+                products.add(product)
+            i += 1
+            field_name = 'product%s' % (i,)
+        self.cleaned_data['products'] = products
+
+        amounts = set()
+        i = 1
+        field_name = 'amount%s' % (i,)
+        while self.cleaned_data.get(field_name):
+            amounts = self.cleaned_data[field_name]
+            if amount in amounts:
+                self.add_error(field_name, 'Duplicate')
+            else:
+                amounts.add(amount)
+            i += 1
+            field_name = 'amount%s' % (i,)
+        self.cleaned_data['amounts'] = amounts
+
+    def populate(self, theUser, sub, old):
         # get the users shipping and billing adresses
         addresses_s = Address.objects.filter(user=theUser, address_type="S")
         addresses_b = Address.objects.filter(user=theUser, address_type="B")
@@ -67,37 +125,66 @@ class EditSubscriptionForm(forms.Form):
         # make the list a touple for use with the product ChoiceField
         product_tuple = tuple(products)
 
-        # make a JSON with all the products
-        products_html = "["
-
-        for product in all_products:
-            id = str(product.id)
-            title = str(product.title)
-            products_html = products_html + \
-                "{&quot;id&quot;: &quot" + id + \
-                "&quot, &quot;title&quot;: &quot" + title + "&quot},"
-
-        products_html = products_html + "]"
-
-        # add a hidden field with the json for use with JS
-
-        self.fields['list_of_products'] = forms.CharField(
-            widget=forms.HiddenInput(), initial='products_html')
-
-        # check if the slug is for a new or editing an old sub
-        if slug == "new":
-            # add all the neccessary fields that are left no initial value
+        if old:
+            subscriptionItems = SubscriptionItem.objects.filter(
+                subscription=sub)
             i = 1
-            for i in range(int(n_o_p)):
-                i += 1
+            # if we have items they will be in subItems
+            for subItem in subscriptionItems:
+                item = subItem.item
+                # create fields for all products in the subscription including initial value
                 field_name1 = 'product%s' % (i,)
                 self.fields[field_name1] = forms.ChoiceField(
-                    choices=product_tuple, required=False)
+                    choices=product_tuple, required=False, initial=item.id)
+                # remove label
                 self.fields[field_name1].label = ""
+
+                # create fields for all amounts in the subscription including initial value
                 field_name2 = 'amount%s' % (i,)
                 self.fields[field_name2] = forms.IntegerField(
-                    min_value=1, required=False)
+                    min_value=1, required=False, initial=subItem.quantity)
+                # remove label
                 self.fields[field_name2].label = ""
+                # increment i
+                i += 1
+
+            # add hidden fields for checking if it is a new or old save
+            self.fields['new_or_old'] = forms.CharField(
+                widget=forms.HiddenInput(), initial='old')
+
+            # add a hidden field for number of products
+            i = i - 1
+            self.fields['number_of_products'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=i)
+            # add a hidden field for the subscription id
+            self.fields['sub_id'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=sub.id)
+            # add a hidden field for the user id
+            self.fields['u_id'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=theUser.id)
+
+            # create the adress choice fields and remove the labels
+            self.fields['shipping_address'] = forms.ChoiceField(
+                choices=addresses_s_tuple, required=False, initial=sub.shipping_address.id)
+            self.fields['shipping_address'].label = ""
+            self.fields['billing_address'] = forms.ChoiceField(
+                choices=addresses_b_tuple, required=False, initial=sub.billing_address.id)
+            self.fields['billing_address'].label = ""
+
+            # set initials for the other fields
+            self.fields['intervall'].initial = sub.intervall
+            self.fields['start_date'].initial = sub.start_date
+        else:
+            # add all the neccessary fields that are left no initial value
+            i = 1
+            field_name1 = 'product%s' % (i,)
+            self.fields[field_name1] = forms.ChoiceField(
+                choices=product_tuple, required=False)
+            self.fields[field_name1].label = ""
+            field_name2 = 'amount%s' % (i,)
+            self.fields[field_name2] = forms.IntegerField(
+                min_value=1, required=False)
+            self.fields[field_name2].label = ""
             self.fields['shipping_address'] = forms.ChoiceField(
                 choices=addresses_s_tuple, required=False)
             self.fields['shipping_address'].label = ""
@@ -107,97 +194,74 @@ class EditSubscriptionForm(forms.Form):
             # add hidden fields for checking if it is a new or old save
             self.fields['new_or_old'] = forms.CharField(
                 widget=forms.HiddenInput(), initial='new')
+            # add a hidden field for the sub id
+            self.fields['sub_id'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=0)
+            # add a hidden field for the user id
+            self.fields['u_id'] = forms.CharField(
+                widget=forms.HiddenInput(), initial=theUser.id)
             # add a hidden field for number of products
             self.fields['number_of_products'] = forms.CharField(
-                widget=forms.HiddenInput(), initial=n_o_p)
-        else:
-            subcription = Subscription.objects.filter(user=theUser, slug=slug)
-            print('in form')
-            i = 1
-            for sub in subcription:
-                subscriptionItems = SubscriptionItem.objects.filter(
-                    subscription=sub)
-                print('in sub')
+                widget=forms.HiddenInput(), initial="1")
 
-                # if we have items they will be in subItems
-                for subItem in subscriptionItems:
-                    item = subItem.item
-                    # create fields for all products in the subscription including initial value if it shouls have one
-                    field_name1 = 'product%s' % (i,)
-                    self.fields[field_name1] = forms.ChoiceField(
-                        choices=product_tuple, required=False, initial=item.id)
-                    # remove label
-                    self.fields[field_name1].label = ""
+    def populate_from_submit(self):
+        self.fields[field_name2] = forms.IntegerField(
+            min_value=1, required=False, initial=self.request.POST[field_name2])
+        self.fields['start_date'].widget.attrs.update(
+            {'value': self.request.POST['start_date']})
+        self.fields['intervall'].widget.attrs.update(
+            {'value': self.request.POST['intervall']})
+        # get the users shipping and billing adresses
+        addresses_s = Address.objects.filter(user=theUser, address_type="S")
+        addresses_b = Address.objects.filter(user=theUser, address_type="B")
+        # create a list for each adress type
+        the_s_adresses = []
+        for adress in addresses_s:
+            the_s_adresses.append((adress.id, adress.street_address))
+        the_b_adresses = []
+        for adress in addresses_b:
+            the_b_adresses.append((adress.id, adress.street_address))
+        # make the lists to tuples for use with choicefield
+        addresses_s_tuple = tuple(the_s_adresses)
+        addresses_b_tuple = tuple(the_b_adresses)
 
-                    # create fields for all amounts in the subscription including initial value
-                    field_name2 = 'amount%s' % (i,)
-                    self.fields[field_name2] = forms.IntegerField(
-                        min_value=1, required=False, initial=subItem.quantity)
-                    # remove label
-                    self.fields[field_name2].label = ""
-                    # increment i
-                    i += 1
+        # get all available products
+        all_products = Item.objects.all()
+        # create a list for the products
+        products = []
+        for product in all_products:
+            products.append((product.id, product.title))
+        # make the list a touple for use with the product ChoiceField
+        product_tuple = tuple(products)
 
-                # add hidden fields for checking if it is a new or old save
-                self.fields['new_or_old'] = forms.CharField(
-                    widget=forms.HiddenInput(), initial='old')
-
-                # add a hidden field for number of products
-                i = i - 1
-                self.fields['number_of_products'] = forms.CharField(
-                    widget=forms.HiddenInput(), initial=i)
-                # add a hidden field for the subscription id
-                self.fields['id'] = forms.CharField(
-                    widget=forms.HiddenInput(), initial=sub.id)
-
-                # create the adress choice fields and remove the labels
-                self.fields['shipping_address'] = forms.ChoiceField(
-                    choices=addresses_s_tuple, required=False, initial=sub.shipping_address)
-                self.fields['shipping_address'].label = ""
-                self.fields['billing_address'] = forms.ChoiceField(
-                    choices=addresses_b_tuple, required=False, initial=sub.billing_address)
-                self.fields['billing_address'].label = ""
-
-                # set initials for the other fields
-                self.fields['intervall'].initial = sub.intervall
-                self.fields['start_date'].initial = sub.start_date
-
-    def get_product_fields(self):
-        for field_name in self.fields:
-            if field_name.startswith('product'):
-                yield self[field_name]
-
-    def get_amount_fields(self):
-        for field_name in self.fields:
-            if field_name.startswith('amount'):
-                yield self[field_name]
-
-    def clean(self):
-        products = set()
+        # add all the neccessary fields that are left with initial value
+        number_of_items = int(
+            self.request.POST['number_of_products'])
         i = 1
-        field_name = 'product%s' % (i,)
-        while self.cleaned_data.get(field.name):
-            products = self.cleaned_data[field_name]
-            if product in products:
-                self.add_error(field_name, 'Duplicate')
-            else:
-                products.add(product)
-            i += 1
-            field_name = 'product%s' % (i,)
-        self.cleaned_data['products'] = products
-
-        amounts = set()
-        i = 1
-        field_name = 'amount%s' % (i,)
-        while self.cleaned_data.get(field.name):
-            amounts = self.cleaned_data[field_name]
-            if amount in amounts:
-                self.add_error(field_name, 'Duplicate')
-            else:
-                amounts.add(amount)
-            i += 1
-            field_name = 'amount%s' % (i,)
-        self.cleaned_data['amounts'] = amounts
+        for i in range(number_of_items):
+            field_name1 = 'product%s' % (i,)
+            self.fields[field_name1] = forms.ChoiceField(
+                choices=product_tuple, required=False, initial=self.request.POST[field_name1])
+            self.fields[field_name1].label = ""
+            field_name2 = 'amount%s' % (i,)
+            self.fields[field_name2] = forms.IntegerField(
+                min_value=1, required=False, initial=self.request.POST[field_name2])
+            self.fields[field_name2].label = ""
+        self.fields['shipping_address'] = forms.ChoiceField(
+            choices=addresses_s_tuple, required=False, initial=self.request.POST['shipping_address'])
+        self.fields['shipping_address'].label = ""
+        self.fields['billing_address'] = forms.ChoiceField(
+            choices=addresses_b_tuple, required=False, initial=self.request.POST['billing_address'])
+        self.fields['billing_address'].label = ""
+        # add hidden fields for checking if it is a new or old save
+        self.fields['new_or_old'] = forms.CharField(
+            widget=forms.HiddenInput(), initial=self.request.POST['new_or_old'])
+        # add a hidden field for the user id
+        self.fields['user_id'] = forms.CharField(
+            widget=forms.HiddenInput(), initial=self.request.POST['user_id'])
+        # add a hidden field for number of products
+        self.fields['number_of_products'] = forms.CharField(
+            widget=forms.HiddenInput(), initial=self.request.POST['number_of_products'])
 
 
 class NewSubscriptionForm(forms.Form):
@@ -360,7 +424,6 @@ class addressForm(forms.Form):
 
     def __init__(self, address, *args, **kwargs):
         super(addressForm, self).__init__(*args, **kwargs)
-        print(type(address))
 
         try:
             self.fields['street_address'] = forms.CharField(
@@ -465,7 +528,7 @@ class CookieSettingsForm(forms.ModelForm):
 
     class Meta:
         model = Cookies
-        fields = ['functional', 'addapted_adds']
+        fields = ['addapted_adds']
 
     def __init__(self, *args, **kwargs):
         super(CookieSettingsForm, self).__init__(*args, **kwargs)

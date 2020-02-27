@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<main>
+    <div class="container">
+    <!--profile-->
+        <div class="border rounded mb-3 p-2">
+            <h3>
+                Min information
+            </h3>
+            <table class="table-striped table-hover w-100 table-bordered">
+                <tbody>
+                    {% comment %}
+                        Info
+                    {% endcomment %}
+                    <tr>
+                        <td class="mdb-color lighten-5 w-25 pl-1">
+                            Förnamn
+                        </td>
+                        <td class="pl-1">
+                            {{ info.first_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4 pl-1">
+                            Efternamn
+                        </td>
+                        <td class="pl-1">
+                            {{ info.last_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5 pl-1">
+                            Email
+                        </td>
+                        <td class="pl-1">
+                            {{ info.email }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-4 pl-1">
+                            Telefon number
+                        </td>
+                        <td class="pl-1">
+                            {{ info.telephone }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2" style="height: 50px;">
+                {% csrf_token %}
+                <input type="hidden" value="edit" name="edit">
+                <input type="hidden" value="{{info.first_name}}" name="first_name">
+                <input type="hidden" value="{{info.last_name}}" name="last_name">
+                <input type="hidden" value="{{info.email}}" name="email">
+                <input type="hidden" value="{{info.telephone}}" name="telephone">
+                <button class="btn btn-primary float-right">
+                    Ändra
+                </button>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+{% endblock content %}

@@ -8,9 +8,9 @@
     <div class="container">
         <div class="border rounded mb-3">
             {% if info.company %}
-            <h3>Ändra kontaktpersonsinformation</h3>
+            <h3>Ändra Kundens Kontaktpersonsinformation</h3>
             {% else %}
-            <h3>Ändra min information</h3>
+            <h3>Ändra Kundens profil</h3>
             {% endif %}
             <form method="POST">
                 {% csrf_token %}

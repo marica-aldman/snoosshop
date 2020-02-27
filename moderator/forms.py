@@ -33,3 +33,11 @@ class searchOrderForm(forms.Form):
 
 class searchUserForm(forms.Form):
     user_id = forms.IntegerField(required=False, label="")
+
+
+class searchProductForm(forms.Form):
+    product_id = forms.IntegerField(required=True, label="")
+
+    def populate(self, product_id, *args, **kwargs):
+        self.fields['product_id'].widget.attrs.update(
+            {'value': product_id})

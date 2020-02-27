@@ -377,7 +377,7 @@ class Subscription(models.Model):
     # for the moderator
 
     def moderator_get_absolute_url(self):
-        return reverse("moderator:edit_subscription", kwargs={
+        return reverse("moderator:subscription", kwargs={
             'slug': self.slug
         })
 

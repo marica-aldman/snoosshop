@@ -41,6 +41,9 @@
                     <th class="p-1">
                         &nbsp;
                     </th>
+                    <th class="p-1">
+                        &nbsp;
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +75,17 @@
                             <input type="hidden" name="theClient" value="{{ person.id }}">
                             <button class="btn btn-primary float-right">
                                 Ändra/Titta på
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the address? This action can not be undone.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete" value='yes'>
+                            <input type="hidden" name="id" value={{address.id}}>
+                            <input type="hidden" name="u_id" value={{person.id}}>
+                            <button type="submit" class="btn btn-primary float-right">
+                                Ta bort
                             </button>
                         </form>
                     </td>

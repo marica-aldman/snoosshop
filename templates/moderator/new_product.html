@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<main>
+    <div class="container">
+    <!--orders-->
+    <!--active-->
+        <div class="border rounded mb-3">
+            <h3>Skapa ny produkt</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="theUser" value="{{ person.id }}">
+                <table>
+                    <tbody>
+                        <tr style="height:56px;">
+                            <td>
+                                Titel:
+                            </td>
+                            <td>
+                                {{ form.street_address }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Pris:
+                            </td>
+                            <td>
+                                {{ form.apartment_address }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Reapris:
+                            </td>
+                            <td>
+                                {{ form.post_town }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Postkod:
+                            </td>
+                            <td>
+                                {{ form.zip }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Addresstyp:
+                            </td>
+                            <td>
+                                <select name="address_type" class="select form-control">
+                                    {% for choice_list in address_choices %}
+                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Huvudsaklig address:
+                            </td>
+                            <td>
+                                <input type="checkbox" {% if address.default%} checked{% endif%} name="default">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type='submit' class='btn btn-primary' name="saveAddress" value="True">Spara</button>
+            </form>
+        </div>
+
+    </div>
+
+</main>
+{% endblock content %}

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 
@@ -7,10 +6,9 @@
     <div class="container">
     <!--orders-->
     <!--active-->
-        <div class="border rounded mb-3 p-1">
-            <h3>Inställningar för mina kakor</h3>
+        <div class="border rounded mb-3">
+            <h3>Inställningar för kundens kakor</h3>
             <form method="POST" action=".">
-                {% csrf_token %}
                 <table class="table-striped table-hover w-100">
                     <thead class="mdb-color lighten-5">
                         <tr>
@@ -28,32 +26,15 @@
                     <tbody>
                         <tr>
                             <td>
-                                    Nödvändiga kakor
+                                Sidfunktion
                             </td>
                             <td>
-                                    På
+                                På
                             </td>
                             <td>
-                                    Dessa går inte att stänga av då sidans grundläggande funktioner så som navigation, kundvagn etc slutar fungera.
+                                Dessa går inte att stänga av då sidans grundläggande funktioner så som navigation, kundvagn etc slutar fungera.
                             </td>
                         </tr>
-                        {% comment %}
-                            These dont exist yet. When they do add remove in turn off function.
-                        <tr>
-                            <td>
-                                    Personligt anpassad reklam
-                            </td>
-                            <td>
-                                    {% if cookie_settings.addapted_adds %}
-                                        På
-                                    {% else %}
-                                        Av
-                                    {% endif %}
-                            </td>
-                            <td>
-                                    {{form.addapted_adds}}
-                            </td>
-                        </tr> {% endcomment %}
                     </tbody>
                 </table>
                <div class="w-100 mb-2" style="height: 50px!important;">

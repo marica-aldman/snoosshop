@@ -7,7 +7,8 @@ from .views import (
     OrderView,
     SupportView,
     Errand,
-    Profile,
+    ProfileView,
+    InfoView,
     Users,
     EditUser,
     NewAddress,
@@ -16,6 +17,11 @@ from .views import (
     SettingsView,
     EditCompany,
     Subscriptions,
+    SpecificSubscription,
+    ProductsView,
+    SpecificProductsView,
+    CategoriesView,
+    SpecificCategoryView,
 )
 
 from member.views import CookieSettingsView
@@ -29,7 +35,8 @@ urlpatterns = [
     path('support/', SupportView.as_view(), name='support'),
     path('errand/<slug>', Errand.as_view(), name='errand'),
     path('search_users/', Users.as_view(), name='search_users'),
-    path('profile/', Profile.as_view(), name='profile'),
+    path('my_profile/', ProfileView.as_view(), name='my_profile'),
+    path('my_info/', InfoView.as_view(), name='my_info'),
     path('edit_user/', EditUser.as_view(), name='edit_user'),
     path('edit_company/', EditCompany.as_view(), name='edit_company'),
     path('edit_address/<slug>', EditAdress.as_view(), name='edit_address'),
@@ -38,6 +45,13 @@ urlpatterns = [
     path('settings/', CookieSettingsView.as_view(), name='settings'),
     path('user_settings/', SettingsView.as_view(), name='user_settings'),
     path('subscriptions/', Subscriptions.as_view(), name='subscriptions'),
+    path('subscription/<slug>', SpecificSubscription.as_view(), name='subscription'),
+    path('products/', ProductsView.as_view(), name='products'),
+    path('product/', SpecificProductsView.as_view(), name='product'),
+    path('new_product/', SpecificProductsView.as_view(), name='new_product'),
+    path('categories/', CategoriesView.as_view(), name='categories'),
+    path('category/', SpecificCategoryView.as_view(), name='category'),
+    path('new_category/', SpecificCategoryView.as_view(), name='new_category'),
 
 ]
 
