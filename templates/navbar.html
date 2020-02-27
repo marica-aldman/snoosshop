@@ -37,7 +37,7 @@
               {% comment %}
                 Menues logged in
                 Check user type
-              {% endcomment %} 
+              {% endcomment %}
           {% for group in request.user.groups.values_list %}
           {% if group.1 == 'moderator' %}
               {% comment %}
@@ -93,7 +93,7 @@
                     Mina ordrar
                   </span>
                 </a>
-                
+
                 {% comment %} <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_support' %}">
                   <span class="clearfix d-none d-sm-inline-block">
                     Min support
@@ -138,9 +138,13 @@
               {% endcomment %}
 
           <li class="nav-item">
-            <a class="nav-link waves-effect" href="{% url 'account_logout' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Logga ut </span>
-            </a>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+              {% endif %}
+              <button class='btn shadow-none' type="submit">Logga Ut</button>
+            </form>
           </li>
           {% else %}
 
@@ -151,7 +155,7 @@
               {% comment %}
                 Cart
               {% endcomment %}
-              
+
           <li class="nav-item">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
               <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
@@ -159,7 +163,7 @@
               <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
             </a>
           </li>
-              
+
               {% comment %}
                 User
               {% endcomment %}
@@ -175,7 +179,7 @@
               {% comment %}
                 Support
               {% endcomment %}
-              
+
           <li class="nav-item">
             <a class="nav-link waves-effect" href="{% url 'member:support' %}">
               <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
@@ -183,7 +187,7 @@
           </li>
 
               {% comment %}
-                Login
+                Logga in
               {% endcomment %}
 
           <li class="nav-item">
@@ -193,7 +197,7 @@
           </li>
 
               {% comment %}
-                Signup
+                Registrera
               {% endcomment %}
 
           <li class="nav-item">
