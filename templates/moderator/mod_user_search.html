@@ -21,7 +21,7 @@
     </div>
     <!-- results or all orders -->
     <div class="row border border-dark mb-3 p-2">
-        <h3>Ordrar</h3>
+        <h3>Kunder</h3>
         <table class="table-striped table-hover w-100  mb-2 table-bordered">
             <thead class="mdb-color lighten-5">
                 <tr>
@@ -193,14 +193,14 @@
                     </button>
                 </form>
             </li>
-            {% for order in more_orders %}
+            {% for user in more_users %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ order.number }}" name="nextPageOrder" {% if current_page_orders == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{order.number}}
+                    <button type="submit" value="{{ user.number }}" name="page" {% if current_page_orders == user.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{user.number}}
                     </button>
                 </form>
             </li>
@@ -211,7 +211,7 @@
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchvalue" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPageOrder" class="page-link">
+                    <button type="submit" value="True" name="nextPage" class="page-link">
                         >
                     </button>
                 </form>

@@ -1505,10 +1505,15 @@ class Users(View):
                 # if there are more we divide by ten
                 u_pages = number_users / 20
                 # see if there is a decimal
-                numType = type(u_pages)
+                testU = int(u_pages)
+                print(testU)
+                print(u_pages)
                 # if there isn't an even number of ten make an extra page for the last group
-                if numType == "Float":
+                if testU != u_pages:
+                    print('here')
+                    u_pages = int(u_pages)
                     u_pages += 1
+                    print(u_pages)
 
             # create a list for a ul to work through
 
@@ -1517,8 +1522,10 @@ class Users(View):
             i = 0
             # populate the list with the amount of pages there are
             for i in range(u_pages):
+                print('here')
                 i += 1
                 more_users.append({'number': i})
+                print(more_users)
 
             # make search for specific order or customer
 
@@ -1641,7 +1648,8 @@ class Users(View):
                         # see if there is a decimal
                         numType = type(u_pages)
                         # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
+                        if numType == "<class 'float'>":
+                            u_pages = int(u_pages)
                             u_pages += 1
 
                     # create a list for a ul to work through
@@ -1738,6 +1746,119 @@ class Users(View):
                         if current_page > 1:
                             current_page -= 1
                             offset = current_page
+                        users = User.objects.all()[20:offset]
+                        number_users = User.objects.all(
+                        ).count()
+
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        u_pages = 1
+
+                        if number_users > 20:
+                            # if there are more we divide by ten
+                            u_pages = number_users / 20
+                            # see if there is a decimal
+                            numType = type(u_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if numType == "Float":
+                                u_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_users = []
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(u_pages):
+                            i += 1
+                            more_users.append({'number': i})
+
+                        # make search for specific order or customer
+
+                        form = searchUserForm()
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'users': users,
+                            'more_users': more_users,
+                            'form': form,
+                            'current_page': current_page,
+                        }
+
+                        return render(self.request, "moderator/mod_user_search.html", context)
+
+                    except ObjectDoesNotExist:
+                        messages.info(
+                            self.request, "Something is wrong with the user search page. Contact IT support for assistance.")
+                        return redirect("moderator:search_users")
+
+                elif search_type == "UserID":
+                    user_id = int(self.request.POST['search_value'])
+
+                    if user_id != 0:
+                        # previous page on a single user is the same as the search for single user
+                        # get the user
+
+                        try:
+                            the_user = User.objects.get(id=user_id)
+
+                            # there is only one
+
+                            more_users = [{'number': 1}]
+
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "userID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'multiple': multiple,
+                                'user': the_user,
+                                'more_users': more_users,
+                                'form': form,
+                                'current_page': current_page,
+                            }
+
+                            return render(self.request, "moderator/mod_user_search.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(self.request, "User does not exist.")
+                            return redirect("moderator:search_users")
+                else:
+                    messages.info(
+                        self.request, "Something is wrong with the order search page. Contact IT support for assistance.")
+                    return redirect("moderator:search_users")
+
+            elif 'page' in self.request.POST.keys():
+                # paging through the pagination using specific offset
+                # get what type of search
+                search_type = self.request.POST['search_type']
+
+                # check what kind of search
+                if search_type == "None":
+
+                    try:
+                        offset = int(self.request.POST['page'])
                         users = User.objects.all()[20:offset]
                         number_users = User.objects.all(
                         ).count()
@@ -2588,7 +2709,6 @@ class Subscriptions(View):
                 if 'theUser' in self.request.POST.keys():
                     user_id = int(self.request.POST['theUser'])
                     theUser = User.objects.get(id=user_id)
-                    print(theUser)
                     # get the subscription id
                     sub_id = int(self.request.POST['id'])
                     try:
@@ -3273,11 +3393,9 @@ class ProductsView(View):
             elif 'nextPage' in self.request.POST.keys():
                 # get what type of search
                 search_type = self.request.POST['search_type']
-                print('in')
 
                 # check what kind of search
                 if search_type == "None":
-                    print('none')
 
                     try:
                         number_products = Item.objects.all(
@@ -3391,7 +3509,6 @@ class ProductsView(View):
                     return redirect("moderator:overview")
 
             elif 'previousPage' in self.request.POST.keys():
-                print('previousPage')
                 # get what type of search
                 search_type = self.request.POST['search_type']
 
@@ -3508,7 +3625,6 @@ class ProductsView(View):
                     return redirect("moderator:products")
 
         except ObjectDoesNotExist:
-            print('no key')
             messages.info(
                 self.request, "Something is wrong with the products page. Contact IT support for assistance.")
             return redirect("moderator:overview")

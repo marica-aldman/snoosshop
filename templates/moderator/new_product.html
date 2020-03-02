@@ -40,7 +40,7 @@
                         </tr>
                         <tr>
                             <td>
-                                Postkod:
+                                Kategori:
                             </td>
                             <td>
                                 {{ form.zip }}
@@ -48,7 +48,7 @@
                         </tr>
                         <tr>
                             <td>
-                                Addresstyp:
+                                Label:
                             </td>
                             <td>
                                 <select name="address_type" class="select form-control">
@@ -60,10 +60,26 @@
                         </tr>
                         <tr>
                             <td>
-                                Huvudsaklig address:
+                                Beskrivning:
                             </td>
                             <td>
-                                <input type="checkbox" {% if address.default%} checked{% endif%} name="default">
+                                <select name="address_type" class="select form-control">
+                                    {% for choice_list in address_choices %}
+                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Bild:
+                            </td>
+                            <td>
+                                <select name="address_type" class="select form-control">
+                                    {% for choice_list in address_choices %}
+                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
+                                    {% endfor %}
+                                </select>
                             </td>
                         </tr>
                     </tbody>
