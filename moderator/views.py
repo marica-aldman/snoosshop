@@ -1567,126 +1567,8 @@ class Users(View):
 
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
                 # make a form and populate so we can clean the data
-                form = searchUserForm(self.request.POST)
-
-                if form.is_valid():
-                    # get the values
-                    user_id = form.cleaned_data.get('user_id')
-
-                    if type(user_id) == 'Int':
-                        # search done on user
-                        search_value = user_id
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-
-                            # there is only one
-                            u_pages = 1
-                            more_users = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'person': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': u_pages,
-                            }
-
-                            return render(self.request, "moderator/mod_user_search.html", context)
-
-                        except ObjectDoesNotExist:
-                            messages.info(self.request, "User does not exist.")
-                            return redirect("moderator:search_users")
-                    else:
-                        return redirect("moderator:search_users")
-
-            elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-
-                # check what kind of search
-                if search_type == "None":
-
-                    try:
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-                        number_pages = number_users / 20
-                        if current_page < number_pages:
-                            current_page += 1
-                        offset = current_page * 20
-                        users = User.objects.filter(
-                            groups__name='client')[20:offset]
-                    except ObjectDoesNotExist:
-                        users = {}
-                        number_users = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    u_pages = 1
-
-                    if number_users > 20:
-                        # if there are more we divide by ten
-                        u_pages = number_users / 20
-                        # see if there is a decimal
-                        testU = int(u_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if testU != u_pages:
-                            u_pages = int(u_pages)
-                            u_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_users = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(u_pages):
-                        i += 1
-                        more_users.append({'number': i})
-
-                    # make search for specific order or customer
-
-                    form = searchOrderForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
-
-                    # set the hidden value for wether or not we have done a search
-
-                    search_type = "None"
-                    search_value = "None"
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'users': users,
-                        'more_users': more_users,
-                        'form': form,
-                        'current_page': current_page,
-                        'max_pages': u_pages,
-                    }
-
-                    return render(self.request, "moderator/mod_user_search.html", context)
-
-                elif search_type == "UserID":
+                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
+                    # we only have one page when doing a search on user id, show that page
                     user_id = int(self.request.POST['search_value'])
 
                     if user_id != 0:
@@ -1730,9 +1612,120 @@ class Users(View):
                             messages.info(self.request, "User does not exist.")
                             return redirect("moderator:search_users")
                 else:
-                    messages.info(
-                        self.request, "Something is wrong with the users search page. Contact IT support for assistance.")
-                    return redirect("moderator:overview")
+                    form = searchUserForm(self.request.POST)
+
+                    if form.is_valid():
+                        # get the values
+                        user_id = form.cleaned_data.get('user_id')
+                        # search done on user
+                        search_value = user_id
+                        # get the user
+
+                        try:
+                            the_user = User.objects.get(id=user_id)
+
+                            # there is only one
+                            u_pages = 1
+                            more_users = [{'number': 1}]
+
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "userID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'multiple': multiple,
+                                'person': the_user,
+                                'more_users': more_users,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': u_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_user_search.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(
+                                self.request, "User does not exist.")
+                            return redirect("moderator:search_users")
+                    else:
+                        return redirect("moderator:search_users")
+
+            elif 'nextPage' in self.request.POST.keys():
+                # get what type of search
+                search_type = self.request.POST['search']
+
+                try:
+                    number_users = User.objects.filter(
+                        groups__name='client').count()
+                    number_pages = number_users / 20
+                    if current_page < number_pages:
+                        current_page += 1
+                    offset = current_page * 20
+                    users = User.objects.filter(
+                        groups__name='client')[20:offset]
+                except ObjectDoesNotExist:
+                    users = {}
+                    number_users = 0
+
+                # figure out how many pages of 20 there are
+                # if there are only 20 or fewer pages will be 1
+
+                u_pages = 1
+
+                if number_users > 20:
+                    # if there are more we divide by ten
+                    u_pages = number_users / 20
+                    # see if there is a decimal
+                    testU = int(u_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testU != u_pages:
+                        u_pages = int(u_pages)
+                        u_pages += 1
+
+                # create a list for a ul to work through
+
+                more_users = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(u_pages):
+                    i += 1
+                    more_users.append({'number': i})
+
+                # make search for specific order or customer
+
+                form = searchOrderForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_type = "None"
+                search_value = "None"
+
+                context = {
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'users': users,
+                    'more_users': more_users,
+                    'form': form,
+                    'current_page': current_page,
+                    'max_pages': u_pages,
+                }
+
+                return render(self.request, "moderator/mod_user_search.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
                 search_type = self.request.POST['search']
