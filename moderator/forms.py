@@ -43,6 +43,14 @@ class searchProductForm(forms.Form):
             {'value': product_id})
 
 
+class searchCategoryForm(forms.Form):
+    category_id = forms.IntegerField(required=False, label="")
+
+    def populate(self, category_id, *args, **kwargs):
+        self.fields['category_id'].widget.attrs.update(
+            {'value': category_id})
+
+
 class editOrCreateProduct(forms.ModelForm):
     # sort this meta class out
 
@@ -67,3 +75,25 @@ class editOrCreateProduct(forms.ModelForm):
             {'value': product.discount_price})
         self.fields['description'].widget.attrs.update(
             {'value': product.description})
+
+
+class editOrCreateCategory(forms.ModelForm):
+    # sort this meta class out
+
+    class Meta:
+        model = Category
+        fields = ['title', 'discount_price', 'description']
+
+    def __init__(self, *args, **kwargs):
+        super(editOrCreateCategory, self).__init__(*args, **kwargs)
+        self.fields['title'].label = ""
+        self.fields['discount_price'].label = ""
+        self.fields['description'].label = ""
+
+    def populate(self, category_id, *args, **kwargs):
+        category = Category.objects.get(id=category_id)
+        self.fields['title'].widget.attrs.update(
+            {'value': category.title})
+        self.fields['discount_price'].widget.attrs.update(
+            {'value': category.discount_price})
+        self.fields['description'].initial = category.description

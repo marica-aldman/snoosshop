@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="border border-dark mb-3 p-2">
+        <form method="POST" class="w-100">
+            <input type="hidden" value="{{current_page}}" name="current_page">
+        {% csrf_token %}
+            <div class="d-flex justify-content-around">
+                <div>
+                    Kategori id: {{form.category_id|as_crispy_field}}
+                </div>
+                <div>
+                    <button type="submit" name="search" class='btn btn-primary mt-3'>Sök</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="border border-dark mb-3 p-2">
+        <form method="POST" class="w-100" action="{% url 'moderator:new_category' %}">
+            {% csrf_token %}
+            <div class="d-flex justify-content-around">
+                <div>
+                    <button type="submit" value="{{product.id}}" name="new" class='btn btn-primary'>
+                        Skapa Ny Kategori
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- results or all orders -->
+    <div class="border border-dark mb-3 p-2">
+        <h3>Kategorier</h3>
+        <table class="table-striped table-hover w-100  mb-2 table-bordered">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th>
+                        Kategori id
+                    </th>
+                    <th>
+                        Titel
+                    </th>
+                    <th>
+                        Rea Pris
+                    </th>
+                    <th>
+                        &nbsp;
+                    </th>
+                    <th>
+                        &nbsp;
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {% if multiple %}
+        {% for category in categories %}
+                <tr>
+                    <td>
+                        {{ category.id }}
+                    </td>
+                    <td>
+                        {{ category.title }}
+                    </td>
+                    <td>
+                        {{ category.discount_price }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:category' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{category.id}}" name="lookAtCategory" class='btn btn-primary'>
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the category? This action can not be undone.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete" value='yes'>
+                            <input type="hidden" name="id" value={{category.id}}>
+                            <button type="submit" class="btn btn-primary float-right">
+                                Ta bort
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+        {% endfor %}
+    {% else %}
+                <tr>
+                    <td>
+                        {{ category.id }}
+                    </td>
+                    <td>
+                        {{ category.title }}
+                    </td>
+                    <td>
+                        {{ category.price }}
+                    </td>
+                    <td>
+                        {{ category.category }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'moderator:category' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{category.id}}" name="lookAtCategory" class='btn btn-primary'>
+                                Se
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the product? This action can not be undone and any products in this category will have the category removed from them.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete" value='yes'>
+                            <input type="hidden" name="id" value={{product.id}}>
+                            <button type="submit" class="btn btn-primary float-right">
+                                Ta bort
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+    {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex w-100 justify-content-around">
+        <ul class="pagination">
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
+                        <
+                    </button>
+                </form>
+            </li>
+            {% for category in more_categories %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="{{ category.number }}" name="page" {% if current_page == category.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{category.number}}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
+                        >
+                    </button>
+                </form>
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+
+{% endblock content %}

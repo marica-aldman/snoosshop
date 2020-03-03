@@ -9,12 +9,13 @@ from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.timezone import make_aware
-from datetime import datetime, timedelta
+from datetime import datetime
 from slugify import slugify
 from core.models import *
 from member.forms import *
 from .forms import *
 from core.functions import *
+from core.info_error_msg import *
 
 
 class Overview(View):
@@ -112,8 +113,8 @@ class Overview(View):
             return render(self.request, "moderator/mod_overview.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the overview. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_35)
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
@@ -135,8 +136,8 @@ class Overview(View):
                     number_support = SupportThread.objects.filter(
                         last_responce=2).count()
                 except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                    messages.warning(
+                        self.request, error_message_36)
                     support = {}
                     number_support = 0
 
@@ -236,8 +237,8 @@ class Overview(View):
                     number_support = SupportThread.objects.filter(
                         last_responce=2).count()
                 except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                    messages.warning(
+                        self.request, error_message_37)
                     support = {}
                     number_support = 0
 
@@ -324,8 +325,8 @@ class Overview(View):
                     number_support = SupportThread.objects.filter(
                         last_responce=2).count()
                 except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                    messages.warning(
+                        self.request, error_message_38)
                     support = {}
                     number_support = 0
 
@@ -416,7 +417,7 @@ class Overview(View):
                         last_responce=2).count()
                 except ObjectDoesNotExist:
                     messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                        self.request, error_message_39)
                     support = {}
                     number_support = 0
 
@@ -508,7 +509,7 @@ class Overview(View):
                         being_delivered=False)[10:offset]
                 except ObjectDoesNotExist:
                     messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                        self.request, error_message_40)
                     support = {}
                     number_support = 0
 
@@ -598,8 +599,8 @@ class Overview(View):
                     number_support = SupportThread.objects.filter(
                         last_responce=2).count()
                 except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something is wrong in the page function. Report this issue to IT support.")
+                    messages.warning(
+                        self.request, error_message_41)
                     support = {}
                     number_support = 0
 
@@ -677,8 +678,8 @@ class Overview(View):
                 return render(self.request, "moderator/mod_overview.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the next page in overview. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_42)
             return redirect("moderator:overview")
 
 
@@ -749,8 +750,8 @@ class MultipleOrdersView(View):
             return render(self.request, "moderator/mod_order_search.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something is wrong with the page that displays orders. Contact IT support for assistance.")
+            messages.warning(
+                self.request, error_message_43)
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
@@ -809,7 +810,7 @@ class MultipleOrdersView(View):
                                 return render(self.request, "moderator:mod_vieworder", context)
                             except ObjectDoesNotExist:
                                 messages.info(
-                                    self.request, "Order does not exist.")
+                                    self.request, info_message_19)
                                 return redirect("moderator:orders")
 
                         elif order_id != 0:
@@ -845,7 +846,7 @@ class MultipleOrdersView(View):
                                 return render(self.request, "moderator:mod_vieworder", context)
                             except ObjectDoesNotExist:
                                 messages.info(
-                                    self.request, "Order does not exist.")
+                                    self.request, info_message_19)
                                 return redirect("moderator:orders")
 
                         elif user_id != 0:
@@ -910,11 +911,9 @@ class MultipleOrdersView(View):
 
                             except ObjectDoesNotExist:
                                 messages.info(
-                                    self.request, "User does not exist.")
+                                    self.request, info_message_20)
                                 return redirect("moderator:orders")
                         else:
-                            messages.info(
-                                self.request, "Var god fyll i Referens, order id eller kund id.")
                             return redirect("moderator:orders")
 
             elif 'nextPage' in self.request.POST.keys():
@@ -1113,8 +1112,8 @@ class MultipleOrdersView(View):
                     return render(self.request, "moderator/mod_order_search.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something is wrong with the order search page. Contact IT support for assistance.")
+            messages.warning(
+                self.request, error_message_44)
             return redirect("moderator:overview")
 
 
@@ -1187,7 +1186,7 @@ class Users(View):
 
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something is wrong with the search for user page. Contact IT support for assistance.")
+                self.request, error_message_45)
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
@@ -1243,7 +1242,7 @@ class Users(View):
                             return render(self.request, "moderator/mod_user_search.html", context)
 
                         except ObjectDoesNotExist:
-                            messages.info(self.request, "User does not exist.")
+                            messages.info(self.request, info_message_21)
                             return redirect("moderator:search_users")
                 else:
                     form = searchUserForm(self.request.POST)
@@ -1288,7 +1287,7 @@ class Users(View):
 
                         except ObjectDoesNotExist:
                             messages.info(
-                                self.request, "User does not exist.")
+                                self.request, info_message_22)
                             return redirect("moderator:search_users")
                     else:
                         return redirect("moderator:search_users")
@@ -1427,8 +1426,8 @@ class Users(View):
                         return render(self.request, "moderator/mod_user_search.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something is wrong with the user search page. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_46)
                         return redirect("moderator:search_users")
 
                 else:
@@ -1492,8 +1491,8 @@ class Users(View):
                         return render(self.request, "moderator/mod_user_search.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something is wrong with the user search page. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_47)
                         return redirect("moderator:search_users")
 
             elif 'page' in self.request.POST.keys():
@@ -1562,8 +1561,8 @@ class Users(View):
                         return render(self.request, "moderator/mod_user_search.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something is wrong with the user search page. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_48)
                         return redirect("moderator:search_users")
 
                 else:
@@ -1625,16 +1624,16 @@ class Users(View):
                         return render(self.request, "moderator/mod_user_search.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something is wrong with the user search page. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_49)
                         return redirect("moderator:search_users")
-
-            messages.info(
-                self.request, "Something is wrong with the user search page.")
-            return redirect("moderator:search_users")
+            else:
+                messages.warning(
+                    self.request, error_message_50)
+                return redirect("moderator:search_users")
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something is wrong with the order search page. Contact IT support for assistance.")
+            messages.warning(
+                self.request, error_message_51)
             return redirect("moderator:overview")
 
 
@@ -1657,8 +1656,8 @@ class OrderView(LoginRequiredMixin, View):
             return render(self.request, "moderator:mod_vieworder", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Can't find this order. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_52)
             return redirect("moderator:orders")
 
 
@@ -1675,8 +1674,8 @@ class SupportView(View):
 
             return render(self.request, "member/my_support.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing this page. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_53)
             return redirect("moderator:overview")
 
 
@@ -1693,12 +1692,19 @@ class Errand(View):
             return render(self.request, "member/my_errand.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Can't find this errand. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_54)
             return redirect("moderator:support")
 
 
 class EditUser(View):
+    def get(self, *args, **kwargs):
+        # return to search
+
+        messages.warning(
+            self.request, error_message_92)
+        return redirect("moderator:search_users")
+
     def post(self, *args, **kwargs):
         try:
             # get the specific user's profile
@@ -1737,15 +1743,15 @@ class EditUser(View):
                         person.save()
                         userInfo.save()
                         messages.info(
-                            self.request, "Information saved.")
+                            self.request, info_message_23)
                         return redirect("moderator:search_users")
                     else:
                         context = {
                             'form': form,
                         }
 
-                        messages.info(
-                            self.request, "Id check went wrong, talk to IT support.")
+                        messages.warning(
+                            self.request, error_message_55)
                         return render(self.request, "moderator/edit_user.html", context)
                 else:
                     context = {
@@ -1753,16 +1759,23 @@ class EditUser(View):
                     }
 
                     messages.info(
-                        self.request, "Check information something you did was invalid.")
+                        self.request, info_message_24)
                     return render(self.request, "moderator/edit_user.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the profile. Contact the IT support for assistance.")
+            messages.warning(
+                self.request, error_message_56)
             return redirect("moderator:overview")
 
 
 class EditCompany(View):
+    def get(self, *args, **kwargs):
+        # return to search
+
+        messages.warning(
+            self.request, error_message_93)
+        return redirect("moderator:search_users")
+
     def post(self, *args, **kwargs):
         if 'lookAtCompany' in self.request.POST.keys():
             # take in the id nr
@@ -1809,7 +1822,7 @@ class EditCompany(View):
                                             user=theUser)
                                     except ObjectDoesNotExist:
                                         messages.warning(
-                                            self.request, "Company does not seem to exist. Something is wrong in the change company info form. Contact IT support for assistance.")
+                                            self.request, error_message_57)
 
                                         return redirect("moderator:search_users")
                                     address = theCompany.addressID
@@ -1831,7 +1844,7 @@ class EditCompany(View):
                                     address.save()
                                     theCompany.save()
                                     messages.info(
-                                        self.request, "Company information updated and saved.")
+                                        self.request, info_message_25)
 
                                     return redirect("moderator:search_users")
 
@@ -1893,7 +1906,7 @@ class EditCompany(View):
                                     theCompany.slug = makeSlug
                                     theCompany.save()
                                     messages.info(
-                                        self.request, "Company created and information saved.")
+                                        self.request, info_message_25)
                                     return redirect("moderator:search_users")
 
                             else:
@@ -1904,8 +1917,8 @@ class EditCompany(View):
                                     'person': theUser,
                                     'newOrOld': newOrOld,
                                 }
-                                messages.info(
-                                    self.request, "Check the address information. Something might be missing. If this problem persists contact IT support.")
+                                messages.warning(
+                                    self.request, error_message_58)
 
                                 return render(self.request, "moderator/company.html", context)
                         else:
@@ -1916,18 +1929,25 @@ class EditCompany(View):
                                 'person': theUser,
                                 'newOrOld': newOrOld,
                             }
-                            messages.info(
-                                self.request, "Check the company information. Something might be missing. If this problem persists contact IT support.")
+                            messages.warning(
+                                self.request, error_message_59)
 
                             return render(self.request, "moderator/company.html", context)
                 except ObjectDoesNotExist:
                     messages.warning(
-                        self.request, "Something is wrong in the change company info form. Contact IT support for assistance.")
+                        self.request, error_message_60)
 
                     return redirect("moderator:search_users")
 
 
 class EditAdresses(View):
+    def get(self, *args, **kwargs):
+        # return to search
+
+        messages.warning(
+            self.request, error_message_94)
+        return redirect("moderator:search_users")
+
     def post(self, *args, **kwargs):
         try:
             if 'lookAtAddresses' in self.request.POST.keys():
@@ -1961,8 +1981,8 @@ class EditAdresses(View):
                             addressID=theAddress).count()
                         if numberOfCompanies >= 1:
                             # a company with that address exists, redisplay page without changes
-                            messages.info(
-                                self.request, "This address is connected to the users company. Please change the company's address before deleting this address.")
+                            messages.warning(
+                                self.request, info_message_26)
                             try:
                                 addresses = Address.objects.filter(
                                     user=theUser)
@@ -1989,8 +2009,8 @@ class EditAdresses(View):
                             billing_address=theAddress).count()
                         if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
                             # a subscription is tied to this address
-                            messages.info(
-                                self.request, "This address is connected to at least one of the users subscriptions. Please change the subscriptions's address before deleting this address.")
+                            messages.warning(
+                                self.request, error_message_62)
                             try:
                                 addresses = Address.objects.filter(
                                     user=theUser)
@@ -2012,7 +2032,7 @@ class EditAdresses(View):
 
                     theAddress.delete()
                     messages.info(
-                        self.request, "Address deleted")
+                        self.request, info_message_26)
                     # get the specific user's addresses
                     try:
                         addresses = Address.objects.filter(user=theUser)
@@ -2026,13 +2046,13 @@ class EditAdresses(View):
 
                     return render(self.request, "moderator/edit_addresses.html", context)
             else:
-                messages.info(
-                    self.request, "Something went wrong when accessing this clients addresses. Contact IT support for assistance.")
+                messages.warning(
+                    self.request, error_message_63)
                 return redirect("moderator:search_users")
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing this clients addresses. Contact IT support for assistance.")
+            messages.warning(
+                self.request, error_message_64)
             return redirect("moderator:search_users")
 
 
@@ -2040,8 +2060,8 @@ class EditAdress(View):
     def get(self, *args, **kwargs):
         # return to search
 
-        messages.info(
-            self.request, "Something went wrong when accessing the address. Contact it support for assistance if the problem persists.")
+        messages.warning(
+            self.request, error_message_65)
         return redirect("moderator:search_users")
 
     def post(self, *args, **kwargs):
@@ -2104,8 +2124,8 @@ class EditAdress(View):
                         address.address_type = "B"
                     else:
                         # someone is manipulating the code
-                        messages.info(
-                            self.request, "Something went wrong when saving the address. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_66)
                         return redirect("moderator:user_search")
                 else:
                     # rerender form
@@ -2133,7 +2153,7 @@ class EditAdress(View):
                 # save the address and return to list
                 address.save()
 
-                messages.info(self.request, "Address have been saved.")
+                messages.info(self.request, info_message_27)
 
                 # render the users addresses for a soft redirect
                 # get the specific user's addresses
@@ -2157,6 +2177,8 @@ class EditAdress(View):
                     'address_choices': ADDRESS_CHOICES
                 }
 
+                messages.info(self.request, info_message_28)
+
                 return render(self.request, "moderator/edit_address.html", context)
 
 
@@ -2164,8 +2186,8 @@ class NewAddress(View):
     def get(self, *args, **kwargs):
         # return to search as we dont know the user
 
-        messages.info(
-            self.request, "Something went wrong when accessing the new address page. Contact IT support for assistance if the problem persists.")
+        messages.warning(
+            self.request, error_message_67)
         return redirect("moderator:search_users")
 
     def post(self, *args, **kwargs):
@@ -2219,7 +2241,7 @@ class NewAddress(View):
                     }
 
                     messages.info(
-                        self.request, "Something went wrong when accessing the new address page. Contact IT support for assistance if the problem persists.")
+                        self.request, message)
                     return render(self.request, "moderator/edit_addresses.html", context)
 
                 # get values
@@ -2241,9 +2263,9 @@ class NewAddress(View):
                     # test for defaulting
                     testShipping = Address.objects.get(id=sameShipping)
                     testBilling = Address.objects.get(id=sameBilling)
-                    message = "You already have these addresses saved."
+                    message = info_message_29
                     if default:
-                        message = message + " Default changed."
+                        message = info_message_30
                         new_address_default(testShipping)
                         new_address_default(testBilling)
 
@@ -2297,7 +2319,7 @@ class NewAddress(View):
                 # save the address and return to list
                 address.save()
 
-                messages.info(self.request, "Address have been saved.")
+                messages.info(self.request, info_message_31)
                 # render the users addresses for a soft redirect
                 # get the specific user's addresses
                 try:
@@ -2320,12 +2342,19 @@ class NewAddress(View):
                 }
 
                 messages.info(
-                    self.request, "Something in the information is incorrect or missing.")
+                    self.request, error_message_68)
 
                 return render(self.request, "moderator/edit_address.html", context)
 
 
 class SettingsView(View):
+    def get(self, *args, **kwargs):
+        # return to search
+
+        messages.warning(
+            self.request, error_message_95)
+        return redirect("moderator:search_users")
+
     def post(self, *args, **kwargs):
         try:
             if 'lookAtSettings' in self.request.POST.keys():
@@ -2341,7 +2370,7 @@ class SettingsView(View):
 
                 return render(self.request, "moderator/client_settings.html", context)
         except ObjectDoesNotExist:
-            message = "Something went wrong in the viewing of the clients settings. Contact IT support."
+            message = error_message_69
             messages.warning(self.request, message)
             return redirect("core:home")
 
@@ -2350,8 +2379,8 @@ class Subscriptions(View):
     def get(self, *args, **kwargs):
         # shouldnt be here redirect
 
-        messages.info(
-            self.request, "Something went wrong when accessing the subscriptions. Contact IT support for assistance if the problem persists.")
+        messages.warning(
+            self.request, error_message_70)
         return redirect("moderator:search_users")
 
     def post(self, *args, **kwargs):
@@ -2400,19 +2429,19 @@ class Subscriptions(View):
                                 order.delete()
                                 # delete subscription
                                 subscription.delete()
-                                message = 'subscription and corresponding order deleted'
+                                message = info_message_32
                             except ObjectDoesNotExist:
-                                message = "Subscription was active but had no connected order. Check that there isn't any subscription order connected to this one under orders. Contact IT support. This is a significant error."
+                                message = error_message_71
                                 messages.warning(
                                     self.request, message)
-                                message = "Subscription was not deleted."
+                                message = info_message_33
                         else:
                             # delete subscription
                             subscription.delete()
-                            message = 'subscription deleted'
+                            message = info_message_34
                     except ObjectDoesNotExist:
                         # no such subscription
-                        message = 'Subscription does not exist. If you still see it contact IT support for assistance.'
+                        message = error_message_72
 
                     # get the specific user's subscriptions
                     try:
@@ -2431,16 +2460,16 @@ class Subscriptions(View):
                     return render(self.request, "moderator/subscriptions.html", context)
                 else:
                     messages.warning(
-                        self.request, "Something went wrong when deleting this clients subscription. If this persists contact IT support for assistance.")
+                        self.request, error_message_73)
                     return redirect("moderator:search_users")
             else:
                 messages.warning(
-                    self.request, "Something went wrong when accessing this clients subscriptions. If this persists contact IT support for assistance.")
+                    self.request, error_message_74)
                 return redirect("moderator:search_users")
 
         except ObjectDoesNotExist:
             messages.warning(
-                self.request, "Something went wrong when accessing this clients subscriptions. If this persists contact IT support for assistance.")
+                self.request, error_message_75)
             return redirect("moderator:search_users")
 
 
@@ -2448,8 +2477,8 @@ class SpecificSubscription(View):
     def get(self, *args, **kwargs):
         # shouldnt be here redirect
 
-        messages.info(
-            self.request, "Something went wrong when accessing the subscription. Contact IT support for assistance if the problem persists.")
+        messages.warning(
+            self.request, error_message_76)
         return redirect("moderator:search_users")
 
     def post(self, *args, **kwargs):
@@ -2490,8 +2519,8 @@ class SpecificSubscription(View):
                     return render(self.request, "moderator/edit_subscription.html", context)
 
                 except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+                    messages.warning(
+                        self.request, error_message_77)
                     return redirect("moderator:my_subscriptions")
 
             elif 'saveSubscription' in self.request.POST.keys() and 'u_id' in self.request.POST.keys() and 'sub_id' in self.request.POST.keys():
@@ -2588,7 +2617,7 @@ class SpecificSubscription(View):
                                     orderItem = save_subItems_and_orderItems(
                                         sub, amount, product)
                                     theOrder.items.add(orderItem)
-                                    message = "Subscription saved and activated."
+                                    message = info_message_34
                                     messages.info(self.request, message)
 
                                     # soft redirect
@@ -2663,7 +2692,7 @@ class SpecificSubscription(View):
                                     orderItem = save_subItems_and_orderItems(
                                         sub, amount, product)
                                     theOrder.items.add(orderItem)
-                                    message = "Subscription saved and activated."
+                                    message = info_message_34
                                     messages.info(self.request, message)
                                     # soft redirect
                                     # get the specific user's subscriptions
@@ -2680,7 +2709,7 @@ class SpecificSubscription(View):
 
                                     return render(self.request, "moderator/subscriptions.html", context)
                         except ObjectDoesNotExist:
-                            message = "We can't access the subscription right now. Please contact IT support for assistance."
+                            message = error_message_78
                             messages.info(self.request, message)
 
                             # get the specific user's subscriptions
@@ -2698,8 +2727,8 @@ class SpecificSubscription(View):
                             return render(self.request, "moderator/subscriptions.html", context)
                     else:
                         # somehow this is not an old subscription. Return to subscriptions
-                        message = "It seems like you are trying to create a new subscription. If that is not the case please contact IT support for assistance. If it is the case it us up to the user to create a subscription. It should never be done by staff."
-                        messages.info(self.request, message)
+                        message = error_message_79
+                        messages.warning(self.request, message)
 
                         # get the specific user's subscriptions
                         try:
@@ -2751,7 +2780,7 @@ class SpecificSubscription(View):
                     # deactivate subscription
                     if sub.active is False:
                         messages.info(
-                            self.request, "Subscription already deactivated")
+                            self.request, info_message_35)
                         return redirect("member:my_subscriptions")
                     else:
                         sub.active = False
@@ -2767,9 +2796,9 @@ class SpecificSubscription(View):
                                 item.delete()
                             # delete order
                             theOrder.delete()
-                            message = "Subscription deactivated."
+                            message = info_message_36
                         except ObjectDoesNotExist:
-                            message = "Subscription deactivated no order detected."
+                            message = info_message_37
                         sub.next_order = 0
                         sub.save()
 
@@ -2791,7 +2820,7 @@ class SpecificSubscription(View):
                         return render(self.request, "moderator/subscriptions.html", context)
                 else:
                     messages.warning(
-                        self.request, "Something is wrong with the subscription deactivation. Please contact IT support for assistance.")
+                        self.request, error_message_80)
                     # soft redirect
                     # get the specific user's subscriptions
                     try:
@@ -2807,12 +2836,12 @@ class SpecificSubscription(View):
 
                     return render(self.request, "moderator/subscriptions.html", context)
             else:
-                messages.info(
-                    self.request, "You seem to have encountered a programatic error on the subscription page. Please contact IT support for assistance.")
+                messages.warning(
+                    self.request, error_message_81)
                 return redirect("moderator:search_user")
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "You seem to have encountered a programatic error on the subscription page. Please contact IT support for assistance.")
+                self.request, error_message_82)
             return redirect("moderator:search_user")
 
 
@@ -2835,7 +2864,7 @@ class ProfileView(View):
             return render(self.request, "moderator/my_profile.html", context)
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact IT support for assistance.")
+                self.request, error_message_83)
             return redirect("moderator:my_overview")
 
 
@@ -2853,7 +2882,7 @@ class InfoView(View):
             return render(self.request, "moderator/my_info.html", context)
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when accessing your information. Contact IT support for assistance.")
+                self.request, error_message_84)
             return redirect("moderator:my_profile")
 
     def post(self, *args, **kwargs):
@@ -2878,7 +2907,7 @@ class InfoView(View):
 
                     info.save()
                     messages.info(
-                        self.request, "User information saved.")
+                        self.request, info_message_38)
                     return redirect("moderator:my_profile")
                 except ObjectDoesNotExist:
                     info = UserInfo()
@@ -2890,7 +2919,7 @@ class InfoView(View):
 
                     info.save()
                     messages.info(
-                        self.request, "User information saved.")
+                        self.request, info_message_39)
                     return redirect("moderator:my_profile")
             else:
 
@@ -2899,17 +2928,17 @@ class InfoView(View):
                 }
 
                 messages.info(
-                    self.request, "Missing certain information.")
+                    self.request, info_message_40)
 
                 return render(self.request, "moderator/my_info.html", context)
 
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong when saving your information. Contact IT support for assistance.")
+                self.request, error_message_85)
             return redirect("moderator:my_profile")
 
 
-# rewrite for products, add delete
+# rewrite for add delete
 class ProductsView(View):
     def get(self, *args, **kwargs):
         try:
@@ -2972,7 +3001,7 @@ class ProductsView(View):
 
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something is wrong with the products page. Contact IT support for assistance.")
+                self.request, error_message_86)
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
@@ -3012,12 +3041,16 @@ class ProductsView(View):
 
                             search_type = "productID"
 
+                            # get the form
+                            form = searchProductForm()
+                            form.populate(product_id)
+
                             context = {
                                 'search_type': search_type,
                                 'search_value': product_id,
                                 'multiple': multiple,
                                 'product': the_product,
-                                'more_users': more_products,
+                                'more_products': more_products,
                                 'form': form,
                                 'current_page': current_page,
                                 'max_pages': p_pages,
@@ -3027,7 +3060,7 @@ class ProductsView(View):
 
                         except ObjectDoesNotExist:
                             messages.info(
-                                self.request, "Product does not exist.")
+                                self.request, info_message_41)
                             return redirect("moderator:products")
                     else:
                         # if the product id is 0 we are probably trying to reset the form
@@ -3073,7 +3106,7 @@ class ProductsView(View):
 
                         except ObjectDoesNotExist:
                             messages.info(
-                                self.request, "Product does not exist.")
+                                self.request, info_message_42)
                             return redirect("moderator:products")
                     else:
                         # rerender page with error message
@@ -3233,7 +3266,7 @@ class ProductsView(View):
 
                         # create a list for a ul to work through
 
-                        more_products = [{'number': 1}]
+                        more_products = []
 
                         i = 0
                         # populate the list with the amount of pages there are
@@ -3243,7 +3276,7 @@ class ProductsView(View):
 
                         # make search for specific order or customer
 
-                        form = searchUserForm()
+                        form = searchProductForm()
 
                         # set a bool to check if we are showing one or multiple orders
 
@@ -3269,7 +3302,7 @@ class ProductsView(View):
 
                     except ObjectDoesNotExist:
                         messages.info(
-                            self.request, "Something is wrong with the product page. Contact IT support for assistance.")
+                            self.request, error_message_87)
                         return redirect("moderator:mod_products.html")
 
                 else:
@@ -3298,7 +3331,7 @@ class ProductsView(View):
 
                         # create a list for a ul to work through
 
-                        more_products = [{'number': 1}]
+                        more_products = []
 
                         i = 0
                         # populate the list with the amount of pages there are
@@ -3308,7 +3341,7 @@ class ProductsView(View):
 
                         # make search for specific order or customer
 
-                        form = searchUserForm()
+                        form = searchProductForm()
 
                         # set a bool to check if we are showing one or multiple orders
 
@@ -3333,21 +3366,21 @@ class ProductsView(View):
                         return render(self.request, "moderator/mod_products.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something is wrong with the product page. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_88)
                         return redirect("moderator:mod_products.html")
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something is wrong with the products page. Contact IT support for assistance.")
+            messages.warning(
+                self.request, error_message_89)
             return redirect("moderator:overview")
 
 
 class SpecificProductsView(View):
     def get(self, *args, **kwargs):
         messages.info(
-            self.request, "Something went wrong accessing this product. If the problem persists contact IT support for assistance.")
-        return redirect("moderator:mod_products.html")
+            self.request, error_message_90)
+        return redirect("moderator:mod_products")
 
     def post(self, *args, **kwargs):
         if 'lookAtProduct' in self.request.POST.keys():
@@ -3371,8 +3404,8 @@ class SpecificProductsView(View):
 
                 return render(self.request, "moderator/new_product.html", context)
             except ObjectDoesNotExist:
-                messages.info(
-                    self.request, "Product does not exist. If the problem persists contact IT support for assistance.")
+                messages.warning(
+                    self.request, error_message_91)
                 return redirect("moderator:mod_products.html")
         elif 'new' in self.request.POST.keys():
 
@@ -3419,7 +3452,7 @@ class SpecificProductsView(View):
                 product.save()
 
                 messages.info(
-                    self.request, "Product saved.")
+                    self.request, info_message_43)
                 return redirect("moderator:mod_products.html")
 
             else:
@@ -3446,8 +3479,533 @@ class SpecificProductsView(View):
 
 
 class CategoriesView(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        try:
+            # get the first 20 categories and a count of all products
+            categories = Category.objects.all()[:20]
+            number_categories = Item.objects.all().count()
+            # figure out how many pages of 20 there are
+            # if there are only 20 or fewer pages will be 1
+
+            c_pages = 1
+
+            if number_categories > 20:
+                # if there are more we divide by ten
+                c_pages = number_categories / 20
+                # see if there is a decimal
+                testC = int(c_pages)
+                # if there isn't an even number of ten make an extra page for the last group
+                if testC != c_pages:
+                    c_pages = int(c_pages)
+                    c_pages += 1
+
+            # create a list for a ul to work through
+
+            more_categories = []
+
+            i = 0
+            # populate the list with the amount of pages there are
+            for i in range(c_pages):
+                i += 1
+                more_categories.append({'number': i})
+
+            # make search for specific category
+
+            form = searchCategoryForm()
+
+            # set current page to 1
+            current_page = 1
+
+            # set a bool to check if we are showing one or multiple categories
+
+            multiple = True
+
+            # set the hidden value for wether or not we have done a search
+
+            search_type = "None"
+            search_value = "None"
+
+            context = {
+                'search_type': search_type,
+                'search_value': search_value,
+                'multiple': multiple,
+                'categories': categories,
+                'more_categories': more_categories,
+                'form': form,
+                'current_page': current_page,
+                'max_pages': c_pages,
+            }
+
+            return render(self.request, "moderator/mod_categories.html", context)
+
+        except ObjectDoesNotExist:
+            messages.info(
+                self.request, error_message_96)
+            return redirect("moderator:overview")
+
+    def post(self, *args, **kwargs):
+        try:
+            # where are we
+            current_page = 1
+            if 'current_page' in self.request.POST.keys():
+                current_page = int(self.request.POST['current_page'])
+
+            # what button did we press
+
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+                # make a form and populate so we can clean the data
+                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
+                    # we only have one type of search for this we can only get one page.
+                    category_id = int(self.request.POST['search_value'])
+
+                    if category_id != 0:
+                        # next page on a single user is the same as the search for single user
+                        # get the user
+
+                        try:
+                            the_category = Category.objects.get(id=category_id)
+
+                            # there is only one
+                            c_pages = 1
+                            more_categories = [{'number': 1}]
+
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "categoryID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': category_id,
+                                'multiple': multiple,
+                                'category': the_category,
+                                'more_categories': more_categories,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': c_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_categories.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(
+                                self.request, info_message_44)
+                            return redirect("moderator:categories")
+                    else:
+                        # if the product id is 0 we are probably trying to reset the form
+                        return redirect("moderator:products")
+
+                else:
+                    # make a form and populate so we can clean the data
+                    form = searchCategoryForm(self.request.POST)
+
+                    if form.is_valid():
+                        # get the values
+                        category_id = form.cleaned_data.get('category_id')
+                        # search done on product id
+                        search_value = category_id
+                        # get the product
+                        try:
+                            category = Category.objects.get(id=category_id)
+                            c_pages = 1
+                            more_categories = [{'number': 1}]
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "categoryID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'multiple': multiple,
+                                'category': category,
+                                'more_categories': more_categories,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': c_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_categories.html", context)
+
+                        except ObjectDoesNotExist:
+                            # most likely trying to reset the form
+                            return redirect("moderator:categories")
+                    else:
+                        # rerender page with error message
+                        # get the first 20 categories and a count of all categories
+                        categories = Category.objects.all()[:20]
+                        number_categories = Category.objects.all().count()
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        c_pages = 1
+
+                        if number_categories > 20:
+                            # if there are more we divide by ten
+                            c_pages = number_categories / 20
+                            # see if there is a decimal
+                            testC = int(c_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if testC != c_pages:
+                                c_pages = int(c_pages)
+                                c_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_categories = []
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(c_pages):
+                            i += 1
+                            more_categories.append({'number': i})
+
+                        # we already have the form
+
+                        # set current page to 1
+                        current_page = 1
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'categories': categories,
+                            'more_categories': more_categories,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': c_pages,
+                        }
+
+                        if self.request.POST['category_id'] != "":
+                            message.warning(
+                                self.request, error_message_97)
+                        return render(self.request, "moderator/mod_categories.html", context)
+
+            elif 'nextPage' in self.request.POST.keys():
+                # get what type of search
+                search_type = self.request.POST['search']
+
+                try:
+                    number_categories = Category.objects.all(
+                    ).count()
+                    number_pages = number_categories / 20
+                    if current_page < number_pages:
+                        current_page += 1
+                    offset = current_page * 20
+                    categories = Category.objects.all()[20:offset]
+                except ObjectDoesNotExist:
+                    categories = {}
+                    number_categories = 0
+
+                # figure out how many pages of 20 there are
+                # if there are only 20 or fewer pages will be 1
+
+                c_pages = 1
+
+                if number_categories > 20:
+                    # if there are more we divide by ten
+                    c_pages = number_categories / 20
+                    # see if there is a decimal
+                    testC = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testC != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+
+                # create a list for a ul to work through
+
+                more_categories = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(c_pages):
+                    i += 1
+                    more_categories.append({'number': i})
+
+                # make search for specific order or customer
+
+                form = searchCategoryForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_type = "None"
+                search_value = "None"
+
+                context = {
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'categories': categories,
+                    'more_categories': more_categories,
+                    'form': form,
+                    'current_page': current_page,
+                    'max_pages': c_pages,
+                }
+
+                return render(self.request, "moderator/mod_categories.html", context)
+
+            elif 'previousPage' in self.request.POST.keys():
+                # get what type of search
+                search_type = self.request.POST['search']
+
+                # check what kind of search
+                if current_page > 2:
+
+                    try:
+                        if current_page > 1:
+                            current_page -= 1
+                        offset = current_page * 20
+                        categories = Category.objects.all()[20:offset]
+                        number_categories = Category.objects.all(
+                        ).count()
+
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        c_pages = 1
+
+                        if number_categories > 20:
+                            # if there are more we divide by ten
+                            c_pages = number_categories / 20
+                            # see if there is a decimal
+                            testP = int(c_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if testP != c_pages:
+                                c_pages = int(c_pages)
+                                c_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_categories = []
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(c_pages):
+                            i += 1
+                            more_categories.append({'number': i})
+
+                        # make search for specific order or customer
+
+                        form = searchCategoryForm()
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'categories': categories,
+                            'more_categories': more_categories,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': c_pages,
+                        }
+
+                        return render(self.request, "moderator/mod_categories.html", context)
+
+                    except ObjectDoesNotExist:
+                        messages.warning(
+                            self.request, error_message_98)
+                        return redirect("moderator:categories")
+
+                else:
+
+                    try:
+                        if current_page > 1:
+                            current_page -= 1
+                        categories = Category.objects.all()[:20]
+                        number_categories = Category.objects.all(
+                        ).count()
+
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        c_pages = 1
+
+                        if number_categories > 20:
+                            # if there are more we divide by ten
+                            p_pages = number_categories / 20
+                            # see if there is a decimal
+                            testC = int(c_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if testC != c_pages:
+                                c_pages = int(c_pages)
+                                c_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_categories = []
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(c_pages):
+                            i += 1
+                            more_categories.append({'number': i})
+
+                        # make search for specific order or customer
+
+                        form = searchCategoryForm()
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'categories': categories,
+                            'more_categories': more_categories,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': c_pages,
+                        }
+
+                        return render(self.request, "moderator/mod_categories.html", context)
+
+                    except ObjectDoesNotExist:
+                        messages.warning(
+                            self.request, error_message_99)
+                        return redirect("moderator:categories")
+            elif 'delete' in self.request.POST.keys():
+                if 'id' in self.request.POST.keys():
+
+                    category_id = int(self.request.POST['id'])
+                    category = Category.objects.get(id=category_id)
+                    category.delete()
+
+                    messages.info(
+                        self.request, info_message_47)
+                    return redirect("moderator:categories")
+                else:
+                    return redirect("moderator:categories")
+            else:
+                return redirect("moderator:categories")
+
+        except ObjectDoesNotExist:
+            messages.warning(
+                self.request, error_message_100)
+            return redirect("moderator:overview")
 
 
 class SpecificCategoryView(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        messages.warning(
+            self.request, error_message_90)
+        return redirect("moderator:categories")
+
+    def post(self, *args, **kwargs):
+        if 'lookAtCategory' in self.request.POST.keys():
+            category_id = int(self.request.POST['lookAtCategory'])
+            # test
+            category = Category.objects.get(id=category_id)
+
+            form = editOrCreateCategory()
+            form.populate(category_id)
+
+            old = category_id
+
+            context = {
+                'form': form,
+                'old': old,
+                'category': category,
+            }
+
+            return render(self.request, "moderator/mod_single_category.html", context)
+
+        elif 'new' in self.request.POST.keys():
+
+            form = editOrCreateCategory()
+
+            old = 'new'
+
+            context = {
+                'form': form,
+                'old': old,
+            }
+
+            return render(self.request, "moderator/mod_single_category.html", context)
+        elif 'saveCategory' in self.request.POST.keys():
+            form = editOrCreateCategory(self.request.POST)
+
+            if form.is_valid():
+                category_id = self.request.POST['old']
+                if category_id == "new":
+                    category = Category()
+
+                    category.title = form.cleaned_data.get('title')
+                    category.description = form.cleaned_data.get('description')
+                    category.discount_price = form.cleaned_data.get(
+                        'discount_price')
+                    category.slug = "temp"
+                    category.save()
+                    category.slug = "c" + str(category.id)
+                    category.save()
+                    messages.info(
+                        self.request, info_message_46)
+                    return redirect("moderator:categories")
+
+                else:
+                    category_id = int(category_id)
+                    category = Category.objects.get(id=category_id)
+                    category.title = form.cleaned_data.get('title')
+                    category.description = form.cleaned_data.get('description')
+                    category.discount_price = form.cleaned_data.get(
+                        'discount_price')
+                    category.save()
+                    messages.info(
+                        self.request, info_message_46)
+                    return redirect("moderator:categories")
+
+            else:
+                category_id = int(self.request.POST['old'])
+                old = category_id
+
+                context = {
+                    'form': form,
+                    'old': old,
+                }
+                messages.warning(self.request, error_message_101)
+                return render(self.request, "moderator/mod_single_category.html", context)
+        else:
+            # post with not correct varaibles
+            messages.info(
+                self.request, error_message_102)
+            return redirect("moderator:categories")
