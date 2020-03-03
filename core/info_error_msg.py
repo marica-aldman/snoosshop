@@ -202,10 +202,16 @@ info_message_45 = "Category does not exist."
 
 info_message_47 = "Category deleted."
 
-#Moderator
+# Moderator
 # single category
 # save
 info_message_46 = "Category saved."
+
+# Moderator
+# product handling
+# delete
+
+info_message_48 = "Product deleted."
 
 # ERROR MESSAGES
 
@@ -637,6 +643,10 @@ error_message_99 = "Something is wrong in the pagination of the category handlin
 error_message_100 = "Something is wrong in the category handling page. Please contact IT support for assistance."
 
 # Moderator: single category
+# get redirect
+
+error_message_104 = "Something went wrong accessing this category. If the problem persists contact IT support for assistance."
+
 # save
 
 error_message_101 = "All fields not filled in. Please fill in the form completely before saving."
@@ -644,3 +654,9 @@ error_message_101 = "All fields not filled in. Please fill in the form completel
 # post with not correct varaibles. Something is off
 
 error_message_102 = "Something went wrong when viewing the category. If the problem persists contact IT support."
+
+# Moderator
+# product handling
+# search
+
+error_message_103 = 'Please enter a valid product id'

@@ -36,7 +36,7 @@ class searchUserForm(forms.Form):
 
 
 class searchProductForm(forms.Form):
-    product_id = forms.IntegerField(required=True, label="")
+    product_id = forms.IntegerField(required=False, label="")
 
     def populate(self, product_id, *args, **kwargs):
         self.fields['product_id'].widget.attrs.update(
@@ -56,7 +56,7 @@ class editOrCreateProduct(forms.ModelForm):
 
     class Meta:
         model = Item
-        fields = ['title', 'price', 'discount_price', 'description']
+        fields = ['title', 'price', 'discount_price', 'description', 'image']
 
     def __init__(self, *args, **kwargs):
         super(editOrCreateProduct, self).__init__(*args, **kwargs)
@@ -64,6 +64,8 @@ class editOrCreateProduct(forms.ModelForm):
         self.fields['price'].label = ""
         self.fields['discount_price'].label = ""
         self.fields['description'].label = ""
+        self.fields['image'].label = ""
+        self.fields['image'].required = False
 
     def populate(self, product_id, *args, **kwargs):
         product = Item.objects.get(id=product_id)
@@ -73,8 +75,20 @@ class editOrCreateProduct(forms.ModelForm):
             {'value': product.price})
         self.fields['discount_price'].widget.attrs.update(
             {'value': product.discount_price})
-        self.fields['description'].widget.attrs.update(
-            {'value': product.description})
+        self.fields['description'].initial = product.description
+
+
+class editProductImage(forms.ModelForm):
+    # sort this meta class out
+
+    class Meta:
+        model = Item
+        fields = ['image']
+
+    def __init__(self, *args, **kwargs):
+        super(editProductImage, self).__init__(*args, **kwargs)
+        self.fields['image'].label = ""
+        self.fields['image'].required = False
 
 
 class editOrCreateCategory(forms.ModelForm):

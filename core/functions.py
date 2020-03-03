@@ -5,37 +5,6 @@ from core.models import *
 import random
 import string
 
-# standardised variables
-
-ADDRESS_CHOICES = [
-    {'key': 'B', 'name': 'Fakturaaddress'},
-    {'key': 'S', 'name': 'Leveransaddress'},
-]
-
-ADDRESS_CHOICES_EXTENDED = [
-    {'key': 'B', 'name': 'Fakturaaddress'},
-    {'key': 'S', 'name': 'Leveransaddress'},
-    {'key': 'BOTH', 'name': 'Båda'},
-]
-
-LANGUAGE_CHOICES = (
-    ('SWE', 'Svenska'),
-    ('ENG', 'English'),
-    ('DEU', 'Deutch'),
-    ('RUS', 'Russian'),
-)
-
-INTERVALL_CHOICES = (
-    ('001', 'En gång i veckan'),
-    ('002', 'Varannan vecka'),
-    ('010', 'En gång i månaden'),
-    ('020', 'Varannan månad'),
-    ('100', 'Var sjätte månad'),
-    ('200', 'En gång om året'),
-)
-
-# reused functions
-
 
 def where_am_i(self):
     path = self.request.get_full_path()

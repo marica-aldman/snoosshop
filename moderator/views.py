@@ -3105,8 +3105,9 @@ class ProductsView(View):
                             return render(self.request, "moderator/mod_products.html", context)
 
                         except ObjectDoesNotExist:
-                            messages.info(
-                                self.request, info_message_42)
+                            if product_id is not None:
+                                messages.info(
+                                    self.request, info_message_42)
                             return redirect("moderator:products")
                     else:
                         # rerender page with error message
@@ -3162,9 +3163,9 @@ class ProductsView(View):
                             'current_page': current_page,
                             'max_pages': p_pages,
                         }
-                        if self.request.POST['product_id'] != "":
+                        if self.request.POST['product_id'] is not None:
                             message.warning(
-                                self.request, 'Please enter a valid product id')
+                                self.request, error_message_103)
                         return render(self.request, "moderator/mod_products.html", context)
 
             elif 'nextPage' in self.request.POST.keys():
@@ -3238,7 +3239,7 @@ class ProductsView(View):
                 # get what type of search
                 search_type = self.request.POST['search']
 
-                # check what kind of search
+                # check what page
                 if current_page > 2:
 
                     try:
@@ -3303,7 +3304,7 @@ class ProductsView(View):
                     except ObjectDoesNotExist:
                         messages.info(
                             self.request, error_message_87)
-                        return redirect("moderator:mod_products.html")
+                        return redirect("moderator:products")
 
                 else:
 
@@ -3368,7 +3369,22 @@ class ProductsView(View):
                     except ObjectDoesNotExist:
                         messages.warning(
                             self.request, error_message_88)
-                        return redirect("moderator:mod_products.html")
+                        return redirect("moderator:products")
+
+            elif 'delete' in self.request.POST.keys():
+                if 'id' in self.request.POST.keys():
+
+                    product_id = int(self.request.POST['id'])
+                    product = Item.objects.get(id=product_id)
+                    product.delete()
+
+                    messages.info(
+                        self.request, info_message_48)
+                    return redirect("moderator:products")
+                else:
+                    return redirect("moderator:products")
+            else:
+                return redirect("moderator:categories")
 
         except ObjectDoesNotExist:
             messages.warning(
@@ -3380,7 +3396,7 @@ class SpecificProductsView(View):
     def get(self, *args, **kwargs):
         messages.info(
             self.request, error_message_90)
-        return redirect("moderator:mod_products")
+        return redirect("moderator:products")
 
     def post(self, *args, **kwargs):
         if 'lookAtProduct' in self.request.POST.keys():
@@ -3390,92 +3406,138 @@ class SpecificProductsView(View):
                 # get the form
                 form = editOrCreateProduct()
                 form.populate(product_id)
+                img_form = editProductImage()
 
-                # we also need the image and category. So we pass the product to the template for rendering those options in there
+                old = product_id
 
-                tryingToSave = False
-                product = Item.objects.get(id=product_id)
+                # we need all possible categories
+
+                category = 0
+                categories = Category.objects.all()
 
                 context = {
-                    'product': product,
                     'form': form,
-                    'tryingToSave': tryingToSave,
+                    'img_form': img_form,
+                    'old': old,
+                    'category': category,
+                    'categories': categories,
                 }
 
-                return render(self.request, "moderator/new_product.html", context)
+                return render(self.request, "moderator/mod_single_product.html", context)
             except ObjectDoesNotExist:
                 messages.warning(
                     self.request, error_message_91)
-                return redirect("moderator:mod_products.html")
+                return redirect("moderator:products")
         elif 'new' in self.request.POST.keys():
 
             # get the form
             form = editOrCreateProduct()
+            img_form = editProductImage()
 
-            # we also need the image and category. So we pass the product to the template for rendering those options in there
+            old = 'new'
 
-            tryingToSave = False
-            product = Item()
+            # we need all possible categories
+            category = 0
+            categories = Category.objects.all()
 
             context = {
-                'product': product,
                 'form': form,
-                'tryingToSave': tryingToSave,
+                'old': old,
+                'img_form': img_form,
+                'category': category,
+                'categories': categories,
             }
 
-            return render(self.request, "moderator/new_product.html", context)
+            return render(self.request, "moderator/mod_single_product.html", context)
 
-        elif 'save' in self.request.POST.keys():
-            form = editOrCreateProduct(self.request.Post)
+        elif 'saveProduct' in self.request.POST.keys():
+
+            form = editOrCreateProduct(self.request.POST)
+            img_form = editProductImage(self.request.POST)
 
             if form.is_valid():
-                product_id = int(self.request.POST['p_id'])
-                product = Item.objects.get(id=product_id)
-                product.title = form.cleaned_data.get('title')
-                product.price = form.cleaned_data.get('price')
-                product.discount_price = form.cleaned_data.get(
-                    'discount_price')
-                product.description = form.cleaned_data.get('description')
+                product_id = self.request.POST['old']
+                if product_id == "new":
+                    product = Item()
+                    product.title = form.cleaned_data.get('title')
+                    product.price = form.cleaned_data.get('price')
+                    product.discount_price = form.cleaned_data.get(
+                        'discount_price')
+                    product.description = form.cleaned_data.get('description')
+                    if img_form.is_valid():
+                        if 'image' in self.request.FILES.keys():
+                            product.image = Item(
+                                imgfile=self.request.FILES['image'])
+                            print(product.image)
+                        else:
+                            print('oh')
+                            print(self.request.FILES.keys())
+                    else:
+                        print('oh dear')
+                    if 'category' in self.request.POST.keys():
+                        category_id = int(self.request.POST['category'])
+                        category = Category.objects.get(id=category_id)
+                        product.category = category
 
-                # now we need to secure the other values
+                    # save
 
-                category_id = int(self.request.POST['category'])
-                category = Category.objects.get(id=category_id)
-                product.category = category
+                    product.save()
 
-                # image fix this when you have fixed new product
+                    product.slug = product.title + str(product.id)
 
-                image = ""
+                    product.save()
 
-                # save
+                    messages.info(
+                        self.request, info_message_43)
+                    return redirect("moderator:products")
+                else:
+                    product_id = int(product_id)
+                    product = Item.objects.get(id=product_id)
+                    product.title = form.cleaned_data.get('title')
+                    product.price = form.cleaned_data.get('price')
+                    product.discount_price = form.cleaned_data.get(
+                        'discount_price')
+                    product.description = form.cleaned_data.get('description')
+                    if img_form.is_valid():
+                        product.image = img_form.cleaned_data.get('image')
+                        print(product.image)
+                    else:
+                        print('oh dear')
+                    if 'category' in self.request.POST.keys():
+                        category_id = int(self.request.POST['category'])
+                        category = Category.objects.get(id=category_id)
+                        product.category = category
 
-                product.save()
+                    # save
 
-                messages.info(
-                    self.request, info_message_43)
-                return redirect("moderator:mod_products.html")
+                    product.save()
+
+                    messages.info(
+                        self.request, info_message_43)
+                    return redirect("moderator:products")
 
             else:
                 # rerender page with form filled in
 
-                product_id = int(self.request.POST['p_id'])
+                old = int(self.request.POST['old'])
 
                 # we also need the image and category to rerender the form properly
 
-                tryingToSave = True
-                image = self.request.POST['image']
-                slug = self.request.POST['slug']
                 category = self.request.POST['category']
+
+                # we need all possible categories
+
+                categories = Category.objects.all()
 
                 context = {
                     'form': form,
-                    'tryingToSave': tryingToSave,
-                    'image': image,
-                    'slug': slug,
+                    'img_form': img_form,
+                    'old': old,
                     'category': category,
+                    'categories': categories,
                 }
 
-                return render(self.request, "moderator/new_product.html", context)
+                return render(self.request, "moderator/mod_single_product.html", context)
 
 
 class CategoriesView(View):
@@ -3483,7 +3545,7 @@ class CategoriesView(View):
         try:
             # get the first 20 categories and a count of all products
             categories = Category.objects.all()[:20]
-            number_categories = Item.objects.all().count()
+            number_categories = Category.objects.all().count()
             # figure out how many pages of 20 there are
             # if there are only 20 or fewer pages will be 1
 
@@ -3580,6 +3642,11 @@ class CategoriesView(View):
 
                             search_type = "categoryID"
 
+                            # form
+
+                            form = searchCategoryForm()
+                            form.populate(category_id)
+
                             context = {
                                 'search_type': search_type,
                                 'search_value': category_id,
@@ -3599,7 +3666,7 @@ class CategoriesView(View):
                             return redirect("moderator:categories")
                     else:
                         # if the product id is 0 we are probably trying to reset the form
-                        return redirect("moderator:products")
+                        return redirect("moderator:categories")
 
                 else:
                     # make a form and populate so we can clean the data
@@ -3773,7 +3840,7 @@ class CategoriesView(View):
                 # get what type of search
                 search_type = self.request.POST['search']
 
-                # check what kind of search
+                # check what page
                 if current_page > 2:
 
                     try:
@@ -3793,9 +3860,9 @@ class CategoriesView(View):
                             # if there are more we divide by ten
                             c_pages = number_categories / 20
                             # see if there is a decimal
-                            testP = int(c_pages)
+                            testC = int(c_pages)
                             # if there isn't an even number of ten make an extra page for the last group
-                            if testP != c_pages:
+                            if testC != c_pages:
                                 c_pages = int(c_pages)
                                 c_pages += 1
 
@@ -3904,6 +3971,7 @@ class CategoriesView(View):
                         messages.warning(
                             self.request, error_message_99)
                         return redirect("moderator:categories")
+
             elif 'delete' in self.request.POST.keys():
                 if 'id' in self.request.POST.keys():
 
@@ -3928,14 +3996,14 @@ class CategoriesView(View):
 class SpecificCategoryView(View):
     def get(self, *args, **kwargs):
         messages.warning(
-            self.request, error_message_90)
+            self.request, error_message_104)
         return redirect("moderator:categories")
 
     def post(self, *args, **kwargs):
         if 'lookAtCategory' in self.request.POST.keys():
             category_id = int(self.request.POST['lookAtCategory'])
-            # test
-            category = Category.objects.get(id=category_id)
+
+            # get the form
 
             form = editOrCreateCategory()
             form.populate(category_id)
@@ -3945,7 +4013,6 @@ class SpecificCategoryView(View):
             context = {
                 'form': form,
                 'old': old,
-                'category': category,
             }
 
             return render(self.request, "moderator/mod_single_category.html", context)

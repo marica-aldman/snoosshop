@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="border border-dark mb-3 p-2">
+        <h3>Produkt</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="old" value="{{ old }}">
+            <table class="table-striped table-hover w-100  mb-2 table-bordered">
+                <tbody>
+                    <tr>
+                        <td>
+                            Titel:
+                        </td>
+                        <td>
+                            {{ form.title }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Beskrivning
+                        </td>
+                        <td>
+                            {{ form.description }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Pris
+                        </td>
+                        <td>
+                            {{ form.price }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Rea pris
+                        </td>
+                        <td>
+                            {{ form.discount_price }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Kategori
+                        </td>
+                        <td>
+                            <select name="category">
+                                {% for a_category in categories %}
+                                    <option value="{{a_category.id}}" {% if a_category.id == category %}selected{% endif %}>
+                                        {{ a_category.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Bild
+                        </td>
+                        <td>
+                            {{ img_form.image }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='submit' class='btn btn-primary' name="saveProduct" value="True">Spara</button>
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}
