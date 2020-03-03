@@ -19,7 +19,7 @@
                                 Titel:
                             </td>
                             <td>
-                                {{ form.street_address }}
+                                {{ form.title }}
                             </td>
                         </tr>
                         <tr>
@@ -27,7 +27,7 @@
                                 Pris:
                             </td>
                             <td>
-                                {{ form.apartment_address }}
+                                {{ form.price }}
                             </td>
                         </tr>
                         <tr>
@@ -35,7 +35,7 @@
                                 Reapris:
                             </td>
                             <td>
-                                {{ form.post_town }}
+                                {{ form.discount_price }}
                             </td>
                         </tr>
                         <tr>
@@ -43,19 +43,7 @@
                                 Kategori:
                             </td>
                             <td>
-                                {{ form.zip }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Label:
-                            </td>
-                            <td>
-                                <select name="address_type" class="select form-control">
-                                    {% for choice_list in address_choices %}
-                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
-                                    {% endfor %}
-                                </select>
+                                Stoppa in dropdown
                             </td>
                         </tr>
                         <tr>
@@ -63,11 +51,7 @@
                                 Beskrivning:
                             </td>
                             <td>
-                                <select name="address_type" class="select form-control">
-                                    {% for choice_list in address_choices %}
-                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
-                                    {% endfor %}
-                                </select>
+                                {{ form.description }}
                             </td>
                         </tr>
                         <tr>
@@ -75,11 +59,7 @@
                                 Bild:
                             </td>
                             <td>
-                                <select name="address_type" class="select form-control">
-                                    {% for choice_list in address_choices %}
-                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
-                                    {% endfor %}
-                                </select>
+                                Img upload thing here
                             </td>
                         </tr>
                     </tbody>

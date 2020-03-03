@@ -6,37 +6,7 @@ from django.db.models import Sum
 from django.shortcuts import reverse
 from datetime import datetime
 from django_countries.fields import CountryField
-
-class fake_class(models.Model):
-    test = models.CharField(max_length= 42)
-
-
-CATEGORY_CHOICES = (
-    ('TS', 'Tobaksfritt Snus'),
-    ('KS', 'Klassikt Snus'),
-    ('TB', 'Tillbehör')
-)
-
-ADDRESS_CHOICES = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
-)
-
-LANGUAGE_CHOICES = (
-    ('SWE', 'Svenska'),
-    ('ENG', 'English'),
-    ('DEU', 'Deutch'),
-    ('RUS', 'Russian'),
-)
-
-INTERVALL_CHOICES = (
-    ('001', 'En gång i veckan'),
-    ('002', 'Varannan vecka'),
-    ('010', 'En gång i månaden'),
-    ('020', 'Varannan månad'),
-    ('100', 'Var sjätte månad'),
-    ('200', 'En gång om året'),
-)
+from core.functions import *
 
 
 class UserProfile(models.Model):
@@ -264,6 +234,11 @@ class Order(models.Model):
 
     def get_absolute_url_member(self):
         return reverse("member:my_order", kwargs={
+            'slug': self.slug
+        })
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:vieworder", kwargs={
             'slug': self.slug
         })
 

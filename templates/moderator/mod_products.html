@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="container">
+<div class="container mt-3">
 
     <div class="border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
@@ -21,18 +21,20 @@
     </div>
 
     <div class="border border-dark mb-3 p-2">
-        <form method="POST" class="w-100" action="{% url 'moderator:new_product' %}">
-        {% csrf_token %}
+        <form method="POST" class="w-100" action="{% url 'moderator:product' %}">
+            {% csrf_token %}
             <div class="d-flex justify-content-around">
                 <div>
-                    <button type="submit" name="search" class='btn btn-primary mt-3'>Skapa Ny Produkt</button>
+                    <button type="submit" value="{{product.id}}" name="new" class='btn btn-primary'>
+                        Skapa Ny Produkt
+                    </button>
                 </div>
             </div>
         </form>
     </div>
     <!-- results or all orders -->
     <div class="border border-dark mb-3 p-2">
-        <h3>Ordrar</h3>
+        <h3>Produkter</h3>
         <table class="table-striped table-hover w-100  mb-2 table-bordered">
             <thead class="mdb-color lighten-5">
                 <tr>
@@ -130,28 +132,26 @@
         </table>
     </div>
 
-
     <div class="d-flex w-100 justify-content-around">
         <ul class="pagination">
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="search_value" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="previousPageOrder" class="page-link">
+                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
                 </form>
             </li>
-            {% for itemOffset in more_products %}
+            {% for product in more_products %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ itemOffset.number }}" name="nextPageOrder" {% if current_page == itemOffset.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{itemOffset.number}}
+                    <button type="submit" value="{{ product.number }}" name="page" {% if current_page == product.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{product.number}}
                     </button>
                 </form>
             </li>
@@ -160,9 +160,9 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="search_value" value="{{search_value}}">
+                    <input type="hidden" name="searchvalue" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPageOrder" class="page-link">
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
                         >
                     </button>
                 </form>

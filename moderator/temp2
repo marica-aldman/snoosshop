@@ -1,0 +1,87 @@
+                    product_id = int(self.request.POST['search_value'])
+
+                    if product_id != 0:
+                        # next page on a single user is the same as the search for single user
+                        # get the user
+
+                        try:
+                            the_product = Item.objects.get(id=product_id)
+
+                            # there is only one
+                            p_pages = 1
+                            more_products = [{'number': 1}]
+
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "productID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': product_id,
+                                'multiple': multiple,
+                                'product': the_product,
+                                'more_users': more_products,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': p_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_products.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(self.request, "User does not exist.")
+                            return redirect("moderator:products")
+                else:
+                    form = searchUserForm(self.request.POST)
+
+                    if form.is_valid():
+                        # get the values
+                        user_id = form.cleaned_data.get('user_id')
+                        # search done on user
+                        search_value = user_id
+                        # get the user
+
+                        try:
+                            the_user = User.objects.get(id=user_id)
+
+                            # there is only one
+                            u_pages = 1
+                            more_users = [{'number': 1}]
+
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "userID"
+
+                            context = {
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'multiple': multiple,
+                                'person': the_user,
+                                'more_users': more_users,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': u_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_user_search.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(
+                                self.request, "User does not exist.")
+                            return redirect("moderator:search_users")
+                    else:
+                        return redirect("moderator:search_users")

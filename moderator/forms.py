@@ -41,3 +41,29 @@ class searchProductForm(forms.Form):
     def populate(self, product_id, *args, **kwargs):
         self.fields['product_id'].widget.attrs.update(
             {'value': product_id})
+
+
+class editOrCreateProduct(forms.ModelForm):
+    # sort this meta class out
+
+    class Meta:
+        model = Item
+        fields = ['title', 'price', 'discount_price', 'description']
+
+    def __init__(self, *args, **kwargs):
+        super(editOrCreateProduct, self).__init__(*args, **kwargs)
+        self.fields['title'].label = ""
+        self.fields['price'].label = ""
+        self.fields['discount_price'].label = ""
+        self.fields['description'].label = ""
+
+    def populate(self, product_id, *args, **kwargs):
+        product = Item.objects.get(id=product_id)
+        self.fields['title'].widget.attrs.update(
+            {'value': product.title})
+        self.fields['price'].widget.attrs.update(
+            {'value': product.price})
+        self.fields['discount_price'].widget.attrs.update(
+            {'value': product.discount_price})
+        self.fields['description'].widget.attrs.update(
+            {'value': product.description})

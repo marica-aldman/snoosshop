@@ -14,195 +14,8 @@ from slugify import slugify
 from core.models import *
 from member.forms import *
 from .forms import *
-from core.views import create_ref_code
+from core.functions import *
 
-# standardised variables
-
-ADDRESS_CHOICES = [
-    {'key': 'B', 'name': 'Fakturaaddress'},
-    {'key': 'S', 'name': 'Leveransaddress'},
-]
-
-ADDRESS_CHOICES_EXTENDED = [
-    {'key': 'B', 'name': 'Fakturaaddress'},
-    {'key': 'S', 'name': 'Leveransaddress'},
-    {'key': 'BOTH', 'name': 'Båda'},
-]
-
-# reused functions
-
-
-def where_am_i(self):
-    path = self.request.get_full_path()
-    split_path = path.split("/")
-    page = split_path[-1]
-    if page == "":
-        page = split_path[-2]
-    return page
-
-
-def test_slug_company(slug):
-    test = False
-    companyQuery = CompanyInfo.objects.filter(slug=slug)
-    if len(companyQuery) > 0:
-        test = True
-    return test
-
-
-def create_slug_address(address):
-    toSlug = address.street_address + \
-        "B" + str(address.user.id)
-    testSlug = slugify(toSlug)
-    existingSlug = test_slug_address(testSlug)
-    i = 1
-    while existingSlug:
-        toSlug = address.street_address + \
-            "B" + str(address.user.id) + "_" + str(i)
-        testSlug = slugify(toSlug)
-        existingSlug = test_slug_address(testSlug)
-        i += 1
-
-    return testSlug
-
-
-def test_slug_address(slug):
-    test = False
-    addressQuery = Address.objects.filter(slug=slug)
-    if len(addressQuery) > 0:
-        test = True
-    return test
-
-
-def new_address_default(address):
-    # remove default from any other default address of the same type
-    otherAddresses = Address.objects.filter(
-        address_type=address.address_type, default=True)
-    for otherAddress in otherAddresses:
-        otherAddress.default = False
-        otherAddress.save()
-
-
-def get_next_order_date(subdate, intervall):
-    if intervall == '001':
-        # add a week
-        d = timedelta(days=7)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-
-    elif intervall == '002':
-        # add two weeks
-        d = timedelta(days=14)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-
-    elif intervall == '010':
-        # add a month
-        d = timedelta(days=30)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '020':
-        # add two months
-        d = timedelta(days=60)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '100':
-        # add six months
-        d = timedelta(days=182)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '200':
-        # add a year
-        d = timedelta(days=365)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    else:
-        # this shouldnt be able to happen. do nothing
-        return subdate
-
-
-def save_subItems_and_orderItems(theUser, sub, amount, product):
-    # create a subscription item object
-    subItem = SubscriptionItem()
-    subItem.user = theUser
-    subItem.subscription = sub
-    subItem.item = product
-    subItem.item_title = product.title
-    subItem.price = product.price
-    discount_price = 1
-    if product.discount_price is not None:
-        discount_price = product.discount_price
-    subItem.discount_price = discount_price
-    subItem.quantity = amount
-    total_price = product.price * discount_price * amount
-    subItem.total_price = total_price
-
-    # new orderItem object
-    orderItem = OrderItem()
-    # set basic valeus
-    orderItem.user = sub.user
-    orderItem.ordered = True
-    orderItem.item = product
-    orderItem.title = product.title
-    orderItem.quantity = subItem.quantity
-    orderItem.price = product.price
-    orderItem.discount_price = discount_price
-    orderItem.total_price = total_price
-    # save orderitem
-    orderItem.save()
-    # save subitems
-    subItem.save()
-    return orderItem
-
-
-def sameAddress_moderator(theUser, form_street_address, form_post_town, form_address_type):
-    # start by checking that we dont already have this address
-    sameBilling = 0
-    sameShipping = 0
-    message = ''
-    addresses = Address.objects.filter(user=theUser)
-    for anAddress in addresses:
-        if form_street_address == anAddress.street_address:
-            if form_post_town == anAddress.post_town:
-                if form_address_type == "A":
-                    if anAddress.address_type == "S":
-                        sameShipping = anAddress.id
-                    elif anAddress.address_type == "B":
-                        sameBilling = anAddress.id
-                    return sameShipping, sameBilling, message
-
-                elif anAddress.address_type == form_address_type:
-                    message = "Address already exists"
-                    if default and not anAddress.default:
-                        # remove default from other addresses of same type
-
-                        compAddresses = Address.objects.filter(
-                            user=theUser, address_type=anAddress.address_type)
-                        for sameAddress in compAddresses:
-                            if sameAddress.default:
-                                sameAddress.default = False
-                                sameAddress.save()
-                                testAddress = Address.objects.get(
-                                    id=sameAddress.id)
-                        # add default to this address
-                        anAddress.default = True
-                        anAddress.save()
-                        message = "Address already exists. Default changed."
-                    return sameShipping, sameBilling, message
-
-
-# view classes
 
 class Overview(View):
     def get(self, *args, **kwargs):
@@ -890,9 +703,10 @@ class MultipleOrdersView(View):
                 # if there are more we divide by ten
                 o_pages = number_orders / 20
                 # see if there is a decimal
-                numType = type(o_pages)
+                testO = int(o_pages)
                 # if there isn't an even number of ten make an extra page for the last group
-                if numType == "Float":
+                if testO != o_pages:
+                    o_pages = int(o_pages)
                     o_pages += 1
 
             # create a list for a ul to work through
@@ -929,6 +743,7 @@ class MultipleOrdersView(View):
                 'more_orders': more_orders,
                 'form': form,
                 'current_page': current_page,
+                'max_pages': o_pages,
             }
 
             return render(self.request, "moderator/mod_order_search.html", context)
@@ -947,357 +762,237 @@ class MultipleOrdersView(View):
 
             # what button did we press
 
-            if 'search' in self.request.POST.keys():
-                # make a form and populate so we can clean the data
-                form = searchOrderForm(self.request.POST)
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
+                    # fix this to display pagination for some types of searches and only one specific page for other others
+                    user_id = int(self.request.POST['search_value'])
+                else:
+                    # make a form and populate so we can clean the data
+                    form = searchOrderForm(self.request.POST)
 
-                if form.is_valid():
-                    # get the values
-                    order_ref = form.cleaned_data.get('order_ref')
-                    order_id = form.cleaned_data.get('order_id')
-                    user_id = form.cleaned_data.get('user_id')
+                    if form.is_valid():
+                        # get the values
+                        order_ref = form.cleaned_data.get('order_ref')
+                        order_id = form.cleaned_data.get('order_id')
+                        user_id = form.cleaned_data.get('user_id')
 
-                    if len(order_ref) == 20:
-                        # search done on order reference
-                        search_value = order_ref
+                        if len(order_ref) == 20:
+                            # search done on order reference
+                            search_value = order_ref
 
-                        try:
-                            order = Order.objects.get(order_ref=order_ref)
+                            try:
+                                order = Order.objects.get(order_ref=order_ref)
 
-                            # set current page to 1
-                            current_page = 1
+                                # set current page to 1
+                                current_page = 1
 
-                            # set a bool to check if we are showing one or multiple orders
+                                # set a bool to check if we are showing one or multiple orders
 
-                            multiple = False
-                            more_orders = [{'number': 1}]
+                                multiple = False
+                                more_orders = [{'number': 1}]
 
-                            # set the search type
+                                # set the search type
 
-                            search_type = "Reference"
+                                search_type = "Reference"
 
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'order': order,
-                                'more_orders': more_orders,
-                                'form': form,
-                                'current_page': 1,
-                            }
+                                context = {
+                                    'search_type': search_type,
+                                    'search_value': search_value,
+                                    'multiple': multiple,
+                                    'order': order,
+                                    'more_orders': more_orders,
+                                    'form': form,
+                                    'current_page': 1,
+                                    'max_pages': 1,
+                                }
 
-                            return render(self.request, "moderator:mod_vieworder", context)
-                        except ObjectDoesNotExist:
+                                return render(self.request, "moderator:mod_vieworder", context)
+                            except ObjectDoesNotExist:
+                                messages.info(
+                                    self.request, "Order does not exist.")
+                                return redirect("moderator:orders")
+
+                        elif order_id != 0:
+                            # search on order id
+                            search_value = order_id
+
+                            try:
+                                order = Order.objects.get(id=order_id)
+
+                                # set current page to 1
+                                current_page = 1
+
+                                # set a bool to check if we are showing one or multiple orders
+
+                                multiple = False
+                                more_orders = [{'number': 1}]
+
+                                # set the search type
+
+                                search_type = "orderID"
+
+                                context = {
+                                    'search_type': search_type,
+                                    'search_value': search_value,
+                                    'multiple': multiple,
+                                    'order': order,
+                                    'more_orders': more_orders,
+                                    'form': form,
+                                    'current_page': 1,
+                                    'max_pages': 1,
+                                }
+
+                                return render(self.request, "moderator:mod_vieworder", context)
+                            except ObjectDoesNotExist:
+                                messages.info(
+                                    self.request, "Order does not exist.")
+                                return redirect("moderator:orders")
+
+                        elif user_id != 0:
+                            # search done on user
+                            search_value = user_id
+                            # get the user
+
+                            try:
+                                the_user = User.objects.get(id=user_id)
+                                orders = Order.objects.filter(
+                                    user=the_user)
+                                number_orders = Order.objects.filter(
+                                    user=the_user).count()
+
+                                # figure out how many pages of 10 there are
+                                # if there are only 10 or fewer pages will be 1
+
+                                o_pages = 1
+
+                                if number_orders > 10:
+                                    # if there are more we divide by ten
+                                    o_pages = number_orders / 10
+                                    # see if there is a decimal
+                                    numType = type(o_pages)
+                                    # if there isn't an even number of ten make an extra page for the last group
+                                    if numType == "Float":
+                                        o_pages += 1
+
+                                # create a list for a ul to work through
+
+                                more_orders = []
+
+                                i = 0
+                                # populate the list with the amount of pages there are
+                                for i in range(o_pages):
+                                    i += 1
+                                    more_orders.append({'number': i})
+
+                                # set current page to 1
+                                current_page = 1
+
+                                # set a bool to check if we are showing one or multiple orders
+
+                                multiple = True
+
+                                # set the search type
+
+                                search_type = "userID"
+
+                                context = {
+                                    'search_type': search_type,
+                                    'search_value': search_value,
+                                    'multiple': multiple,
+                                    'orders': orders,
+                                    'more_orders': more_orders,
+                                    'form': form,
+                                    'current_page': current_page,
+                                    'max_pages': o_pages,
+                                }
+
+                                return render(self.request, "moderator:mod_vieworder", context)
+
+                            except ObjectDoesNotExist:
+                                messages.info(
+                                    self.request, "User does not exist.")
+                                return redirect("moderator:orders")
+                        else:
                             messages.info(
-                                self.request, "Order does not exist.")
+                                self.request, "Var god fyll i Referens, order id eller kund id.")
                             return redirect("moderator:orders")
-
-                    elif order_id != 0:
-                        # search on order id
-                        search_value = order_id
-
-                        try:
-                            order = Order.objects.get(id=order_id)
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-                            more_orders = [{'number': 1}]
-
-                            # set the search type
-
-                            search_type = "orderID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'order': order,
-                                'more_orders': more_orders,
-                                'form': form,
-                                'current_page': 1,
-                            }
-
-                            return render(self.request, "moderator:mod_vieworder", context)
-                        except ObjectDoesNotExist:
-                            messages.info(
-                                self.request, "Order does not exist.")
-                            return redirect("moderator:orders")
-
-                    elif user_id != 0:
-                        # search done on user
-                        search_value = user_id
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-                            orders = Order.objects.filter(
-                                user=the_user)
-                            number_orders = Order.objects.filter(
-                                user=the_user).count()
-
-                            # figure out how many pages of 10 there are
-                            # if there are only 10 or fewer pages will be 1
-
-                            o_pages = 1
-
-                            if number_orders > 10:
-                                # if there are more we divide by ten
-                                o_pages = number_orders / 10
-                                # see if there is a decimal
-                                numType = type(o_pages)
-                                # if there isn't an even number of ten make an extra page for the last group
-                                if numType == "Float":
-                                    o_pages += 1
-
-                            # create a list for a ul to work through
-
-                            more_orders = []
-
-                            i = 0
-                            # populate the list with the amount of pages there are
-                            for i in range(o_pages):
-                                i += 1
-                                more_orders.append({'number': i})
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = True
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'orders': orders,
-                                'more_orders': more_orders,
-                                'form': form,
-                                'current_page': current_page,
-                            }
-
-                            return render(self.request, "moderator:mod_vieworder", context)
-
-                        except ObjectDoesNotExist:
-                            messages.info(self.request, "User does not exist.")
-                            return redirect("moderator:orders")
-                    else:
-                        messages.info(
-                            self.request, "Var god fyll i Referens, order id eller kund id.")
-                        return redirect("moderator:orders")
 
             elif 'nextPage' in self.request.POST.keys():
                 # get what type of search
                 search_type = self.request.POST['search']
 
-                # check what kind of search
-                if search_type == "None":
+                try:
+                    number_orders = Order.objects.all(
+                    ).count()
+                    number_pages = number_users / 20
+                    if current_page < number_pages:
+                        current_page += 1
+                    offset = current_page * 20
+                    orders = Order.objects.all()[20:offset]
+                except ObjectDoesNotExist:
+                    orders = {}
+                    number_orders = 0
 
-                    try:
-                        number_orders = Order.objects.all(
-                        ).count()
-                        offset = current_page
-                        if current_page < (number_orders / 20):
-                            current_page += 1
-                            offset = current_page
-                        orders = Order.objects.all()[20:offset]
-                    except ObjectDoesNotExist:
-                        orders = {}
-                        number_orders = 0
+                # figure out how many pages of 20 there are
+                # if there are only 20 or fewer pages will be 1
 
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
+                o_pages = 1
 
-                    o_pages = 1
+                if number_orders > 20:
+                    # if there are more we divide by ten
+                    o_pages = number_orders / 20
+                    # see if there is a decimal
+                    testO = int(o_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != o_pages:
+                        o_pages = int(o_pages)
+                        o_pages += 1
 
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        numType = type(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
-                            o_pages += 1
+                # create a list for a ul to work through
 
-                    # create a list for a ul to work through
+                more_orders = []
 
-                    more_orders = []
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(o_pages):
+                    i += 1
+                    more_orders.append({'number': i})
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
+                # make search for specific order or customer
 
-                    # make search for specific order or customer
+                form = searchOrderForm()
 
-                    form = searchOrderForm()
+                # set a bool to check if we are showing one or multiple orders
 
-                    # set a bool to check if we are showing one or multiple orders
+                multiple = True
 
-                    multiple = True
+                # set the hidden value for wether or not we have done a search
 
-                    # set the hidden value for wether or not we have done a search
+                search_type = "None"
+                search_value = "None"
 
-                    search_type = "None"
-                    search_value = "None"
+                context = {
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'orders': orders,
+                    'more_orders': more_orders,
+                    'form': form,
+                    'current_page': current_page,
+                    'max_pages': o_pages,
+                }
 
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'orders': orders,
-                        'more_orders': more_orders,
-                        'form': form,
-                        'current_page': current_page,
-                    }
-
-                    return render(self.request, "moderator/mod_order_search.html", context)
-
-                elif search_type == "Reference":
-                    # get the search value
-                    search_value = int(self.request.POST['search_value'])
-
-                    try:
-                        order = Order.objects.get(order_ref=search_value)
-
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-                        more_orders = [{'number': 1}]
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'order': order,
-                            'more_orders': more_orders,
-                            'form': form,
-                            'current_page': 1,
-                        }
-
-                        return render(self.request, "moderator:mod_vieworder", context)
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Order does not exist.")
-                        return redirect("moderator:orders")
-                elif search_type == "OrderID":
-                    # get the search value
-                    search_value = int(self.request.POST['search_value'])
-
-                    try:
-                        order = Order.objects.get(id=search_value)
-
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-                        more_orders = [{'number': 1}]
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'order': order,
-                            'more_orders': more_orders,
-                            'form': form,
-                            'current_page': 1,
-                        }
-
-                        return render(self.request, "moderator:mod_vieworder", context)
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Order does not exist.")
-                        return redirect("moderator:orders")
-                elif search_type == "UserID":
-                    search_value = int(self.request.POST['search_value'])
-
-                    try:
-                        theUser = User.objects.get(id=search_value)
-                        number_orders = Order.objects.filter(
-                            user=theUser).count()
-                        offset = current_page
-                        if current_page < (number_orders / 20):
-                            current_page += 1
-                            offset = current_page
-                        orders = Order.objects.filter(user=theUser)[20:offset]
-                    except ObjectDoesNotExist:
-                        orders = {}
-                        number_orders = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    o_pages = 1
-
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        numType = type(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
-                            o_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_orders = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
-
-                    # make search for specific order or customer
-
-                    form = searchOrderForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'orders': orders,
-                        'more_orders': more_orders,
-                        'form': form,
-                        'current_page': current_page,
-                    }
-
-                    return render(self.request, "moderator/mod_order_search.html", context)
-                else:
-                    messages.info(
-                        self.request, "Something is wrong with the order search page. Contact IT support for assistance.")
-                    return redirect("moderator:orders")
+                return render(self.request, "moderator/mod_order_search.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
                 # get what type of search
                 search_type = self.request.POST['search']
 
-                # check what kind of search
-                if search_type == "None":
-
+                if current_page > 2:
                     try:
-                        offset = current_page
                         if current_page > 1:
                             current_page -= 1
-                            offset = current_page
+                            offset = current_page * 20
                         orders = Order.objects.all()[20:offset]
                         number_orders = Order.objects.all(
                         ).count()
@@ -1314,9 +1009,10 @@ class MultipleOrdersView(View):
                         # if there are more we divide by ten
                         o_pages = number_orders / 20
                         # see if there is a decimal
-                        numType = type(o_pages)
+                        testO = int(o_pages)
                         # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
+                        if testO != o_pages:
+                            o_pages = int(o_pages)
                             o_pages += 1
 
                     # create a list for a ul to work through
@@ -1350,82 +1046,17 @@ class MultipleOrdersView(View):
                         'more_orders': more_orders,
                         'form': form,
                         'current_page': current_page,
+                        'max_pages': o_pages,
                     }
 
                     return render(self.request, "moderator/mod_order_search.html", context)
-
-                elif search_type == "Reference":
-                    # get the search value
-                    search_value = int(self.request.POST['search_value'])
-
+                else:
                     try:
-                        order = Order.objects.get(order_ref=search_value)
-
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-                        more_orders = [{'number': 1}]
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'order': order,
-                            'more_orders': more_orders,
-                            'form': form,
-                            'current_page': 1,
-                        }
-
-                        return render(self.request, "moderator:mod_vieworder", context)
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Order does not exist.")
-                        return redirect("moderator:orders")
-                elif search_type == "OrderID":
-                    # get the search value
-                    search_value = int(self.request.POST['search_value'])
-
-                    try:
-                        order = Order.objects.get(id=search_value)
-
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-                        more_orders = [{'number': 1}]
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'order': order,
-                            'more_orders': more_orders,
-                            'form': form,
-                            'current_page': 1,
-                        }
-
-                        return render(self.request, "moderator:mod_vieworder", context)
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Order does not exist.")
-                        return redirect("moderator:orders")
-                elif search_type == "UserID":
-                    search_value = int(self.request.POST['search_value'])
-
-                    try:
-                        theUser = User.objects.get(id=search_value)
-                        offset = current_page
                         if current_page > 1:
                             current_page -= 1
-                            offset = current_page
-                        orders = Order.objects.filter(user=theUser)[20:offset]
-                        number_orders = Order.objects.filter(
-                            user=theUser).count()
+                        orders = Order.objects.all()[:20]
+                        number_orders = Order.objects.all(
+                        ).count()
                     except ObjectDoesNotExist:
                         orders = {}
                         number_orders = 0
@@ -1439,9 +1070,10 @@ class MultipleOrdersView(View):
                         # if there are more we divide by ten
                         o_pages = number_orders / 20
                         # see if there is a decimal
-                        numType = type(o_pages)
+                        testO = int(o_pages)
                         # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
+                        if testO != o_pages:
+                            o_pages = int(o_pages)
                             o_pages += 1
 
                     # create a list for a ul to work through
@@ -1462,6 +1094,11 @@ class MultipleOrdersView(View):
 
                     multiple = True
 
+                    # set the hidden value for wether or not we have done a search
+
+                    search_type = "None"
+                    search_value = "None"
+
                     context = {
                         'search_type': search_type,
                         'search_value': search_value,
@@ -1470,13 +1107,10 @@ class MultipleOrdersView(View):
                         'more_orders': more_orders,
                         'form': form,
                         'current_page': current_page,
+                        'max_pages': o_pages,
                     }
 
                     return render(self.request, "moderator/mod_order_search.html", context)
-                else:
-                    messages.info(
-                        self.request, "Something is wrong with the order search page. Contact IT support for assistance.")
-                    return redirect("moderator:orders")
 
         except ObjectDoesNotExist:
             messages.info(
@@ -2951,8 +2585,8 @@ class SpecificSubscription(View):
                                         id=product_id)
                                     # saving subscription and order items
 
-                                    orderItem = save_subItems_and_orderItems(theUser,
-                                                                             sub, amount, product)
+                                    orderItem = save_subItems_and_orderItems(
+                                        sub, amount, product)
                                     theOrder.items.add(orderItem)
                                     message = "Subscription saved and activated."
                                     messages.info(self.request, message)
@@ -3026,8 +2660,8 @@ class SpecificSubscription(View):
                                     amount = int(self.request.POST[a_string])
                                     product = Item.objects.get(id=product_id)
                                     # saving subscription and order items
-                                    orderItem = save_subItems_and_orderItems(theUser,
-                                                                             sub, amount, product)
+                                    orderItem = save_subItems_and_orderItems(
+                                        sub, amount, product)
                                     theOrder.items.add(orderItem)
                                     message = "Subscription saved and activated."
                                     messages.info(self.request, message)
@@ -3291,9 +2925,10 @@ class ProductsView(View):
                 # if there are more we divide by ten
                 p_pages = number_products / 20
                 # see if there is a decimal
-                numType = type(p_pages)
+                testP = int(p_pages)
                 # if there isn't an even number of ten make an extra page for the last group
-                if numType == "Float":
+                if testP != p_pages:
+                    p_pages = int(p_pages)
                     p_pages += 1
 
             # create a list for a ul to work through
@@ -3330,6 +2965,7 @@ class ProductsView(View):
                 'more_products': more_products,
                 'form': form,
                 'current_page': current_page,
+                'max_pages': p_pages,
             }
 
             return render(self.request, "moderator/mod_products.html", context)
@@ -3348,153 +2984,10 @@ class ProductsView(View):
 
             # what button did we press
 
-            if 'search' in self.request.POST.keys():
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
                 # make a form and populate so we can clean the data
-                form = searchProductForm(self.request.POST)
-
-                if form.is_valid():
-                    # get the values
-                    product_id = form.cleaned_data.get('product_id')
-                    # search done on product id
-                    search_value = product_id
-                    # get the product
-                    try:
-                        product = Item.objects.get(id=product_id)
-
-                        more_products = [{'number': 1}]
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-
-                        # set the search type
-
-                        search_type = "productID"
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'product': product,
-                            'more_products': more_products,
-                            'form': form,
-                            'current_page': current_page,
-                        }
-
-                        return render(self.request, "moderator/mod_products.html", context)
-
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Product does not exist.")
-                        return redirect("moderator:products")
-                else:
-                    # if we are paging after a search we need to render the same page again. Values will be in other places than a regular search
-                    product_id = int(self.request.POST['search_value'])
-                    # get the product
-                    product = Item.objects.get(id=product_id)
-
-                    # only one page
-
-                    more_products = [{'number': 1}]
-
-                    # set current page to 1
-                    current_page = 1
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = False
-
-                    # set the search type
-
-                    search_type = "productID"
-                    search_value = product_id
-
-                    form = searchProductForm()
-                    form.populate(product_id)
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'product': product,
-                        'more_products': more_products,
-                        'form': form,
-                        'current_page': current_page,
-                    }
-
-                    return render(self.request, "moderator/mod_products.html", context)
-
-            elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-
-                # check what kind of search
-                if search_type == "None":
-
-                    try:
-                        number_products = Item.objects.all(
-                        ).count()
-                        offset = current_page
-                        if current_page < (number_products / 20):
-                            current_page += 1
-                            offset = current_page
-                        products = Item.objects.all()[20:offset]
-                    except ObjectDoesNotExist:
-                        products = {}
-                        number_products = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    p_pages = 1
-
-                    if number_products > 20:
-                        # if there are more we divide by ten
-                        p_pages = number_products / 20
-                        # see if there is a decimal
-                        numType = type(p_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if numType == "Float":
-                            p_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_products = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(p_pages):
-                        i += 1
-                        more_products.append({'number': i})
-
-                    # make search for specific order or customer
-
-                    form = searchProductForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
-
-                    # set the hidden value for wether or not we have done a search
-
-                    search_type = "None"
-                    search_value = "None"
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'products': products,
-                        'more_products': more_products,
-                        'form': form,
-                        'current_page': current_page,
-                    }
-
-                    return render(self.request, "moderator/mod_products.html", context)
-
-                elif search_type == "productID":
+                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
+                    # we only have one type of search for this we can only get one page.
                     product_id = int(self.request.POST['search_value'])
 
                     if product_id != 0:
@@ -3502,11 +2995,10 @@ class ProductsView(View):
                         # get the user
 
                         try:
-                            # get the product
-                            product = Item.objects.get(id=product_id)
+                            the_product = Item.objects.get(id=product_id)
 
-                            # only one page
-
+                            # there is only one
+                            p_pages = 1
                             more_products = [{'number': 1}]
 
                             # set current page to 1
@@ -3519,9 +3011,52 @@ class ProductsView(View):
                             # set the search type
 
                             search_type = "productID"
-                            search_value = product_id
 
-                            form = searchProductForm().populate(product_id)
+                            context = {
+                                'search_type': search_type,
+                                'search_value': product_id,
+                                'multiple': multiple,
+                                'product': the_product,
+                                'more_users': more_products,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': p_pages,
+                            }
+
+                            return render(self.request, "moderator/mod_products.html", context)
+
+                        except ObjectDoesNotExist:
+                            messages.info(
+                                self.request, "Product does not exist.")
+                            return redirect("moderator:products")
+                    else:
+                        # if the product id is 0 we are probably trying to reset the form
+                        return redirect("moderator:products")
+
+                else:
+                    # make a form and populate so we can clean the data
+                    form = searchProductForm(self.request.POST)
+
+                    if form.is_valid():
+                        # get the values
+                        product_id = form.cleaned_data.get('product_id')
+                        # search done on product id
+                        search_value = product_id
+                        # get the product
+                        try:
+                            product = Item.objects.get(id=product_id)
+                            p_pages = 1
+                            more_products = [{'number': 1}]
+                            # set current page to 1
+                            current_page = 1
+
+                            # set a bool to check if we are showing one or multiple orders
+
+                            multiple = False
+
+                            # set the search type
+
+                            search_type = "productID"
 
                             context = {
                                 'search_type': search_type,
@@ -3531,6 +3066,7 @@ class ProductsView(View):
                                 'more_products': more_products,
                                 'form': form,
                                 'current_page': current_page,
+                                'max_pages': p_pages,
                             }
 
                             return render(self.request, "moderator/mod_products.html", context)
@@ -3538,24 +3074,144 @@ class ProductsView(View):
                         except ObjectDoesNotExist:
                             messages.info(
                                 self.request, "Product does not exist.")
-                            return redirect("moderator:search_users")
-                else:
-                    messages.info(
-                        self.request, "Something is wrong with the products page. Contact IT support for assistance.")
-                    return redirect("moderator:overview")
+                            return redirect("moderator:products")
+                    else:
+                        # rerender page with error message
+                        # get the first 20 products and a count of all products
+                        products = Item.objects.all()[:20]
+                        number_products = Item.objects.all().count()
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        p_pages = 1
+
+                        if number_products > 20:
+                            # if there are more we divide by ten
+                            p_pages = number_products / 20
+                            # see if there is a decimal
+                            testP = int(p_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if testP != p_pages:
+                                p_pages = int(p_pages)
+                                p_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_products = []
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(p_pages):
+                            i += 1
+                            more_products.append({'number': i})
+
+                        # we already have the form
+
+                        # set current page to 1
+                        current_page = 1
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'products': products,
+                            'more_products': more_products,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': p_pages,
+                        }
+                        if self.request.POST['product_id'] != "":
+                            message.warning(
+                                self.request, 'Please enter a valid product id')
+                        return render(self.request, "moderator/mod_products.html", context)
+
+            elif 'nextPage' in self.request.POST.keys():
+                # get what type of search
+                search_type = self.request.POST['search']
+
+                try:
+                    number_products = Item.objects.all(
+                    ).count()
+                    number_pages = number_products / 20
+                    if current_page < number_pages:
+                        current_page += 1
+                    offset = current_page * 20
+                    products = Item.objects.all()[20:offset]
+                except ObjectDoesNotExist:
+                    products = {}
+                    number_products = 0
+
+                # figure out how many pages of 20 there are
+                # if there are only 20 or fewer pages will be 1
+
+                p_pages = 1
+
+                if number_products > 20:
+                    # if there are more we divide by ten
+                    p_pages = number_products / 20
+                    # see if there is a decimal
+                    testP = int(p_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testP != p_pages:
+                        p_pages = int(p_pages)
+                        p_pages += 1
+
+                # create a list for a ul to work through
+
+                more_products = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(p_pages):
+                    i += 1
+                    more_products.append({'number': i})
+
+                # make search for specific order or customer
+
+                form = searchProductForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_type = "None"
+                search_value = "None"
+
+                context = {
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'products': products,
+                    'more_products': more_products,
+                    'form': form,
+                    'current_page': current_page,
+                    'max_pages': p_pages,
+                }
+
+                return render(self.request, "moderator/mod_products.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
                 # get what type of search
                 search_type = self.request.POST['search']
 
                 # check what kind of search
-                if search_type == "None":
+                if current_page > 2:
 
                     try:
-                        offset = current_page
                         if current_page > 1:
                             current_page -= 1
-                            offset = current_page
+                        offset = current_page * 20
                         products = Item.objects.all()[20:offset]
                         number_products = Item.objects.all(
                         ).count()
@@ -3569,9 +3225,10 @@ class ProductsView(View):
                             # if there are more we divide by ten
                             p_pages = number_products / 20
                             # see if there is a decimal
-                            numType = type(p_pages)
+                            testP = int(p_pages)
                             # if there isn't an even number of ten make an extra page for the last group
-                            if numType == "Float":
+                            if testP != p_pages:
+                                p_pages = int(p_pages)
                                 p_pages += 1
 
                         # create a list for a ul to work through
@@ -3605,6 +3262,7 @@ class ProductsView(View):
                             'more_products': more_products,
                             'form': form,
                             'current_page': current_page,
+                            'max_pages': p_pages,
                         }
 
                         return render(self.request, "moderator/mod_products.html", context)
@@ -3614,51 +3272,70 @@ class ProductsView(View):
                             self.request, "Something is wrong with the product page. Contact IT support for assistance.")
                         return redirect("moderator:mod_products.html")
 
-                elif search_type == "productID":
-                    product_id = int(self.request.POST['search_value'])
-
-                    if product_id != 0:
-                        # previous page on a single user is the same as the search for single user
-                        # get the user
-
-                        try:
-                            product = Item.objects.get(id=product_id)
-
-                            # there is only one
-
-                            more_products = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "productID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'user': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                            }
-
-                            return render(self.request, "moderator/mod_products.html", context)
-
-                        except ObjectDoesNotExist:
-                            messages.info(
-                                self.request, "Product does not exist.")
-                            return redirect("moderator:products")
                 else:
-                    messages.info(
-                        self.request, "Something is wrong with the products page. Contact IT support for assistance.")
-                    return redirect("moderator:products")
+
+                    try:
+                        if current_page > 1:
+                            current_page -= 1
+                        products = Item.objects.all()[:20]
+                        number_products = Item.objects.all(
+                        ).count()
+
+                        # figure out how many pages of 20 there are
+                        # if there are only 20 or fewer pages will be 1
+
+                        p_pages = 1
+
+                        if number_products > 20:
+                            # if there are more we divide by ten
+                            p_pages = number_products / 20
+                            # see if there is a decimal
+                            testP = int(p_pages)
+                            # if there isn't an even number of ten make an extra page for the last group
+                            if testP != p_pages:
+                                p_pages = int(p_pages)
+                                p_pages += 1
+
+                        # create a list for a ul to work through
+
+                        more_products = [{'number': 1}]
+
+                        i = 0
+                        # populate the list with the amount of pages there are
+                        for i in range(p_pages):
+                            i += 1
+                            more_products.append({'number': i})
+
+                        # make search for specific order or customer
+
+                        form = searchUserForm()
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "None"
+                        search_value = "None"
+
+                        context = {
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'multiple': multiple,
+                            'products': products,
+                            'more_products': more_products,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': p_pages,
+                        }
+
+                        return render(self.request, "moderator/mod_products.html", context)
+
+                    except ObjectDoesNotExist:
+                        messages.info(
+                            self.request, "Something is wrong with the product page. Contact IT support for assistance.")
+                        return redirect("moderator:mod_products.html")
 
         except ObjectDoesNotExist:
             messages.info(
@@ -3667,7 +3344,105 @@ class ProductsView(View):
 
 
 class SpecificProductsView(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        messages.info(
+            self.request, "Something went wrong accessing this product. If the problem persists contact IT support for assistance.")
+        return redirect("moderator:mod_products.html")
+
+    def post(self, *args, **kwargs):
+        if 'lookAtProduct' in self.request.POST.keys():
+            try:
+                product_id = int(self.request.POST['lookAtProduct'])
+
+                # get the form
+                form = editOrCreateProduct()
+                form.populate(product_id)
+
+                # we also need the image and category. So we pass the product to the template for rendering those options in there
+
+                tryingToSave = False
+                product = Item.objects.get(id=product_id)
+
+                context = {
+                    'product': product,
+                    'form': form,
+                    'tryingToSave': tryingToSave,
+                }
+
+                return render(self.request, "moderator/new_product.html", context)
+            except ObjectDoesNotExist:
+                messages.info(
+                    self.request, "Product does not exist. If the problem persists contact IT support for assistance.")
+                return redirect("moderator:mod_products.html")
+        elif 'new' in self.request.POST.keys():
+
+            # get the form
+            form = editOrCreateProduct()
+
+            # we also need the image and category. So we pass the product to the template for rendering those options in there
+
+            tryingToSave = False
+            product = Item()
+
+            context = {
+                'product': product,
+                'form': form,
+                'tryingToSave': tryingToSave,
+            }
+
+            return render(self.request, "moderator/new_product.html", context)
+
+        elif 'save' in self.request.POST.keys():
+            form = editOrCreateProduct(self.request.Post)
+
+            if form.is_valid():
+                product_id = int(self.request.POST['p_id'])
+                product = Item.objects.get(id=product_id)
+                product.title = form.cleaned_data.get('title')
+                product.price = form.cleaned_data.get('price')
+                product.discount_price = form.cleaned_data.get(
+                    'discount_price')
+                product.description = form.cleaned_data.get('description')
+
+                # now we need to secure the other values
+
+                category_id = int(self.request.POST['category'])
+                category = Category.objects.get(id=category_id)
+                product.category = category
+
+                # image fix this when you have fixed new product
+
+                image = ""
+
+                # save
+
+                product.save()
+
+                messages.info(
+                    self.request, "Product saved.")
+                return redirect("moderator:mod_products.html")
+
+            else:
+                # rerender page with form filled in
+
+                product_id = int(self.request.POST['p_id'])
+
+                # we also need the image and category to rerender the form properly
+
+                tryingToSave = True
+                image = self.request.POST['image']
+                slug = self.request.POST['slug']
+                category = self.request.POST['category']
+
+                context = {
+                    'form': form,
+                    'tryingToSave': tryingToSave,
+                    'image': image,
+                    'slug': slug,
+                    'category': category,
+                }
+
+                return render(self.request, "moderator/new_product.html", context)
 
 
 class CategoriesView(View):
