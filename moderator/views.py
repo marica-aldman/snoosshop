@@ -3466,8 +3466,7 @@ class SpecificProductsView(View):
                     product.description = form.cleaned_data.get('description')
                     if img_form.is_valid():
                         if 'image' in self.request.FILES.keys():
-                            product.image = Item(
-                                imgfile=self.request.FILES['image'])
+                            product.image = self.request.FILES['image']
                             print(product.image)
                         else:
                             print('oh')

@@ -7,7 +7,7 @@
 
     <div class="border border-dark mb-3 p-2">
         <h3>Produkt</h3>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="old" value="{{ old }}">
             <table class="table-striped table-hover w-100  mb-2 table-bordered">
