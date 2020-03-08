@@ -4,7 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Sum
 from django.shortcuts import reverse
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 from django_countries.fields import CountryField
 
 # standardised variables
@@ -192,6 +193,7 @@ class OrderItem(models.Model):
     price = models.FloatField(blank=True, null=True)
     discount_price = models.FloatField(blank=True, null=True)
     total_price = models.FloatField(blank=True, null=True)
+    sent = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -236,7 +238,7 @@ class Order(models.Model):
     received = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
-    slug = models.SlugField(default='order')
+    comment = models.CharField(max_length=500, blank=True, null=True)
 
     '''
     1. Item added to cart
@@ -262,13 +264,33 @@ class Order(models.Model):
 
     def get_absolute_url_member(self):
         return reverse("member:my_order", kwargs={
-            'slug': self.slug
+            'slug': self.ref_code
+        })
+
+    def get_absolute_url_support(self):
+        return reverse("moderator:vieworder", kwargs={
+            'slug': self.ref_code
         })
 
     def get_absolute_url_moderator(self):
-        return reverse("moderator:vieworder", kwargs={
-            'slug': self.slug
+        return reverse("moderator:specific_order", kwargs={
+            'slug': self.ref_code
         })
+
+    def red_flag(self):
+        date = make_aware(datetime.now())
+        if date >= self.sub_out_date:
+            return True
+        else:
+            return False
+
+    def warning(self):
+        date1 = make_aware(datetime.now() + timedelta(days=1))
+        date2 = make_aware(datetime.now() + timedelta(days=3))
+        if date1 <= self.sub_out_date and date2 >= self.sub_out_date:
+            return True
+        else:
+            return False
 
 
 class Payment(models.Model):
@@ -362,6 +384,7 @@ class Subscription(models.Model):
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order = models.IntegerField(default=1)
+    comment = models.IntegerField(default=0)
     intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
     shipping_address = models.ForeignKey(
         Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)

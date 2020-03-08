@@ -1285,7 +1285,6 @@ class SubscriptionView(View):
                                 datetime.now())
                             theOrder.sub_out_date = sub.start_date
                             theOrder.ordered_date = sub.start_date
-                            theOrder.sub_out_date = sub.start_date
                             theOrder.ordered = True
                             theOrder.received = False
                             theOrder.being_delivered = False
@@ -1410,6 +1409,7 @@ class SubscriptionView(View):
 
                     sub.next_order = theOrder.id
                     sub.save()
+                    print(sub.next_order)
 
                     # create subscription items and corresponding orderItems
 

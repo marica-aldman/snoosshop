@@ -4346,7 +4346,6 @@ class SpecificOrderHandlingView(View):
 
             return render(self.request, "moderator/specificOrder.html", context)
         if 'send' in self.request.POST.keys():
-            print('button pressed')
             order_id = int(self.request.POST['send'])
 
             try:
@@ -4360,15 +4359,11 @@ class SpecificOrderHandlingView(View):
                 some_sent = False
 
                 for item in orderItems:
-                    print(item.id)
                     if str(item.id) in self.request.POST.keys():
                         item.sent = True
                         some_sent = True
-                        print('True')
                     else:
                         not_filled = True
-                        print('True2')
-                print('order items tested')
 
                 if not_filled:
                     if some_sent:
@@ -4380,23 +4375,18 @@ class SpecificOrderHandlingView(View):
                         order.being_delivered = False
 
                 if order.subscription_order:
-                    print('there is a subscription')
-                    print(order.id)
                     sub = Subscription.objects.get(next_order=order.id)
-                    print('have subscription')
                     sub.next_order_date = get_next_order_date(
                         make_aware(datetime.now()), sub.intervall)
                     sub.updated_date = make_aware(datetime.now())
 
                     # create a new order for this sub
-                    print('before order create')
                     new_order = Order()
                     new_order.user = sub.user
 
                     # create a reference code and check that there isnt already one before setting the orders ref code to the code
                     refcode = create_ref_code()
                     ref_test = True
-                    print('before ref code')
 
                     while ref_test:
                         try:
@@ -4405,7 +4395,6 @@ class SpecificOrderHandlingView(View):
                         except ObjectDoesNotExist:
                             ref_test = False
 
-                    print('after refcode')
                     new_order.ref_code = refcode
                     new_order.total_price = order.total_price
                     new_order.freight = order.freight
@@ -4429,33 +4418,26 @@ class SpecificOrderHandlingView(View):
                     # get the subitems
                     subItems = SubscriptionItem.objects.filter(
                         subscription=sub)
-                    print('getting subitems')
 
                     # create order items from sub items
                     for subItem in subItems:
-                        print('going through subitems')
                         # saving subscription and order items
                         orderItem = save_orderItem(subItem)
-                        print(orderItem.id)
                         new_order.items.add(orderItem)
                     new_order.save()
                     if sub.comment == 0:
                         if order.being_delivered is False:
                             sub.comment = order.id
                             sub.save()
-                            print('order not being delivered')
                         else:
                             sub.comment = 0
                             sub.save()
-                            print('sub saved')
                     else:
                         # this person already has orders backed up. Abort and alert
                         messages.warning(
                             self.request, error_message_108 + str(order.user.id))
                         return redirect("moderator:orderhandling")
-                print("all clear")
                 order.save()
-                print(order.id)
 
                 if order.being_delivered:
                     messages.info(

@@ -213,6 +213,15 @@ info_message_46 = "Category saved."
 
 info_message_48 = "Product deleted."
 
+# Moderator: orderhandling
+# display
+
+info_message_49 = "No regurlar orders to send."
+info_message_50 = "No subscriptions orders to send."
+# Moderator: single order handling
+
+info_message_51 = "Order marked as sent."
+
 # ERROR MESSAGES
 
 # Member: Setup save
@@ -660,3 +669,24 @@ error_message_102 = "Something went wrong when viewing the category. If the prob
 # search
 
 error_message_103 = 'Please enter a valid product id'
+
+
+# Moderator
+# specific order handling
+# get
+
+error_message_105 = "Unable to access order. If the problem persists, contact IT support."
+
+# post: look at
+# no such order
+error_message_106 = "Unable to access order. If the problem persists, contact IT support."
+
+# save
+# no such order
+error_message_106 = "Unable to mark order as sent. If the problem persists, contact IT support."
+
+# nothing in post keys
+error_message_107 = "Something is wrong with the order display page. If this persists, contact IT support."
+
+# backed up orders
+error_message_108 = "This user has a previous unfilled order. Sort out the first one or contact support for a resolution. User id:"

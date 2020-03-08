@@ -148,6 +148,24 @@ def save_subItems_and_orderItems(sub, amount, product):
     return orderItem
 
 
+def save_orderItem(subItem):
+    # new orderItem object
+    orderItem = OrderItem()
+    # set basic valeus
+    orderItem.user = subItem.user
+    orderItem.ordered = True
+    orderItem.item = subItem.item
+    orderItem.title = subItem.item_title
+    orderItem.quantity = subItem.quantity
+    orderItem.price = subItem.price
+    orderItem.discount_price = subItem.discount_price
+    orderItem.total_price = subItem.total_price
+    orderItem.sent = False
+    # save orderitem
+    orderItem.save()
+    return orderItem
+
+
 def sameAddress_moderator(theUser, form_street_address, form_post_town, form_address_type):
     # start by checking that we dont already have this address
     sameBilling = 0

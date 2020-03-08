@@ -22,6 +22,8 @@ from .views import (
     SpecificProductsView,
     CategoriesView,
     SpecificCategoryView,
+    OrderHandlingView,
+    SpecificOrderHandlingView,
 )
 
 from member.views import CookieSettingsView
@@ -52,6 +54,9 @@ urlpatterns = [
     path('categories/', CategoriesView.as_view(), name='categories'),
     path('category/', SpecificCategoryView.as_view(), name='category'),
     path('new_category/', SpecificCategoryView.as_view(), name='new_category'),
+    path('orderhandling/', OrderHandlingView.as_view(), name='orderhandling'),
+    path('specific_order/<slug>',
+         SpecificOrderHandlingView.as_view(), name='specific_order'),
 
 ]
 
