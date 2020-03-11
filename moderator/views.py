@@ -9,6 +9,7 @@ from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.timezone import make_aware
+from urllib.parse import urlencode
 from datetime import datetime
 from slugify import slugify
 from core.models import *
@@ -1638,9 +1639,72 @@ class Users(View):
 
 class OrderView(View):
     def get(self, *args, **kwargs):
-        messages.warning(
-            self.request, error_message_109)
-        return redirect("moderator:orders")
+        # this is either a redirect or someone refreshing the page
+        # if redirect
+        if 'order_ref' in self.request.GET.keys():
+            order_ref = self.request.GET['order_ref']
+            message = ""
+
+            # get the user's specific order
+            try:
+                order = Order.objects.get(ref_code=order_ref)
+            except ObjectDoesNotExist:
+                messages.warning(
+                    self.request, error_message_52)
+                return redirect("moderator:orders")
+
+            # get the order items
+            orderItems = order.items.all()
+            payment = order.payment
+            hasPayment = False
+            if payment:
+                hasPayment = True
+            coupon = order.coupon
+            hasCoupon = False
+            if coupon:
+                hasCoupon = True
+            billing_address = order.billing_address
+            shipping_address = order.shipping_address
+            theClient = order.user
+            theClientInfo = UserInfo.objects.get(user=order.user)
+            subscription = Subscription()
+            if order.subscription_order and not order.being_delivered:
+                try:
+                    subscription = Subscription.objects.get(
+                        next_order=order.id)
+                except ObjectDoesNotExist:
+                    try:
+                        subscription = Subscription.objects.get(
+                            comment=order.id)
+                    except ObjectDoesNotExist:
+                        message = error_message_110
+
+            path = self.request.get_full_path()
+
+            context = {
+                'order': order,
+                'orderItems': orderItems,
+                'payment': payment,
+                'coupon': coupon,
+                'shipping_address': shipping_address,
+                'billing_address': billing_address,
+                'subscription': subscription,
+                'hasPayment': hasPayment,
+                'hasCoupon': hasCoupon,
+                'theClient': theClient,
+                'theClientInfo': theClientInfo,
+            }
+
+            if message != "":
+                messages.warning(
+                    self.request, message)
+
+            return render(self.request, "moderator/mod_vieworder.html", context)
+        else:
+            # this is a refresh, we might loose valuable info if this is just refreshed after a long time so redirect
+            messages.warning(
+                self.request, error_message_109)
+            return redirect("moderator:orders")
 
     def post(self, *args, **kwargs):
         try:
@@ -1722,142 +1786,174 @@ class OrderView(View):
                     return redirect("moderator:orders")
                 # and orderItems
                 orderItems = order.items.all()
-                flag = 'return'
-                flag3 = 'payback'
-                for item in orderItems:
-                    flag = 'return' + str(item.id)
-                    flag3 = 'payback' + str(item.id)
                 # check that the order isnt currently being packed
                 if order.being_read:
                     messages.warning(self.request, error_message_113)
                     return redirect("moderator:orders")
 
                 # Start with checking if we are returning the entire order
-
                 if 'OrderReturned' in self.request.POST.keys():
+                    # the entire order has been returned
+                    order.returned = True
+                    for item in orderItems:
+                        item.returned = True
+                        item.save()
+                    messages.info(self.request, info_message_58)
+                if 'OrderUnReturned' in self.request.POST.keys():
+                    # the entire order has been returned
+                    order.returned = False
+                    for item in orderItems:
+                        item.returned = False
+                        item.save()
+                    messages.info(self.request, info_message_59)
+                if 'OrderToReturnUn' in self.request.POST.keys():
+                    # we marked the entire order as being returned
+                    order.returned_flag = False
+                    # set all order items to returned
+                    for item in orderItems:
+                        item.returned_flag = False
+                        item.save()
+                    messages.info(self.request, info_message_57)
+                if 'OrderToReturn' in self.request.POST.keys():
+                    # we marked the entire order as being returned
+                    order.returned_flag = True
+                    # set all order items to returned
+                    for item in orderItems:
+                        item.returned_flag = True
+                        item.save()
+                    messages.info(self.request, info_message_56)
+                if 'PaybackRequested' in self.request.POST.keys():
                     # we have returned the entire order
                     order.refund_requested = True
                     # set all order items to returned
                     for item in orderItems:
-                        item.returned = True
+                        item.returned_flag = True
                         item.save()
-                    # check if we have granted the money back
-                    if 'PaybackApproved' in self.request.POST.keys():
-                        # we have granted full money back
-                        order.refund_granted = True
-                        # set refund for all orderItems
-                        for item in orderItems:
-                            item.refund = True
-                            item.save()
-                        order.save()
-                        messages.info(self.request, info_message_52)
-                        messages.info(self.request, info_message_53)
-                        return redirect("moderator:orders")
-                    else:
-                        order.save()
-                        messages.info(self.request, info_message_52)
-                        return redirect("moderator:orders")
-                elif 'PaybackApproved' in self.request.POST.keys():
+
+                    messages.info(self.request, info_message_52)
+                if 'PaybackRequestCancel' in self.request.POST.keys():
+                    # we have returned the entire order
+                    order.refund_requested = False
+                    # set all order items to returned
+                    for item in orderItems:
+                        item.returned_flag = False
+                        item.save()
+                    messages.info(self.request, info_message_60)
+                if 'PaybackApproved' in self.request.POST.keys():
                         # we have granted full money back without reutrn
                     order.refund_granted = True
                     # set refund for all orderItems
                     for item in orderItems:
                         item.refund = True
                         item.save()
-                    order.save()
                     messages.info(self.request, info_message_53)
-                    return redirect("moderator:orders")
-                elif flag in self.request.POST.keys():
-                    # we are returning induvidual items
-                    message1 = info_message_54
-                    message2 = info_message_55
-
-                    for item in OrderItem:
-                        flag1 = 'return' + str(item.id)
-                        flag2 = 'payback' + str(item.id)
-                        if flag1 in self.request.POST.keys():
-                            item.returned = True
-                            message1 = message1 + " item.title"
-                        if flag2 in self.request.POST.keys():
-                            item.refund = True
-                            message2 = message2 + " item.title"
+                if 'PaybackCancel' in self.request.POST.keys():
+                        # we have granted full money back without reutrn
+                    order.refund_granted = False
+                    # set refund for all orderItems
+                    for item in orderItems:
+                        item.refund = False
                         item.save()
-
-                    order.save()
-                    messages.info(self.request, message1)
-                    messages.info(self.request, message2)
-                    return redirect("moderator:orders")
-                elif flag3 in self.request.POST.keys():
-                    # we are refunding items without returns
-                    message2 = info_message_55
-
-                    for item in OrderItem:
-                        flag2 = 'payback' + str(item.id)
-                        if flag2 in self.request.POST.keys():
-                            item.refund = True
-                            message2 = message2 + " item.title"
-                        item.save()
-
-                    order.save()
-                    messages.info(self.request, message2)
-                    return redirect("moderator:orders")
-                else:
-                    payment = order.payment
-                    hasPayment = False
-                    if payment:
-                        hasPayment = True
-                    coupon = order.coupon
-                    hasCoupon = False
-                    if coupon:
-                        hasCoupon = True
-                    billing_address = order.billing_address
-                    shipping_address = order.shipping_address
-                    theClient = order.user
-                    theClientInfo = UserInfo.objects.get(user=order.user)
-                    subscription = Subscription()
-                    if order.subscription_order and not order.being_delivered:
-                        try:
-                            subscription = Subscription.objects.get(
-                                next_order=order.id)
-                        except ObjectDoesNotExist:
-                            try:
-                                subscription = Subscription.objects.get(
-                                    comment=order.id)
-                            except ObjectDoesNotExist:
-                                message = error_message_110
-
-                    path = self.request.get_full_path()
-
-                    context = {
-                        'order': order,
-                        'orderItems': orderItems,
-                        'payment': payment,
-                        'coupon': coupon,
-                        'shipping_address': shipping_address,
-                        'billing_address': billing_address,
-                        'subscription': subscription,
-                        'hasPayment': hasPayment,
-                        'hasCoupon': hasCoupon,
-                        'theClient': theClient,
-                        'theClientInfo': theClientInfo,
-                    }
-
-                    if message != "":
-                        messages.warning(
-                            self.request, message)
-
-                    messages.warning(
-                        self.request, error_message_52)
-                    return render(self.request, "moderator/mod_vieworder.html", context)
-            else:
-                messages.warning(
-                    self.request, error_message_52)
+                    messages.info(self.request, info_message_61)
+                order.save()
                 return redirect("moderator:orders")
 
         except ObjectDoesNotExist:
             messages.warning(
                 self.request, error_message_52)
             return redirect("moderator:orders")
+
+
+class OrderItemView(View):
+    def post(self, *args, **kwargs):
+        if 'handle' in self.request.POST.keys():
+            # view item
+            # get the ids for order and item
+            order_id = 0
+            item_id = 0
+            if 'order' in self.request.POST.keys():
+                order_id = int(self.request.POST['order'])
+            if 'item' in self.request.POST.keys():
+                item_id = int(self.request.POST['item'])
+
+            # get the order and item
+
+            order = Order()
+            item = OrderItem()
+            try:
+                order = Order.objects.get(id=order_id)
+                item = OrderItem.objects.get(id=item_id)
+            except ObjectDoesNotExist:
+                messages.warning(
+                    self.request, error_message)
+                return redirect("moderator:orders")
+
+            context = {
+                'order': order,
+                'item': item,
+            }
+
+            return render(self.request, "moderator/mod_specific_orderItem.html", context)
+        elif 'save' in self.request.POST.keys():
+            # get the ids for order and item
+            order_id = 0
+            item_id = 0
+            if 'order' in self.request.POST.keys():
+                order_id = int(self.request.POST['order'])
+            if 'item' in self.request.POST.keys():
+                item_id = int(self.request.POST['item'])
+
+            # get the order and item
+            order = Order()
+            item = OrderItem()
+            try:
+                order = Order.objects.get(id=order_id)
+                item = OrderItem.objects.get(id=item_id)
+            except ObjectDoesNotExist:
+                messages.warning(
+                    self.request, error_message_52)
+                return redirect("moderator:orders")
+            if 'ItemToReturn' in self.request.POST.keys():
+                item.returned_flag = True
+                messages.info(
+                    self.request, item.title + info_message_64)
+            if 'ItemToReturnUn' in self.request.POST.keys():
+                item.returned_flag = False
+                messages.info(
+                    self.request, item.title + info_message_65)
+            if 'ItemReturned' in self.request.POST.keys():
+                item.returned = True
+                messages.info(
+                    self.request, item.title + info_message_66)
+            if 'ItemUnReturned' in self.request.POST.keys():
+                item.returned = False
+                messages.info(
+                    self.request, item.title + info_message_67)
+            if 'PaybackRequested' in self.request.POST.keys():
+                item.refund_flag = True
+                messages.info(
+                    self.request, info_message_68 + item.title)
+            if 'PaybackRequestCancel' in self.request.POST.keys():
+                item.refund_flag = False
+                messages.info(
+                    self.request, info_message_69 + item.title)
+            if 'PaybackApproved' in self.request.POST.keys():
+                item.refund = True
+                messages.info(
+                    self.request, info_message_70 + item.title)
+            if 'PaybackCancel' in self.request.POST.keys():
+                item.refund = False
+                messages.info(
+                    self.request, info_message_71 + item.title)
+
+            messages.info(
+                self.request, item.title + info_message_72)
+            item.save()
+            # changes made create redirect  with variable
+            base_url = order.get_absolute_url_support()
+            query_string = urlencode({'order_ref': order.ref_code})
+            url = '{}?{}'.format(base_url, query_string)
+            return redirect(url)
 
 
 class SupportView(View):

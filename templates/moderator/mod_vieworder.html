@@ -18,7 +18,7 @@
 
     <form method="POST">
         {% csrf_token %}
-        <input type="hidden" name="order" value="{{order.id}}"
+        <input type="hidden" name="order" value="{{order.id}}">
         <div class="row border border-warning" >
             <h1>Order {{order.id}}</h1>
             <table class="table-striped table-hover w-100  mb-2">
@@ -176,6 +176,24 @@
                                 Skickad
                             {% elif order.being_read %}
                                 Packas
+                            {% elif order.refund_requested %}
+                                {% if order.refund_granted %}
+                                    Återbetalningbegärd
+                                {% else %}
+                                    Återbetalningbeviljad
+                                {% endif %}
+                            {% elif order.refund_requested %}
+                                {% if order.refund_granted %}
+                                    Återbetalningbegärd
+                                {% else %}
+                                    Återbetalningbeviljad
+                                {% endif %}
+                            {% elif order.returned_flag %}
+                                {% if order.returned %}
+                                    Flaggad för retur
+                                {% else %}
+                                    Returnerad
+                                {% endif %}
                             {% else %}
                                 Inte hanterad
                             {% endif %}
@@ -183,26 +201,18 @@
                     </tr>
                     <tr>
                         <td>
-                            Återbetalningbegärd
+                            Markera hela ordern för retur
                         </td>
                         <td>
-                            {% if order.refund_requested %}
-                                Ja
-                            {% else %}
-                                Nej
-                            {% endif %}
+                            <input type="checkbox" name="OrderToReturn" value="True">
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            Återbetalningbeviljad
+                            Avmarkera hela ordern för retur
                         </td>
                         <td>
-                            {% if order.refund_granted %}
-                                Ja
-                            {% else %}
-                                Nej
-                            {% endif %}
+                            <input type="checkbox" name="OrderToReturnUn" value="True">
                         </td>
                     </tr>
                     <tr>
@@ -215,16 +225,49 @@
                     </tr>
                     <tr>
                         <td>
+                            Markera hela ordern som oreturnerad
+                        </td>
+                        <td>
+                            <input type="checkbox" name="OrderUnReturned" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Markera Återbetalningbegärd
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackRequested" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Avmarkera Återbetalningbegärd
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackRequestCancel" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             Godkänn återbetalning av hela orddern
                         </td>
                         <td>
                             <input type="checkbox" name="PaybackApproved" value="True">
                         </td>
                     </tr>
+                    <tr>
+                        <td>
+                            Avbryt återbetalning av hela orddern
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackCancel" value="True">
+                        </td>
+                    </tr>
                 </tbody>
             </table>
-
+            <button type='submit' class='btn btn-primary' name="save" value="True">Spara</button>
         </div>
+    </form>
 
         <!--recently completed-->
         <div class="row border border-dark">
@@ -251,10 +294,13 @@
                             Skickad
                         </th>
                         <th>
-                            Returnera varan
+                            Returflagga
                         </th>
                         <th>
-                            Bevilja återbetalning
+                            Returnerad
+                        </th>
+                        <th>
+                            Hantera produkten
                         </th>
                     </tr>
                 </thead>
@@ -277,21 +323,39 @@
                             {{ item.total_price }}
                         </td>
                         <td>
-                            {{ item.sent }}
+                            {% if item.sent %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
                         </td>
                         <td>
-                            <input type="checkbox" name="return{{ item.id }}" value="{{ item.id }}">
+                            {% if item.returned %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
                         </td>
                         <td>
-                            <input type="checkbox" name="payback{{ item.id }}" value="{{ item.id }}">
+                            {% if item.returned_flag %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{item.get_absolute_url_support}}">
+                                {% csrf_token %}
+                                <input type="hidden" name="order" value="{{order.id}}">
+                                <input type="hidden" name="item" value="{{item.id}}">
+                                <button type='submit' class='btn btn-primary' name="handle" value="True">Hantera</button>
+                            </form>
                         </td>
                     </tr>
             {% endfor %}
                 </tbody>
             </table>
-            <button type='submit' class='btn btn-primary' name="save" value="True">Spara</button>
         </div>
-    </form>
 </div>
 
 

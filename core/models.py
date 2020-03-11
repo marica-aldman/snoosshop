@@ -194,7 +194,9 @@ class OrderItem(models.Model):
     discount_price = models.FloatField(blank=True, null=True)
     total_price = models.FloatField(blank=True, null=True)
     sent = models.BooleanField(default=False)
+    returned_flag = models.BooleanField(default=False)
     returned = models.BooleanField(default=False)
+    refund_flag = models.BooleanField(default=False)
     refund = models.BooleanField(default=False)
 
     def __str__(self):
@@ -213,6 +215,11 @@ class OrderItem(models.Model):
         if self.item.discount_price:
             return self.get_total_discount_item_price()
         return self.get_total_item_price()
+
+    def get_absolute_url_support(self):
+        return reverse("moderator:orderItem", kwargs={
+            'slug': self.id
+        })
 
 
 class Order(models.Model):
@@ -238,6 +245,7 @@ class Order(models.Model):
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
     received = models.BooleanField(default=False)
+    returned_flag = models.BooleanField(default=False)
     returned = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)

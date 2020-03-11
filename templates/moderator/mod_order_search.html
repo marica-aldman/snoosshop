@@ -76,14 +76,18 @@
                         {{ order.ordered_date }}
                     </td>
                     <td>
-                        {% if order.being_delivered and not order.refund_requested %}
-                            Skickad
+                        {% if order.refund_granted%}
+                            Återbetalning godkänd
                         {% elif order.returned %}
                             Order returnerad
-                        {% elif order.refund_requested and not order.refund_granted%}
-                            Återbetalning begärd
                         {% elif order.refund_granted%}
                             Återbetalning godkänd
+                        {% elif order.refund_requested %}
+                            Återbetalning begärd
+                        {% elif order.returned_flag %}
+                            Order påväg i retur
+                        {% elif order.being_delivered %}
+                            Skickad
                         {% elif order.being_read %}
                             Packas
                         {% else %}
@@ -123,8 +127,20 @@
                         {{ order.ordered_date }}
                     </td>
                     <td>
-                        {% if order.being_delivered %}
+                        {% if order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.returned %}
+                            Order returnerad
+                        {% elif order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.refund_requested %}
+                            Återbetalning begärd
+                        {% elif order.returned_flag %}
+                            Order påväg i retur
+                        {% elif order.being_delivered %}
                             Skickad
+                        {% elif order.being_read %}
+                            Packas
                         {% else %}
                             Underbehandling
                         {% endif %}

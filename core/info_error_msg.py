@@ -85,17 +85,69 @@ info_message_20 = "User does not exist."
 
 # Moderator
 # Specific order
-# saved full return
+# saved
+# full return flag
 
-info_message_52 = "Order flagged for return"
+info_message_56 = "Order flagged for return."
 
-info_message_53 = "Order refund granted"
+# full return flag unflag
+
+info_message_57 = "Order unflagged for return."
+
+# full return
+
+info_message_58 = "Order been returned fully."
+
+# full return unflag
+
+info_message_59 = "Order not been returned fully."
+
+# refund requested
+
+info_message_52 = "Order refund requested."
+
+# refund requested cancel
+
+info_message_60 = "Order refund request canceled."
+
+# refund granted
+
+info_message_53 = "Order refund granted."
+
+# refund granted cancel
+
+info_message_61 = "Order refund canceled."
 
 # saved induvidual items
 
 info_message_54 = "Item flagged for return:"
 
 info_message_55 = "Item refund granted:"
+
+info_message_62 = "Item unflagged for return:"
+
+info_message_63 = "Item refund canceled:"
+
+# Moderator
+# orderItem
+# return flag
+info_message_64 = " has been flagged for return"
+# unreturn flag
+info_message_65 = " has been unflagged for return"
+# return
+info_message_66 = " has been returned"
+# unreturn
+info_message_67 = " has not been returned"
+# payback request
+info_message_68 = "Refund has been requested for: "
+# payback request canceled
+info_message_69 = "Refund has not been requested for: "
+# payback
+info_message_70 = "Refund has been approved for: "
+# payback canceled
+info_message_71 = "Refund has not been approved for: "
+# orderItem saved
+info_message_72 = " saved"
 
 # Moderator
 # User search
@@ -484,6 +536,9 @@ error_message_111 = "Could not find this order when saving. Contact IT support."
 error_message_113 = "Order is currently being packed. Either contact the packers or ask the customer to return the order when recieved."
 # nothing marked
 error_messge_112 = "Could not detect an action in the form. If you filled it in but it still is happening, contact IT support"
+
+# did not mark request
+error_message_114 = "You can not grant money back without a request. Please check the form before resubmitting."
 
 # Moderator: Support view (finish writing this, will contain more messages after finish)
 # accress
