@@ -776,13 +776,12 @@ class MultipleOrdersView(View):
                         order_ref = form.cleaned_data.get('order_ref')
                         order_id = form.cleaned_data.get('order_id')
                         user_id = form.cleaned_data.get('user_id')
-
                         if len(order_ref) == 20:
                             # search done on order reference
                             search_value = order_ref
 
                             try:
-                                order = Order.objects.get(order_ref=order_ref)
+                                order = Order.objects.get(ref_code=order_ref)
 
                                 # set current page to 1
                                 current_page = 1
@@ -807,13 +806,13 @@ class MultipleOrdersView(View):
                                     'max_pages': 1,
                                 }
 
-                                return render(self.request, "moderator:mod_vieworder", context)
+                                return render(self.request, "moderator/mod_order_search.html", context)
                             except ObjectDoesNotExist:
                                 messages.info(
                                     self.request, info_message_19)
                                 return redirect("moderator:orders")
 
-                        elif order_id != 0:
+                        elif order_id != None:
                             # search on order id
                             search_value = order_id
 
@@ -843,13 +842,13 @@ class MultipleOrdersView(View):
                                     'max_pages': 1,
                                 }
 
-                                return render(self.request, "moderator:mod_vieworder", context)
+                                return render(self.request, "moderator/mod_order_search.html", context)
                             except ObjectDoesNotExist:
                                 messages.info(
                                     self.request, info_message_19)
                                 return redirect("moderator:orders")
 
-                        elif user_id != 0:
+                        elif user_id != None:
                             # search done on user
                             search_value = user_id
                             # get the user
@@ -907,7 +906,7 @@ class MultipleOrdersView(View):
                                     'max_pages': o_pages,
                                 }
 
-                                return render(self.request, "moderator:mod_vieworder", context)
+                                return render(self.request, "moderator/mod_order_search.html", context)
 
                             except ObjectDoesNotExist:
                                 messages.info(
@@ -1637,23 +1636,223 @@ class Users(View):
             return redirect("moderator:overview")
 
 
-class OrderView(LoginRequiredMixin, View):
+class OrderView(View):
     def get(self, *args, **kwargs):
+        messages.warning(
+            self.request, error_message_109)
+        return redirect("moderator:orders")
+
+    def post(self, *args, **kwargs):
         try:
-            # get the user's specific order
 
-            context = {
-                'order': order,
-                'all_order_items': all_order_items,
-                'all_items': all_items,
-                'discounts': discounts,
-                'shipping_adress': shipping_adress,
-                'billing_adress': billing_adress,
-                'coupons': coupons,
-                'payment': payment,
-            }
+            if 'lookAtOrder' in self.request.POST.keys():
+                message = ""
+                order_id = int(self.request.POST['lookAtOrder'])
 
-            return render(self.request, "moderator:mod_vieworder", context)
+                # get the user's specific order
+                try:
+                    order = Order.objects.get(id=order_id)
+                except ObjectDoesNotExist:
+                    messages.warning(
+                        self.request, error_message_52)
+                    return redirect("moderator:orders")
+
+                # get the order items
+                orderItems = order.items.all()
+                payment = order.payment
+                hasPayment = False
+                if payment:
+                    hasPayment = True
+                coupon = order.coupon
+                hasCoupon = False
+                if coupon:
+                    hasCoupon = True
+                billing_address = order.billing_address
+                shipping_address = order.shipping_address
+                theClient = order.user
+                theClientInfo = UserInfo.objects.get(user=order.user)
+                subscription = Subscription()
+                if order.subscription_order and not order.being_delivered:
+                    try:
+                        subscription = Subscription.objects.get(
+                            next_order=order.id)
+                    except ObjectDoesNotExist:
+                        try:
+                            subscription = Subscription.objects.get(
+                                comment=order.id)
+                        except ObjectDoesNotExist:
+                            message = error_message_110
+
+                path = self.request.get_full_path()
+
+                context = {
+                    'order': order,
+                    'orderItems': orderItems,
+                    'payment': payment,
+                    'coupon': coupon,
+                    'shipping_address': shipping_address,
+                    'billing_address': billing_address,
+                    'subscription': subscription,
+                    'hasPayment': hasPayment,
+                    'hasCoupon': hasCoupon,
+                    'theClient': theClient,
+                    'theClientInfo': theClientInfo,
+                }
+
+                if message != "":
+                    messages.warning(
+                        self.request, message)
+
+                return render(self.request, "moderator/mod_vieworder.html", context)
+
+            elif 'back' in self.request.POST.keys():
+                # perhaps change this to a soft redirect with search paramaters later
+                return redirect("moderator:orders")
+
+            elif 'save' in self.request.POST.keys():
+                # we have granted or flagged either items or the either order for return.
+                # startwith getting the order
+                order_id = 0
+                if 'order' in self.request.POST.keys():
+                    order_id = int(self.request.POST['order'])
+                try:
+                    order = Order.objects.get(id=order_id)
+                except ObjectDoesNotExist:
+                    messages.warning(self.request, error_message_111)
+                    return redirect("moderator:orders")
+                # and orderItems
+                orderItems = order.items.all()
+                flag = 'return'
+                flag3 = 'payback'
+                for item in orderItems:
+                    flag = 'return' + str(item.id)
+                    flag3 = 'payback' + str(item.id)
+                # check that the order isnt currently being packed
+                if order.being_read:
+                    messages.warning(self.request, error_message_113)
+                    return redirect("moderator:orders")
+
+                # Start with checking if we are returning the entire order
+
+                if 'OrderReturned' in self.request.POST.keys():
+                    # we have returned the entire order
+                    order.refund_requested = True
+                    # set all order items to returned
+                    for item in orderItems:
+                        item.returned = True
+                        item.save()
+                    # check if we have granted the money back
+                    if 'PaybackApproved' in self.request.POST.keys():
+                        # we have granted full money back
+                        order.refund_granted = True
+                        # set refund for all orderItems
+                        for item in orderItems:
+                            item.refund = True
+                            item.save()
+                        order.save()
+                        messages.info(self.request, info_message_52)
+                        messages.info(self.request, info_message_53)
+                        return redirect("moderator:orders")
+                    else:
+                        order.save()
+                        messages.info(self.request, info_message_52)
+                        return redirect("moderator:orders")
+                elif 'PaybackApproved' in self.request.POST.keys():
+                        # we have granted full money back without reutrn
+                    order.refund_granted = True
+                    # set refund for all orderItems
+                    for item in orderItems:
+                        item.refund = True
+                        item.save()
+                    order.save()
+                    messages.info(self.request, info_message_53)
+                    return redirect("moderator:orders")
+                elif flag in self.request.POST.keys():
+                    # we are returning induvidual items
+                    message1 = info_message_54
+                    message2 = info_message_55
+
+                    for item in OrderItem:
+                        flag1 = 'return' + str(item.id)
+                        flag2 = 'payback' + str(item.id)
+                        if flag1 in self.request.POST.keys():
+                            item.returned = True
+                            message1 = message1 + " item.title"
+                        if flag2 in self.request.POST.keys():
+                            item.refund = True
+                            message2 = message2 + " item.title"
+                        item.save()
+
+                    order.save()
+                    messages.info(self.request, message1)
+                    messages.info(self.request, message2)
+                    return redirect("moderator:orders")
+                elif flag3 in self.request.POST.keys():
+                    # we are refunding items without returns
+                    message2 = info_message_55
+
+                    for item in OrderItem:
+                        flag2 = 'payback' + str(item.id)
+                        if flag2 in self.request.POST.keys():
+                            item.refund = True
+                            message2 = message2 + " item.title"
+                        item.save()
+
+                    order.save()
+                    messages.info(self.request, message2)
+                    return redirect("moderator:orders")
+                else:
+                    payment = order.payment
+                    hasPayment = False
+                    if payment:
+                        hasPayment = True
+                    coupon = order.coupon
+                    hasCoupon = False
+                    if coupon:
+                        hasCoupon = True
+                    billing_address = order.billing_address
+                    shipping_address = order.shipping_address
+                    theClient = order.user
+                    theClientInfo = UserInfo.objects.get(user=order.user)
+                    subscription = Subscription()
+                    if order.subscription_order and not order.being_delivered:
+                        try:
+                            subscription = Subscription.objects.get(
+                                next_order=order.id)
+                        except ObjectDoesNotExist:
+                            try:
+                                subscription = Subscription.objects.get(
+                                    comment=order.id)
+                            except ObjectDoesNotExist:
+                                message = error_message_110
+
+                    path = self.request.get_full_path()
+
+                    context = {
+                        'order': order,
+                        'orderItems': orderItems,
+                        'payment': payment,
+                        'coupon': coupon,
+                        'shipping_address': shipping_address,
+                        'billing_address': billing_address,
+                        'subscription': subscription,
+                        'hasPayment': hasPayment,
+                        'hasCoupon': hasCoupon,
+                        'theClient': theClient,
+                        'theClientInfo': theClientInfo,
+                    }
+
+                    if message != "":
+                        messages.warning(
+                            self.request, message)
+
+                    messages.warning(
+                        self.request, error_message_52)
+                    return render(self.request, "moderator/mod_vieworder.html", context)
+            else:
+                messages.warning(
+                    self.request, error_message_52)
+                return redirect("moderator:orders")
 
         except ObjectDoesNotExist:
             messages.warning(
@@ -3163,7 +3362,7 @@ class ProductsView(View):
                             'max_pages': p_pages,
                         }
                         if self.request.POST['product_id'] is not None:
-                            message.warning(
+                            messages.warning(
                                 self.request, error_message_103)
                         return render(self.request, "moderator/mod_products.html", context)
 
@@ -3753,7 +3952,7 @@ class CategoriesView(View):
                         }
 
                         if self.request.POST['category_id'] != "":
-                            message.warning(
+                            messages.warning(
                                 self.request, error_message_97)
                         return render(self.request, "moderator/mod_categories.html", context)
 
@@ -4346,7 +4545,6 @@ class SpecificOrderHandlingView(View):
 
             return render(self.request, "moderator/specificOrder.html", context)
         if 'send' in self.request.POST.keys():
-            print('button pressed')
             order_id = int(self.request.POST['send'])
 
             try:
@@ -4360,15 +4558,12 @@ class SpecificOrderHandlingView(View):
                 some_sent = False
 
                 for item in orderItems:
-                    print(item.id)
                     if str(item.id) in self.request.POST.keys():
                         item.sent = True
                         some_sent = True
-                        print('True')
+                        item.save()
                     else:
                         not_filled = True
-                        print('True2')
-                print('order items tested')
 
                 if not_filled:
                     if some_sent:
@@ -4380,23 +4575,18 @@ class SpecificOrderHandlingView(View):
                         order.being_delivered = False
 
                 if order.subscription_order:
-                    print('there is a subscription')
-                    print(order.id)
                     sub = Subscription.objects.get(next_order=order.id)
-                    print('have subscription')
                     sub.next_order_date = get_next_order_date(
                         make_aware(datetime.now()), sub.intervall)
                     sub.updated_date = make_aware(datetime.now())
 
                     # create a new order for this sub
-                    print('before order create')
                     new_order = Order()
                     new_order.user = sub.user
 
                     # create a reference code and check that there isnt already one before setting the orders ref code to the code
                     refcode = create_ref_code()
                     ref_test = True
-                    print('before ref code')
 
                     while ref_test:
                         try:
@@ -4404,8 +4594,7 @@ class SpecificOrderHandlingView(View):
                             refcode = create_ref_code()
                         except ObjectDoesNotExist:
                             ref_test = False
-
-                    print('after refcode')
+                    total_order_price = 0
                     new_order.ref_code = refcode
                     new_order.total_price = order.total_price
                     new_order.freight = order.freight
@@ -4429,33 +4618,28 @@ class SpecificOrderHandlingView(View):
                     # get the subitems
                     subItems = SubscriptionItem.objects.filter(
                         subscription=sub)
-                    print('getting subitems')
 
                     # create order items from sub items
                     for subItem in subItems:
-                        print('going through subitems')
                         # saving subscription and order items
                         orderItem = save_orderItem(subItem)
-                        print(orderItem.id)
                         new_order.items.add(orderItem)
+                        total_order_price = total_order_price + orderItem.total_price
+                    new_order.total_price = total_order_price
                     new_order.save()
                     if sub.comment == 0:
                         if order.being_delivered is False:
                             sub.comment = order.id
                             sub.save()
-                            print('order not being delivered')
                         else:
                             sub.comment = 0
                             sub.save()
-                            print('sub saved')
                     else:
                         # this person already has orders backed up. Abort and alert
                         messages.warning(
                             self.request, error_message_108 + str(order.user.id))
                         return redirect("moderator:orderhandling")
-                print("all clear")
                 order.save()
-                print(order.id)
 
                 if order.being_delivered:
                     messages.info(

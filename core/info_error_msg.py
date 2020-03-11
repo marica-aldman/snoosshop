@@ -84,6 +84,20 @@ info_message_19 = "Order does not exist."
 info_message_20 = "User does not exist."
 
 # Moderator
+# Specific order
+# saved full return
+
+info_message_52 = "Order flagged for return"
+
+info_message_53 = "Order refund granted"
+
+# saved induvidual items
+
+info_message_54 = "Item flagged for return:"
+
+info_message_55 = "Item refund granted:"
+
+# Moderator
 # User search
 # paging
 
@@ -455,7 +469,21 @@ error_message_51 = "Something is wrong with the order search page. Contact IT su
 # Moderator: Specific order view (finish writing this, will contain more messages after finish)
 # access
 
-error_message_52 = "Can't find this order. Contact the support for assistance."
+error_message_109 = "Can't access this order right now. If the problem persists contact IT support."
+
+error_message_52 = "Can't find this order. If the problem persists. Contact IT support."
+
+# subscription not there
+error_message_110 = "Something went wrong accessing this orders subscription. Contact IT support."
+
+# Save
+# no such order
+error_message_111 = "Could not find this order when saving. Contact IT support."
+# order is being packed
+
+error_message_113 = "Order is currently being packed. Either contact the packers or ask the customer to return the order when recieved."
+# nothing marked
+error_messge_112 = "Could not detect an action in the form. If you filled it in but it still is happening, contact IT support"
 
 # Moderator: Support view (finish writing this, will contain more messages after finish)
 # accress

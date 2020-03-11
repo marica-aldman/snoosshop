@@ -58,7 +58,7 @@ class AddressAdmin(admin.ModelAdmin):
 admin.site.register(Item)
 admin.site.register(Category)
 admin.site.register(OrderItem)
-admin.site.register(Order, OrderAdmin)
+admin.site.register(Order)
 admin.site.register(Payment)
 admin.site.register(Coupon)
 admin.site.register(Refund)

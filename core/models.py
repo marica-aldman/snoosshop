@@ -194,6 +194,8 @@ class OrderItem(models.Model):
     discount_price = models.FloatField(blank=True, null=True)
     total_price = models.FloatField(blank=True, null=True)
     sent = models.BooleanField(default=False)
+    returned = models.BooleanField(default=False)
+    refund = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -236,6 +238,7 @@ class Order(models.Model):
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
     received = models.BooleanField(default=False)
+    returned = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
     comment = models.CharField(max_length=500, blank=True, null=True)

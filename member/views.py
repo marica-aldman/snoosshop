@@ -1215,7 +1215,7 @@ class SubscriptionView(View):
                         if sub.next_order > 0:
                             theOrder = Order.objects.get(
                                 id=sub.next_order)
-
+                            total_order_price = 0
                             theOrder.subscription_date = sub.next_order_date
                             theOrder.updated_date = make_aware(
                                 datetime.now())
@@ -1253,9 +1253,13 @@ class SubscriptionView(View):
                                 orderItem = save_subItems_and_orderItems(
                                     sub, amount, product)
                                 theOrder.items.add(orderItem)
-                                message = info_message_13
-                                messages.info(self.request, message)
-                                return redirect("member:my_subscriptions")
+                                total_order_price = total_order_price + orderItem.total_price
+                            message = info_message_13
+                            theOrder.total_price = total_order_price
+                            theOrder.save()
+                            print(theOrder.total_price)
+                            messages.info(self.request, message)
+                            return redirect("member:my_subscriptions")
 
                         else:
                             # it isn't so we make a new one
@@ -1277,7 +1281,7 @@ class SubscriptionView(View):
                                         ref_test = False
                                 except ObjectDoesNotExist:
                                     ref_test = False
-
+                            total_order_price = 0
                             theOrder.ref_code = ref_code
                             theOrder.subscription_order = True
                             theOrder.subscription_date = sub.next_order_date
@@ -1285,6 +1289,7 @@ class SubscriptionView(View):
                                 datetime.now())
                             theOrder.sub_out_date = sub.start_date
                             theOrder.ordered_date = sub.start_date
+                            theOrder.sub_out_date = sub.start_date
                             theOrder.ordered = True
                             theOrder.received = False
                             theOrder.being_delivered = False
@@ -1313,9 +1318,13 @@ class SubscriptionView(View):
                                 orderItem = save_subItems_and_orderItems(
                                     sub, amount, product)
                                 theOrder.items.add(orderItem)
-                                message = info_message_13
-                                messages.info(self.request, message)
-                                return redirect("member:my_subscriptions")
+                                total_order_price = total_order_price + orderItem.total_price
+                            message = info_message_13
+                            theOrder.total_price = total_order_price
+                            theOrder.save()
+                            print(theOrder.total_price)
+                            messages.info(self.request, message)
+                            return redirect("member:my_subscriptions")
                     except ObjectDoesNotExist:
                         message = error_message_26
                         messages.info(self.request, message)
@@ -1394,6 +1403,7 @@ class SubscriptionView(View):
                         except ObjectDoesNotExist:
                             ref_test = False
 
+                    total_order_price = 0
                     theOrder.ref_code = ref_code
                     theOrder.subscription_order = True
                     theOrder.updated_date = make_aware(datetime.now())
@@ -1409,7 +1419,6 @@ class SubscriptionView(View):
 
                     sub.next_order = theOrder.id
                     sub.save()
-                    print(sub.next_order)
 
                     # create subscription items and corresponding orderItems
 
@@ -1424,8 +1433,11 @@ class SubscriptionView(View):
                         # saving subscription and order items
                         orderItem = save_subItems_and_orderItems(
                             sub, amount, product)
+                        total_order_price = total_order_price + orderItem.total_price
                         theOrder.items.add(orderItem)
                         message = info_message_13
+                    theOrder.total_price = total_order_price
+                    theOrder.save()
                     messages.info(self.request, message)
                     return redirect("member:my_subscriptions")
             else:
