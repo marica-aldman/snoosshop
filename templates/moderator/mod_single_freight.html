@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="border border-dark mb-3 p-2">
+        <h3>Frakt</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2 table-bordered">
+                <tbody>
+                    <tr>
+                        <td>
+                            Titel:
+                        </td>
+                        <td>
+                            {{ form.title }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Pris
+                        <td>
+                            {{ form.amount }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='submit' class='btn btn-primary' {% if new %}name="saveNew" value="new"
+            {% else %}name="saveOld" value="{{freight}}"{% endif %}>Spara</button>
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}

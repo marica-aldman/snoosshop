@@ -3,6 +3,7 @@
 {% block content %}
 
 <div class="container">
+    <div class="d-flex w-100 justify-content-around">
     <form method="POST" action="{{ order.get_absolute_url_support }}">
         {% csrf_token %}
         <div>
@@ -13,6 +14,7 @@
             </div>
         </div>
     </form>
+    </div>
 
     <form method="POST">
         {% csrf_token %}

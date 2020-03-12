@@ -14,7 +14,7 @@
                          addresses
                     {% endcomment %}
         <div>
-            <form method="POST" action="{% url 'moderator:new_address' %}">
+            <form method="POST" action="{% url 'support:new_address' %}">
                 {% csrf_token %}
                 <input type="hidden" name="theClient" value="{{ person.id }}">
                 <button type="submit" class="btn btn-primary float-right">
@@ -70,7 +70,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form method="POST" action="{{address.moderator_get_absolute_url}}">
+                        <form method="POST" action="{{address.support_get_absolute_url}}">
                         {% csrf_token %}
                             <input type="hidden" name="theClient" value="{{ person.id }}">
                             <button class="btn btn-primary float-right">

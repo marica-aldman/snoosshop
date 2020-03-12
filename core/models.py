@@ -37,6 +37,12 @@ INTERVALL_CHOICES = (
     ('200', 'En gång om året'),
 )
 
+PAYMENT_CHOICES = [
+    {'key': 'S', 'name': 'Stripe'},
+    {'key': 'P', 'name': 'Paypal'},
+    {'key': 'I', 'name': 'Invoice'},
+]
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -69,10 +75,10 @@ class Address(models.Model):
             'slug': self.slug
         })
 
-    # for the moderator
+    # for the support
 
-    def moderator_get_absolute_url(self):
-        return reverse("moderator:edit_address", kwargs={
+    def support_get_absolute_url(self):
+        return reverse("support:edit_address", kwargs={
             'slug': self.slug
         })
 
@@ -92,7 +98,7 @@ class CompanyInfo(models.Model):
     slug = models.SlugField(default='company')
 
     def __str__(self):
-        return self.id
+        return self.company
 
     def get_absolute_url(self):
         return reverse("member:edit_companyInfo", kwargs={
@@ -133,6 +139,26 @@ class UserInfo(models.Model):
     def moderator_get_absolute_url(self):
         return reverse("moderator:edit_user", kwargs={
             'slug': self.slug
+        })
+
+
+class Freight(models.Model):
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=False)
+    amount = models.FloatField(blank=True, null=True)
+    test = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:freight", kwargs={
+            'slug': self.slug
+        })
+
+    def get_absolute_url_moderator_new(self):
+        return reverse("moderator:freight", kwargs={
+            'slug': 'new'
         })
 
 
@@ -217,7 +243,7 @@ class OrderItem(models.Model):
         return self.get_total_item_price()
 
     def get_absolute_url_support(self):
-        return reverse("moderator:orderItem", kwargs={
+        return reverse("support:orderItem", kwargs={
             'slug': self.id
         })
 
@@ -239,6 +265,8 @@ class Order(models.Model):
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
         'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
+    payment_type = models.CharField(
+        max_length=1, choices=PAYMENT_CHOICES, default='S')
     payment = models.ForeignKey(
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
     coupon = models.ForeignKey(
@@ -279,7 +307,7 @@ class Order(models.Model):
         })
 
     def get_absolute_url_support(self):
-        return reverse("moderator:vieworder", kwargs={
+        return reverse("support:vieworder", kwargs={
             'slug': self.ref_code
         })
 

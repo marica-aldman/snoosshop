@@ -284,9 +284,29 @@ info_message_48 = "Product deleted."
 
 info_message_49 = "No regurlar orders to send."
 info_message_50 = "No subscriptions orders to send."
-# Moderator: single order handling
+# Moderator
+# single order handling
+# sent
 
 info_message_51 = "Order marked as sent."
+# partial send
+
+info_message_73 = 'Part of the order has been sent.'
+
+# Moderator
+# Freight handling
+# delete
+
+info_message_76 = 'Freight has been deleted'
+
+# Single Freight handling
+# Updated
+
+info_message_74 = 'Freight has been updated'
+
+# new
+
+info_message_75 = 'Freight has been created'
 
 # ERROR MESSAGES
 
@@ -755,6 +775,11 @@ error_message_103 = 'Please enter a valid product id'
 
 
 # Moderator
+# order handling
+#pagination in search
+error_message_117 = "Something is wrong with the orderhandling page. Please contact IT support."
+
+# Moderator
 # specific order handling
 # get
 
@@ -772,4 +797,29 @@ error_message_106 = "Unable to mark order as sent. If the problem persists, cont
 error_message_107 = "Something is wrong with the order display page. If this persists, contact IT support."
 
 # backed up orders
-error_message_108 = "This user has a previous unfilled order. Sort out the first one or contact support for a resolution. User id:"
+error_message_108 = "Order not marked as sent. No items were marked as packed."
+
+# Moderator
+# Freight handling
+
+# Moderator
+# Single Freight handling
+# update not valid form
+
+error_message_115 = 'Something missing in form. Please correct before resubmitting.'
+
+# new not valid form
+
+error_message_116 = 'Something missing in form. Please correct before resubmitting.'
+
+# WARNING MESSAGES
+
+# Support
+# Specific Order
+# Delete
+warning_1 = "Are you sure you wish to delete the order? this action can not be undone."
+
+# Support
+# Specific Subscription
+# Delete
+warning_1 = "Are you sure you wish to delete the subscription? this action can not be undone."

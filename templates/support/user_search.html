@@ -70,7 +70,7 @@
                         {{ person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_user' %}">
+                        <form method="POST" action="{% url 'support:edit_user' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtProfile" class='btn btn-primary'>
                                 Se
@@ -78,7 +78,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_company' %}">
+                        <form method="POST" action="{% url 'support:edit_company' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtCompany" class='btn btn-primary'>
                                 Se
@@ -86,7 +86,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
+                        <form method="POST" action="{% url 'support:edit_addresses' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtAddresses" class='btn btn-primary'>
                                 Se
@@ -94,7 +94,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:user_settings' %}">
+                        <form method="POST" action="{% url 'support:user_settings' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
                                 Se
@@ -102,7 +102,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
+                        <form method="POST" action="{% url 'support:subscriptions' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
@@ -110,7 +110,7 @@
                         </form>
                     </td>
                     {% comment %} <td>
-                        <form method="POST" action="{% url 'moderator:support' %}">
+                        <form method="POST" action="{% url 'support:support' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
                                 Se
@@ -133,7 +133,7 @@
                         {{ person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_user' %}">
+                        <form method="POST" action="{% url 'support:edit_user' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtProfile" class='btn btn-primary'>
                                 Se
@@ -141,7 +141,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_company' %}">
+                        <form method="POST" action="{% url 'support:edit_company' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtCompany" class='btn btn-primary'>
                                 Se
@@ -149,7 +149,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
+                        <form method="POST" action="{% url 'support:edit_addresses' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtAddresses" class='btn btn-primary'>
                                 Se
@@ -157,7 +157,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:user_settings' %}">
+                        <form method="POST" action="{% url 'support:user_settings' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
                                 Se
@@ -165,7 +165,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
+                        <form method="POST" action="{% url 'support:subscriptions' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
@@ -173,7 +173,7 @@
                         </form>
                     </td>
                     {% comment %} <td>
-                        <form method="POST" action="{% url 'moderator:support' %}">
+                        <form method="POST" action="{% url 'support:support' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
                                 Se

@@ -23,6 +23,7 @@ INSTALLED_APPS = [
 
     'member',
     'moderator',
+    'support',
     'core'
 ]
 

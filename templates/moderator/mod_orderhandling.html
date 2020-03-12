@@ -4,7 +4,25 @@
 {% block content %}
 
 <div class="container mt-3">
-
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST" class="w-100">
+            {% csrf_token %}
+            <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+            <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+            <input type="hidden" name="search" value="{{search_type}}">
+            <div class="d-flex justify-content-around">
+                <div>
+                    Reference: {{form.order_ref|as_crispy_field}}
+                </div>
+                <div>
+                    Order id: {{form.order_id|as_crispy_field}}
+                </div>
+                <div>
+                    <button type="submit" name="searching" class='btn btn-primary mt-3' value="True">Sök</button>
+                </div>
+            </div>
+        </form>
+    </div>
     <!-- results or all orders -->
     <div class="row border border-dark mb-3 p-2">
         <h3>Vanliga Ordrar</h3>
@@ -53,6 +71,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="previousPageRegOrder" class="page-link" {% if r_current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
@@ -64,6 +83,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="{{ r_order.number }}" name="r_page" {% if r_current_page == r_order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
                         {{r_order.number}}
                     </button>
@@ -75,6 +95,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="nextPageRegOrder" class="page-link" {% if rmax == r_current_page %} disabled{% endif %}>
                         >
                     </button>
@@ -144,6 +165,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="previousPageSubOrder" class="page-link" {% if s_current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
@@ -155,6 +177,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="{{ s_order.number }}" name="s_page" {% if s_current_page == s_order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
                         {{s_order.number}}
                     </button>
@@ -166,6 +189,7 @@
                 {% csrf_token %}
                     <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="nextPageSubOrder" class="page-link" {% if smax == s_current_page %} disabled{% endif %}>
                         >
                     </button>

@@ -166,12 +166,13 @@ def save_orderItem(subItem):
     return orderItem
 
 
-def sameAddress_moderator(theUser, form_street_address, form_post_town, form_address_type):
+def sameAddress_support(theUser, form_street_address, form_post_town, form_address_type, default):
     # start by checking that we dont already have this address
     sameBilling = 0
     sameShipping = 0
     message = ''
     addresses = Address.objects.filter(user=theUser)
+
     for anAddress in addresses:
         if form_street_address == anAddress.street_address:
             if form_post_town == anAddress.post_town:
@@ -186,9 +187,8 @@ def sameAddress_moderator(theUser, form_street_address, form_post_town, form_add
                     message = "Address already exists"
                     if default and not anAddress.default:
                         # remove default from other addresses of same type
-
                         compAddresses = Address.objects.filter(
-                            user=theUser, address_type=anAddress.address_type)
+                            user=theUser, address_type=form_address_type)
                         for sameAddress in compAddresses:
                             if sameAddress.default:
                                 sameAddress.default = False
@@ -200,6 +200,12 @@ def sameAddress_moderator(theUser, form_street_address, form_post_town, form_add
                         anAddress.save()
                         message = "Address already exists. Default changed."
                     return sameShipping, sameBilling, message
+                else:
+                    return sameShipping, sameBilling, message
+            else:
+                return sameShipping, sameBilling, message
+        else:
+            return sameShipping, sameBilling, message
 
 
 def create_ref_code():

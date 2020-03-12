@@ -23,40 +23,6 @@ class Overview(View):
     def get(self, *args, **kwargs):
         try:
 
-            # get the first ten unanswered support errands and the count of the unanswerd support errands
-
-            try:
-                support = SupportThread.objects.filter(last_responce=2)[:10]
-                number_support = SupportThread.objects.filter(
-                    last_responce=2).count()
-            except ObjectDoesNotExist:
-                support = {}
-                number_support = 0
-
-            # figure out how many pages of 10 there are
-            # if there are only 10 or fewer pages will be 1
-
-            pages = 1
-
-            if number_support > 10:
-                # if there are more we divide by ten
-                pages = number_support / 10
-                # see if there is a decimal
-                numType = type(pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if numType == "Float":
-                    pages += 1
-
-            # create a list for a ul to work through
-
-            more_support = []
-
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(pages):
-                i += 1
-                more_support.append({'number': i})
-
             # get the first ten unsent orders and the count of all unsent orders
 
             try:
@@ -72,9 +38,9 @@ class Overview(View):
 
             o_pages = 1
 
-            if number_support > 10:
+            if number_orders > 10:
                 # if there are more we divide by ten
-                o_pages = number_support / 10
+                o_pages = number_orders / 10
                 # see if there is a decimal
                 numType = type(o_pages)
                 # if there isn't an even number of ten make an extra page for the last group
@@ -92,24 +58,13 @@ class Overview(View):
                 more_orders.append({'number': i})
 
             # we are on the first page so set the page to that
-
-            current_page_support = 1
             current_page_orders = 1
 
             context = {
-                'support': support,
-                'more_support': more_support,
                 'orders': orders,
                 'more_orders': more_orders,
-                'current_page_support': current_page_support,
                 'current_page_orders': current_page_orders,
             }
-
-            """if len(responces_a) < 0:
-                context.update({'responces_a': responces_a})
-
-            if len(responces_r) < 0:
-                context.update({'responces_r': responces_r})"""
 
             return render(self.request, "moderator/mod_overview.html", context)
 
@@ -121,151 +76,11 @@ class Overview(View):
     def post(self, *args, **kwargs):
         try:
             # get where we are
-
-            current_page_support = int(
-                self.request.POST['current_page_support'])
             current_page_orders = int(self.request.POST['current_page_orders'])
 
-            if 'whichPageSupport' in self.request.POST.keys():
-                whichPageSupport = int(self.request.POST['whichPageSupport'])
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = whichPageSupport * 10
-                    support = SupportThread.objects.filter(last_responce=2)[
-                        10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_36)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = Order.objects.filter(
-                        being_delivered=False).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                # fix the current pages
-                current_page_support = whichPageSupport
-
-                context = {
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                """if len(responces_a) < 0:
-                    context.update({'responces_a': responces_a})
-
-                if len(responces_r) < 0:
-                    context.update({'responces_r': responces_r})"""
-
-                return render(self.request, "moderator/mod_overview.html", context)
-
-            elif 'whichPageOrder' in self.request.POST.keys():
+            if 'whichPageOrder' in self.request.POST.keys():
                 whichPageOrder = int(self.request.POST['whichPageOrder'])
                 current_page_order = whichPageOrder
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_37)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
 
                 # get the first ten unsent orders and the count of all unsent orders
 
@@ -304,56 +119,14 @@ class Overview(View):
                     more_orders.append({'number': i})
 
                 context = {
-                    'support': support,
-                    'more_support': more_support,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_support': current_page_support,
                     'current_page_orders': current_page_orders,
                 }
 
                 return render(self.request, "moderator/mod_overview.html", context)
 
             elif 'nextPageOrder' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_38)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
 
                 # get the first ten unsent orders and the count of all unsent orders
 
@@ -395,56 +168,14 @@ class Overview(View):
                     more_orders.append({'number': i})
 
                 context = {
-                    'support': support,
-                    'more_support': more_support,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_support': current_page_support,
                     'current_page_orders': current_page_orders,
                 }
 
                 return render(self.request, "moderator/mod_overview.html", context)
 
             elif 'previousPageOrder' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, error_message_39)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
 
                 # get the first ten unsent orders and the count of all unsent orders
 
@@ -486,193 +217,8 @@ class Overview(View):
                     more_orders.append({'number': i})
 
                 context = {
-                    'support': support,
-                    'more_support': more_support,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "moderator/mod_overview.html", context)
-
-            elif 'nextPageSupport' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    number_support = Order.objects.filter(
-                        being_delivered=False).count()
-                    whichPageSupport = 1
-                    if current_page_support < (number_support / 10):
-                        whichPageSupport = current_page_support + 1
-                    offset = whichPageSupport * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                except ObjectDoesNotExist:
-                    messages.info(
-                        self.request, error_message_40)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "moderator/mod_overview.html", context)
-
-            elif 'previousPageSupport' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    whichPageSupport = 1
-                    if current_page_support > 1:
-                        whichPageSupport = current_page_support - 1
-                    offset = whichPageSupport * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_41)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
                     'current_page_orders': current_page_orders,
                 }
 
@@ -682,2462 +228,6 @@ class Overview(View):
             messages.warning(
                 self.request, error_message_42)
             return redirect("moderator:overview")
-
-
-class MultipleOrdersView(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get the first 20 orders and a count of all orders
-
-            try:
-                orders = Order.objects.all()[:20]
-                number_orders = Order.objects.all().count()
-            except ObjectDoesNotExist:
-                orders = {}
-                number_orders = 0
-
-            # figure out how many pages of 20 there are
-            # if there are only 20 or fewer pages will be 1
-
-            o_pages = 1
-
-            if number_orders > 20:
-                # if there are more we divide by ten
-                o_pages = number_orders / 20
-                # see if there is a decimal
-                testO = int(o_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testO != o_pages:
-                    o_pages = int(o_pages)
-                    o_pages += 1
-
-            # create a list for a ul to work through
-
-            more_orders = []
-
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(o_pages):
-                i += 1
-                more_orders.append({'number': i})
-
-            # make search for specific order or customer
-
-            form = searchOrderForm()
-
-            # set current page to 1
-            current_page = 1
-
-            # set a bool to check if we are showing one or multiple orders
-
-            multiple = True
-
-            # set the hidden value for wether or not we have done a search
-
-            search_type = "None"
-            search_value = "None"
-
-            context = {
-                'search_type': search_type,
-                'search_value': search_value,
-                'multiple': multiple,
-                'orders': orders,
-                'more_orders': more_orders,
-                'form': form,
-                'current_page': current_page,
-                'max_pages': o_pages,
-            }
-
-            return render(self.request, "moderator/mod_order_search.html", context)
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_43)
-            return redirect("moderator:overview")
-
-    def post(self, *args, **kwargs):
-        try:
-            # where are we
-            current_page = 1
-            if 'current_page' in self.request.POST.keys():
-                current_page = int(self.request.POST['current_page'])
-
-            # what button did we press
-
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # fix this to display pagination for some types of searches and only one specific page for other others
-                    user_id = int(self.request.POST['search_value'])
-                else:
-                    # make a form and populate so we can clean the data
-                    form = searchOrderForm(self.request.POST)
-
-                    if form.is_valid():
-                        # get the values
-                        order_ref = form.cleaned_data.get('order_ref')
-                        order_id = form.cleaned_data.get('order_id')
-                        user_id = form.cleaned_data.get('user_id')
-                        if len(order_ref) == 20:
-                            # search done on order reference
-                            search_value = order_ref
-
-                            try:
-                                order = Order.objects.get(ref_code=order_ref)
-
-                                # set current page to 1
-                                current_page = 1
-
-                                # set a bool to check if we are showing one or multiple orders
-
-                                multiple = False
-                                more_orders = [{'number': 1}]
-
-                                # set the search type
-
-                                search_type = "Reference"
-
-                                context = {
-                                    'search_type': search_type,
-                                    'search_value': search_value,
-                                    'multiple': multiple,
-                                    'order': order,
-                                    'more_orders': more_orders,
-                                    'form': form,
-                                    'current_page': 1,
-                                    'max_pages': 1,
-                                }
-
-                                return render(self.request, "moderator/mod_order_search.html", context)
-                            except ObjectDoesNotExist:
-                                messages.info(
-                                    self.request, info_message_19)
-                                return redirect("moderator:orders")
-
-                        elif order_id != None:
-                            # search on order id
-                            search_value = order_id
-
-                            try:
-                                order = Order.objects.get(id=order_id)
-
-                                # set current page to 1
-                                current_page = 1
-
-                                # set a bool to check if we are showing one or multiple orders
-
-                                multiple = False
-                                more_orders = [{'number': 1}]
-
-                                # set the search type
-
-                                search_type = "orderID"
-
-                                context = {
-                                    'search_type': search_type,
-                                    'search_value': search_value,
-                                    'multiple': multiple,
-                                    'order': order,
-                                    'more_orders': more_orders,
-                                    'form': form,
-                                    'current_page': 1,
-                                    'max_pages': 1,
-                                }
-
-                                return render(self.request, "moderator/mod_order_search.html", context)
-                            except ObjectDoesNotExist:
-                                messages.info(
-                                    self.request, info_message_19)
-                                return redirect("moderator:orders")
-
-                        elif user_id != None:
-                            # search done on user
-                            search_value = user_id
-                            # get the user
-
-                            try:
-                                the_user = User.objects.get(id=user_id)
-                                orders = Order.objects.filter(
-                                    user=the_user)
-                                number_orders = Order.objects.filter(
-                                    user=the_user).count()
-
-                                # figure out how many pages of 10 there are
-                                # if there are only 10 or fewer pages will be 1
-
-                                o_pages = 1
-
-                                if number_orders > 10:
-                                    # if there are more we divide by ten
-                                    o_pages = number_orders / 10
-                                    # see if there is a decimal
-                                    numType = type(o_pages)
-                                    # if there isn't an even number of ten make an extra page for the last group
-                                    if numType == "Float":
-                                        o_pages += 1
-
-                                # create a list for a ul to work through
-
-                                more_orders = []
-
-                                i = 0
-                                # populate the list with the amount of pages there are
-                                for i in range(o_pages):
-                                    i += 1
-                                    more_orders.append({'number': i})
-
-                                # set current page to 1
-                                current_page = 1
-
-                                # set a bool to check if we are showing one or multiple orders
-
-                                multiple = True
-
-                                # set the search type
-
-                                search_type = "userID"
-
-                                context = {
-                                    'search_type': search_type,
-                                    'search_value': search_value,
-                                    'multiple': multiple,
-                                    'orders': orders,
-                                    'more_orders': more_orders,
-                                    'form': form,
-                                    'current_page': current_page,
-                                    'max_pages': o_pages,
-                                }
-
-                                return render(self.request, "moderator/mod_order_search.html", context)
-
-                            except ObjectDoesNotExist:
-                                messages.info(
-                                    self.request, info_message_20)
-                                return redirect("moderator:orders")
-                        else:
-                            return redirect("moderator:orders")
-
-            elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-
-                try:
-                    number_orders = Order.objects.all(
-                    ).count()
-                    number_pages = number_users / 20
-                    if current_page < number_pages:
-                        current_page += 1
-                    offset = current_page * 20
-                    orders = Order.objects.all()[20:offset]
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 20 there are
-                # if there are only 20 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 20:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 20
-                    # see if there is a decimal
-                    testO = int(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testO != o_pages:
-                        o_pages = int(o_pages)
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                # make search for specific order or customer
-
-                form = searchOrderForm()
-
-                # set a bool to check if we are showing one or multiple orders
-
-                multiple = True
-
-                # set the hidden value for wether or not we have done a search
-
-                search_type = "None"
-                search_value = "None"
-
-                context = {
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'multiple': multiple,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'form': form,
-                    'current_page': current_page,
-                    'max_pages': o_pages,
-                }
-
-                return render(self.request, "moderator/mod_order_search.html", context)
-
-            elif 'previousPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-
-                if current_page > 2:
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                            offset = current_page * 20
-                        orders = Order.objects.all()[20:offset]
-                        number_orders = Order.objects.all(
-                        ).count()
-                    except ObjectDoesNotExist:
-                        orders = {}
-                        number_orders = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    o_pages = 1
-
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        testO = int(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if testO != o_pages:
-                            o_pages = int(o_pages)
-                            o_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_orders = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
-
-                    # make search for specific order or customer
-
-                    form = searchOrderForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
-
-                    # set the hidden value for wether or not we have done a search
-
-                    search_type = "None"
-                    search_value = "None"
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'orders': orders,
-                        'more_orders': more_orders,
-                        'form': form,
-                        'current_page': current_page,
-                        'max_pages': o_pages,
-                    }
-
-                    return render(self.request, "moderator/mod_order_search.html", context)
-                else:
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                        orders = Order.objects.all()[:20]
-                        number_orders = Order.objects.all(
-                        ).count()
-                    except ObjectDoesNotExist:
-                        orders = {}
-                        number_orders = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    o_pages = 1
-
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        testO = int(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if testO != o_pages:
-                            o_pages = int(o_pages)
-                            o_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_orders = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
-
-                    # make search for specific order or customer
-
-                    form = searchOrderForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
-
-                    # set the hidden value for wether or not we have done a search
-
-                    search_type = "None"
-                    search_value = "None"
-
-                    context = {
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'multiple': multiple,
-                        'orders': orders,
-                        'more_orders': more_orders,
-                        'form': form,
-                        'current_page': current_page,
-                        'max_pages': o_pages,
-                    }
-
-                    return render(self.request, "moderator/mod_order_search.html", context)
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_44)
-            return redirect("moderator:overview")
-
-
-class Users(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get the first 20 users and a count of all users
-
-            try:
-                users = User.objects.filter(groups__name='client')[:20]
-                number_users = User.objects.filter(
-                    groups__name='client').count()
-            except ObjectDoesNotExist:
-                users = {}
-                number_users = 0
-
-            # figure out how many pages of 20 there are
-            # if there are only 20 or fewer pages will be 1
-
-            u_pages = 1
-
-            if number_users > 20:
-                # if there are more we divide by ten
-                u_pages = number_users / 20
-                # see if there is a decimal
-                testU = int(u_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testU != u_pages:
-                    u_pages = int(u_pages)
-                    u_pages += 1
-
-            # create a list for a ul to work through
-
-            more_users = []
-
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(u_pages):
-                i += 1
-                more_users.append({'number': i})
-
-            # make search for specific order or customer
-
-            form = searchUserForm()
-
-            # set current page to 1
-            current_page = 1
-
-            # set a bool to check if we are showing one or multiple orders
-
-            multiple = True
-
-            # set the hidden value for wether or not we have done a search
-
-            search_type = "None"
-            search_value = "None"
-
-            context = {
-                'search_type': search_type,
-                'search_value': search_value,
-                'multiple': multiple,
-                'users': users,
-                'more_users': more_users,
-                'form': form,
-                'current_page': current_page,
-                'max_pages': u_pages,
-            }
-
-            return render(self.request, "moderator/mod_user_search.html", context)
-
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, error_message_45)
-            return redirect("moderator:overview")
-
-    def post(self, *args, **kwargs):
-        try:
-            # where are we
-            current_page = 1
-            if 'current_page' in self.request.POST.keys():
-                current_page = int(self.request.POST['current_page'])
-
-            # what button did we press
-
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-                # make a form and populate so we can clean the data
-                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # we only have one page when doing a search on user id, show that page
-                    user_id = int(self.request.POST['search_value'])
-
-                    if user_id != 0:
-                        # next page on a single user is the same as the search for single user
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-                            userProfile = UserProfile.objects.get(
-                                user=the_user)
-
-                            # there is only one
-                            u_pages = 1
-                            more_users = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'person': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': u_pages,
-                            }
-
-                            return render(self.request, "moderator/mod_user_search.html", context)
-
-                        except ObjectDoesNotExist:
-                            messages.info(self.request, info_message_21)
-                            return redirect("moderator:search_users")
-                else:
-                    form = searchUserForm(self.request.POST)
-
-                    if form.is_valid():
-                        # get the values
-                        user_id = form.cleaned_data.get('user_id')
-                        # search done on user
-                        search_value = user_id
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-
-                            # there is only one
-                            u_pages = 1
-                            more_users = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'person': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': u_pages,
-                            }
-
-                            return render(self.request, "moderator/mod_user_search.html", context)
-
-                        except ObjectDoesNotExist:
-                            messages.info(
-                                self.request, info_message_22)
-                            return redirect("moderator:search_users")
-                    else:
-                        return redirect("moderator:search_users")
-
-            elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-
-                try:
-                    number_users = User.objects.filter(
-                        groups__name='client').count()
-                    number_pages = number_users / 20
-                    if current_page < number_pages:
-                        current_page += 1
-                    offset = current_page * 20
-                    users = User.objects.filter(
-                        groups__name='client')[20:offset]
-                except ObjectDoesNotExist:
-                    users = {}
-                    number_users = 0
-
-                # figure out how many pages of 20 there are
-                # if there are only 20 or fewer pages will be 1
-
-                u_pages = 1
-
-                if number_users > 20:
-                    # if there are more we divide by ten
-                    u_pages = number_users / 20
-                    # see if there is a decimal
-                    testU = int(u_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testU != u_pages:
-                        u_pages = int(u_pages)
-                        u_pages += 1
-
-                # create a list for a ul to work through
-
-                more_users = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(u_pages):
-                    i += 1
-                    more_users.append({'number': i})
-
-                # make search for specific order or customer
-
-                form = searchOrderForm()
-
-                # set a bool to check if we are showing one or multiple orders
-
-                multiple = True
-
-                # set the hidden value for wether or not we have done a search
-
-                search_type = "None"
-                search_value = "None"
-
-                context = {
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'multiple': multiple,
-                    'users': users,
-                    'more_users': more_users,
-                    'form': form,
-                    'current_page': current_page,
-                    'max_pages': u_pages,
-                }
-
-                return render(self.request, "moderator/mod_user_search.html", context)
-
-            elif 'previousPage' in self.request.POST.keys():
-                search_type = self.request.POST['search']
-
-                # check what kind of search
-                if current_page > 2:
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                        offset = current_page * 20
-                        users = User.objects.filter(
-                            groups__name='client')[20:offset]
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
-
-                        u_pages = 1
-
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
-                            # see if there is a decimal
-                            testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testU != u_pages:
-                                u_pages = int(u_pages)
-                                u_pages += 1
-
-                        # create a list for a ul to work through
-
-                        more_users = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchUserForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'users': users,
-                            'more_users': more_users,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
-                        }
-
-                        return render(self.request, "moderator/mod_user_search.html", context)
-
-                    except ObjectDoesNotExist:
-                        messages.warning(
-                            self.request, error_message_46)
-                        return redirect("moderator:search_users")
-
-                else:
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                        users = User.objects.filter(
-                            groups__name='client')[:20]
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
-
-                        u_pages = 1
-
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
-                            # see if there is a decimal
-                            testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testU != u_pages:
-                                u_pages = int(u_pages)
-                                u_pages += 1
-
-                        # create a list for a ul to work through
-
-                        more_users = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchUserForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'users': users,
-                            'more_users': more_users,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
-                        }
-
-                        return render(self.request, "moderator/mod_user_search.html", context)
-
-                    except ObjectDoesNotExist:
-                        messages.warning(
-                            self.request, error_message_47)
-                        return redirect("moderator:search_users")
-
-            elif 'page' in self.request.POST.keys():
-                # paging through the pagination using specific offset
-                # get what type of search
-                search_type = self.request.POST['search']
-                current_page = int(self.request.POST['page'])
-
-                if int(self.request.POST['page']) > 1:
-                    try:
-                        offset = int(self.request.POST['page']) * 20
-                        users = User.objects.filter(
-                            groups__name='client')[20:offset]
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
-
-                        u_pages = 1
-
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
-                            # see if there is a decimal
-                            testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testU != u_pages:
-                                u_pages = int(u_pages)
-                                u_pages += 1
-
-                        # create a list for a ul to work through
-
-                        more_users = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchUserForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'users': users,
-                            'more_users': more_users,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
-                        }
-
-                        return render(self.request, "moderator/mod_user_search.html", context)
-
-                    except ObjectDoesNotExist:
-                        messages.warning(
-                            self.request, error_message_48)
-                        return redirect("moderator:search_users")
-
-                else:
-                    try:
-                        users = User.objects.filter(
-                            groups__name='client')[:20]
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
-
-                        u_pages = 1
-
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
-                            # see if there is a decimal
-                            testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testU != u_pages:
-                                u_pages = int(u_pages)
-                                u_pages += 1
-
-                        # create a list for a ul to work through
-
-                        more_users = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchUserForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-
-                        context = {
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'users': users,
-                            'more_users': more_users,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
-                        }
-
-                        return render(self.request, "moderator/mod_user_search.html", context)
-
-                    except ObjectDoesNotExist:
-                        messages.warning(
-                            self.request, error_message_49)
-                        return redirect("moderator:search_users")
-            else:
-                messages.warning(
-                    self.request, error_message_50)
-                return redirect("moderator:search_users")
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_51)
-            return redirect("moderator:overview")
-
-
-class OrderView(View):
-    def get(self, *args, **kwargs):
-        # this is either a redirect or someone refreshing the page
-        # if redirect
-        if 'order_ref' in self.request.GET.keys():
-            order_ref = self.request.GET['order_ref']
-            message = ""
-
-            # get the user's specific order
-            try:
-                order = Order.objects.get(ref_code=order_ref)
-            except ObjectDoesNotExist:
-                messages.warning(
-                    self.request, error_message_52)
-                return redirect("moderator:orders")
-
-            # get the order items
-            orderItems = order.items.all()
-            payment = order.payment
-            hasPayment = False
-            if payment:
-                hasPayment = True
-            coupon = order.coupon
-            hasCoupon = False
-            if coupon:
-                hasCoupon = True
-            billing_address = order.billing_address
-            shipping_address = order.shipping_address
-            theClient = order.user
-            theClientInfo = UserInfo.objects.get(user=order.user)
-            subscription = Subscription()
-            if order.subscription_order and not order.being_delivered:
-                try:
-                    subscription = Subscription.objects.get(
-                        next_order=order.id)
-                except ObjectDoesNotExist:
-                    try:
-                        subscription = Subscription.objects.get(
-                            comment=order.id)
-                    except ObjectDoesNotExist:
-                        message = error_message_110
-
-            path = self.request.get_full_path()
-
-            context = {
-                'order': order,
-                'orderItems': orderItems,
-                'payment': payment,
-                'coupon': coupon,
-                'shipping_address': shipping_address,
-                'billing_address': billing_address,
-                'subscription': subscription,
-                'hasPayment': hasPayment,
-                'hasCoupon': hasCoupon,
-                'theClient': theClient,
-                'theClientInfo': theClientInfo,
-            }
-
-            if message != "":
-                messages.warning(
-                    self.request, message)
-
-            return render(self.request, "moderator/mod_vieworder.html", context)
-        else:
-            # this is a refresh, we might loose valuable info if this is just refreshed after a long time so redirect
-            messages.warning(
-                self.request, error_message_109)
-            return redirect("moderator:orders")
-
-    def post(self, *args, **kwargs):
-        try:
-
-            if 'lookAtOrder' in self.request.POST.keys():
-                message = ""
-                order_id = int(self.request.POST['lookAtOrder'])
-
-                # get the user's specific order
-                try:
-                    order = Order.objects.get(id=order_id)
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_52)
-                    return redirect("moderator:orders")
-
-                # get the order items
-                orderItems = order.items.all()
-                payment = order.payment
-                hasPayment = False
-                if payment:
-                    hasPayment = True
-                coupon = order.coupon
-                hasCoupon = False
-                if coupon:
-                    hasCoupon = True
-                billing_address = order.billing_address
-                shipping_address = order.shipping_address
-                theClient = order.user
-                theClientInfo = UserInfo.objects.get(user=order.user)
-                subscription = Subscription()
-                if order.subscription_order and not order.being_delivered:
-                    try:
-                        subscription = Subscription.objects.get(
-                            next_order=order.id)
-                    except ObjectDoesNotExist:
-                        try:
-                            subscription = Subscription.objects.get(
-                                comment=order.id)
-                        except ObjectDoesNotExist:
-                            message = error_message_110
-
-                path = self.request.get_full_path()
-
-                context = {
-                    'order': order,
-                    'orderItems': orderItems,
-                    'payment': payment,
-                    'coupon': coupon,
-                    'shipping_address': shipping_address,
-                    'billing_address': billing_address,
-                    'subscription': subscription,
-                    'hasPayment': hasPayment,
-                    'hasCoupon': hasCoupon,
-                    'theClient': theClient,
-                    'theClientInfo': theClientInfo,
-                }
-
-                if message != "":
-                    messages.warning(
-                        self.request, message)
-
-                return render(self.request, "moderator/mod_vieworder.html", context)
-
-            elif 'back' in self.request.POST.keys():
-                # perhaps change this to a soft redirect with search paramaters later
-                return redirect("moderator:orders")
-
-            elif 'save' in self.request.POST.keys():
-                # we have granted or flagged either items or the either order for return.
-                # startwith getting the order
-                order_id = 0
-                if 'order' in self.request.POST.keys():
-                    order_id = int(self.request.POST['order'])
-                try:
-                    order = Order.objects.get(id=order_id)
-                except ObjectDoesNotExist:
-                    messages.warning(self.request, error_message_111)
-                    return redirect("moderator:orders")
-                # and orderItems
-                orderItems = order.items.all()
-                # check that the order isnt currently being packed
-                if order.being_read:
-                    messages.warning(self.request, error_message_113)
-                    return redirect("moderator:orders")
-
-                # Start with checking if we are returning the entire order
-                if 'OrderReturned' in self.request.POST.keys():
-                    # the entire order has been returned
-                    order.returned = True
-                    for item in orderItems:
-                        item.returned = True
-                        item.save()
-                    messages.info(self.request, info_message_58)
-                if 'OrderUnReturned' in self.request.POST.keys():
-                    # the entire order has been returned
-                    order.returned = False
-                    for item in orderItems:
-                        item.returned = False
-                        item.save()
-                    messages.info(self.request, info_message_59)
-                if 'OrderToReturnUn' in self.request.POST.keys():
-                    # we marked the entire order as being returned
-                    order.returned_flag = False
-                    # set all order items to returned
-                    for item in orderItems:
-                        item.returned_flag = False
-                        item.save()
-                    messages.info(self.request, info_message_57)
-                if 'OrderToReturn' in self.request.POST.keys():
-                    # we marked the entire order as being returned
-                    order.returned_flag = True
-                    # set all order items to returned
-                    for item in orderItems:
-                        item.returned_flag = True
-                        item.save()
-                    messages.info(self.request, info_message_56)
-                if 'PaybackRequested' in self.request.POST.keys():
-                    # we have returned the entire order
-                    order.refund_requested = True
-                    # set all order items to returned
-                    for item in orderItems:
-                        item.returned_flag = True
-                        item.save()
-
-                    messages.info(self.request, info_message_52)
-                if 'PaybackRequestCancel' in self.request.POST.keys():
-                    # we have returned the entire order
-                    order.refund_requested = False
-                    # set all order items to returned
-                    for item in orderItems:
-                        item.returned_flag = False
-                        item.save()
-                    messages.info(self.request, info_message_60)
-                if 'PaybackApproved' in self.request.POST.keys():
-                        # we have granted full money back without reutrn
-                    order.refund_granted = True
-                    # set refund for all orderItems
-                    for item in orderItems:
-                        item.refund = True
-                        item.save()
-                    messages.info(self.request, info_message_53)
-                if 'PaybackCancel' in self.request.POST.keys():
-                        # we have granted full money back without reutrn
-                    order.refund_granted = False
-                    # set refund for all orderItems
-                    for item in orderItems:
-                        item.refund = False
-                        item.save()
-                    messages.info(self.request, info_message_61)
-                order.save()
-                return redirect("moderator:orders")
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_52)
-            return redirect("moderator:orders")
-
-
-class OrderItemView(View):
-    def post(self, *args, **kwargs):
-        if 'handle' in self.request.POST.keys():
-            # view item
-            # get the ids for order and item
-            order_id = 0
-            item_id = 0
-            if 'order' in self.request.POST.keys():
-                order_id = int(self.request.POST['order'])
-            if 'item' in self.request.POST.keys():
-                item_id = int(self.request.POST['item'])
-
-            # get the order and item
-
-            order = Order()
-            item = OrderItem()
-            try:
-                order = Order.objects.get(id=order_id)
-                item = OrderItem.objects.get(id=item_id)
-            except ObjectDoesNotExist:
-                messages.warning(
-                    self.request, error_message)
-                return redirect("moderator:orders")
-
-            context = {
-                'order': order,
-                'item': item,
-            }
-
-            return render(self.request, "moderator/mod_specific_orderItem.html", context)
-        elif 'save' in self.request.POST.keys():
-            # get the ids for order and item
-            order_id = 0
-            item_id = 0
-            if 'order' in self.request.POST.keys():
-                order_id = int(self.request.POST['order'])
-            if 'item' in self.request.POST.keys():
-                item_id = int(self.request.POST['item'])
-
-            # get the order and item
-            order = Order()
-            item = OrderItem()
-            try:
-                order = Order.objects.get(id=order_id)
-                item = OrderItem.objects.get(id=item_id)
-            except ObjectDoesNotExist:
-                messages.warning(
-                    self.request, error_message_52)
-                return redirect("moderator:orders")
-            if 'ItemToReturn' in self.request.POST.keys():
-                item.returned_flag = True
-                messages.info(
-                    self.request, item.title + info_message_64)
-            if 'ItemToReturnUn' in self.request.POST.keys():
-                item.returned_flag = False
-                messages.info(
-                    self.request, item.title + info_message_65)
-            if 'ItemReturned' in self.request.POST.keys():
-                item.returned = True
-                messages.info(
-                    self.request, item.title + info_message_66)
-            if 'ItemUnReturned' in self.request.POST.keys():
-                item.returned = False
-                messages.info(
-                    self.request, item.title + info_message_67)
-            if 'PaybackRequested' in self.request.POST.keys():
-                item.refund_flag = True
-                messages.info(
-                    self.request, info_message_68 + item.title)
-            if 'PaybackRequestCancel' in self.request.POST.keys():
-                item.refund_flag = False
-                messages.info(
-                    self.request, info_message_69 + item.title)
-            if 'PaybackApproved' in self.request.POST.keys():
-                item.refund = True
-                messages.info(
-                    self.request, info_message_70 + item.title)
-            if 'PaybackCancel' in self.request.POST.keys():
-                item.refund = False
-                messages.info(
-                    self.request, info_message_71 + item.title)
-
-            messages.info(
-                self.request, item.title + info_message_72)
-            item.save()
-            # changes made create redirect  with variable
-            base_url = order.get_absolute_url_support()
-            query_string = urlencode({'order_ref': order.ref_code})
-            url = '{}?{}'.format(base_url, query_string)
-            return redirect(url)
-
-
-class SupportView(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get all unanswered errands and a count of them
-            # make a search avaiable for specific errand, order or customer
-
-            context = {
-                'support': errands,
-                'errands_a': errands_a,
-            }
-
-            return render(self.request, "member/my_support.html", context)
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_53)
-            return redirect("moderator:overview")
-
-
-class Errand(View):
-    def get(self, *args, **kwargs):
-        try:
-            # get the specific errand. Show all answers and responces as well as a responce form
-
-            context = {
-                'errand': errand,
-                'responces': responces,
-            }
-
-            return render(self.request, "member/my_errand.html", context)
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_54)
-            return redirect("moderator:support")
-
-
-class EditUser(View):
-    def get(self, *args, **kwargs):
-        # return to search
-
-        messages.warning(
-            self.request, error_message_92)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        try:
-            # get the specific user's profile
-            if 'lookAtProfile' in self.request.POST.keys():
-                search_id = int(self.request.POST['lookAtProfile'])
-                form = UserInformationForm()
-                the_user = User.objects.get(id=search_id)
-
-                form.populate(the_user)
-
-                context = {
-                    'form': form,
-                    'person': the_user
-                }
-
-                return render(self.request, "moderator/edit_user.html", context)
-            elif 'saveProfile' in self.request.POST.keys():
-                form = UserInformationForm(self.request.POST)
-                if form.is_valid():
-                    if 'theUser' in self.request.POST.keys():
-                        the_user = int(self.request.POST['theUser'])
-                        person = User.objects.get(id=the_user)
-                        userInfo = UserInfo.objects.get(user=person)
-                        person.first_name = form.cleaned_data.get(
-                            'first_name')
-                        userInfo.first_name = form.cleaned_data.get(
-                            'first_name')
-                        person.last_name = form.cleaned_data.get(
-                            'last_name')
-                        userInfo.last_name = form.cleaned_data.get(
-                            'last_name')
-                        userInfo.email = form.cleaned_data.get(
-                            'email')
-                        userInfo.telephone = form.cleaned_data.get(
-                            'telephone')
-                        person.save()
-                        userInfo.save()
-                        messages.info(
-                            self.request, info_message_23)
-                        return redirect("moderator:search_users")
-                    else:
-                        context = {
-                            'form': form,
-                        }
-
-                        messages.warning(
-                            self.request, error_message_55)
-                        return render(self.request, "moderator/edit_user.html", context)
-                else:
-                    context = {
-                        'form': form,
-                    }
-
-                    messages.info(
-                        self.request, info_message_24)
-                    return render(self.request, "moderator/edit_user.html", context)
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_56)
-            return redirect("moderator:overview")
-
-
-class EditCompany(View):
-    def get(self, *args, **kwargs):
-        # return to search
-
-        messages.warning(
-            self.request, error_message_93)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        if 'lookAtCompany' in self.request.POST.keys():
-            # take in the id nr
-            user_id = int(self.request.POST['lookAtCompany'])
-            # get the user
-            theUser = User.objects.get(id=user_id)
-            # check for company
-            try:
-                theCompany = CompanyInfo.objects.get(user=theUser)
-                newOrOld = True
-            except ObjectDoesNotExist:
-                newOrOld = False
-
-            # create the forms
-            c_form = CompanyInfoForm()
-            a_form = SetupAddressForm()
-            if newOrOld:
-                c_form.populate(theUser)
-                a_form.populate(theCompany)
-
-            context = {
-                'a_form': a_form,
-                'c_form': c_form,
-                'person': theUser,
-                'newOrOld': newOrOld,
-            }
-
-            return render(self.request, "moderator/company.html", context)
-        elif 'saveCompany' in self.request.POST.keys():
-            if 'theUser' in self.request.POST.keys():
-                user_id = int(self.request.POST['theUser'])
-                try:
-                    theUser = User.objects.get(id=user_id)
-                    if 'newOrOld' in self.request.POST.keys():
-                        newOrOld = self.request.POST['newOrOld']
-                        c_form = CompanyInfoForm(self.request.POST)
-                        a_form = SetupAddressForm(self.request.POST)
-                        if c_form.is_valid():
-                            if a_form.is_valid():
-                                if newOrOld:
-                                    # save in old instances
-                                    try:
-                                        theCompany = CompanyInfo.objects.get(
-                                            user=theUser)
-                                    except ObjectDoesNotExist:
-                                        messages.warning(
-                                            self.request, error_message_57)
-
-                                        return redirect("moderator:search_users")
-                                    address = theCompany.addressID
-
-                                    theCompany.company = c_form.cleaned_data.get(
-                                        'company')
-                                    theCompany.organisation_number = c_form.cleaned_data.get(
-                                        'organisation_number')
-
-                                    address.street_address = a_form.cleaned_data.get(
-                                        'street_address')
-                                    address.apartment_address = a_form.cleaned_data.get(
-                                        'apartment_address')
-                                    address.zip = a_form.cleaned_data.get(
-                                        'zip')
-                                    address.post_town = a_form.cleaned_data.get(
-                                        'post_town')
-
-                                    address.save()
-                                    theCompany.save()
-                                    messages.info(
-                                        self.request, info_message_25)
-
-                                    return redirect("moderator:search_users")
-
-                                else:
-                                    # create new
-                                    theCompany = CompanyInfo()
-                                    address = Address()
-
-                                    theCompany.user = theUser
-                                    theCompany.company = c_form.cleaned_data.get(
-                                        'company')
-                                    theCompany.organisation_number = c_form.cleaned_data.get(
-                                        'organisation_number')
-
-                                    address.user = theUser
-                                    address.street_address = a_form.cleaned_data.get(
-                                        'street_address')
-                                    address.apartment_address = a_form.cleaned_data.get(
-                                        'apartment_address')
-                                    address.zip = a_form.cleaned_data.get(
-                                        'zip')
-                                    address.post_town = a_form.cleaned_data.get(
-                                        'post_town')
-                                    address.default = True
-                                    address.address_type = "B"
-                                    address.country = "Sverige"
-                                    # create a slug
-
-                                    toSlug = address.street_address + \
-                                        "B" + str(address.user.id)
-                                    testSlug = slugify(toSlug)
-                                    existingSlug = test_slug_address(testSlug)
-                                    i = 1
-                                    while existingSlug:
-                                        toSlug = address.street_address + \
-                                            "B" + str(address.user.id) + \
-                                            "_" + str(i)
-                                        testSlug = slugify(toSlug)
-                                        existingSlug = test_slug_address(
-                                            testSlug)
-                                        i += 1
-
-                                    address.slug = testSlug
-                                    address.save()
-                                    # add this address to the company
-                                    theCompany.addressID = address
-                                    # company needs a slug
-                                    slug = theCompany.company + \
-                                        str(theCompany.user.id)
-                                    makeSlug = slugify(slug)
-                                    test = test_slug_company(makeSlug)
-                                    i = 1
-                                    while test:
-                                        slug = theCompany.company + \
-                                            str(theCompany.user.id) + str(i)
-                                        makeSlug = slugify(slug)
-                                        test = test_slug_company(makeSlug)
-                                        i += 1
-                                    theCompany.slug = makeSlug
-                                    theCompany.save()
-                                    messages.info(
-                                        self.request, info_message_25)
-                                    return redirect("moderator:search_users")
-
-                            else:
-
-                                context = {
-                                    'a_form': a_form,
-                                    'c_form': c_form,
-                                    'person': theUser,
-                                    'newOrOld': newOrOld,
-                                }
-                                messages.warning(
-                                    self.request, error_message_58)
-
-                                return render(self.request, "moderator/company.html", context)
-                        else:
-
-                            context = {
-                                'a_form': a_form,
-                                'c_form': c_form,
-                                'person': theUser,
-                                'newOrOld': newOrOld,
-                            }
-                            messages.warning(
-                                self.request, error_message_59)
-
-                            return render(self.request, "moderator/company.html", context)
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_60)
-
-                    return redirect("moderator:search_users")
-
-
-class EditAdresses(View):
-    def get(self, *args, **kwargs):
-        # return to search
-
-        messages.warning(
-            self.request, error_message_94)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        try:
-            if 'lookAtAddresses' in self.request.POST.keys():
-                # get the client
-                user_id = int(self.request.POST['lookAtAddresses'])
-                theUser = User.objects.get(id=user_id)
-
-                # get the specific user's addresses
-                try:
-                    addresses = Address.objects.filter(user=theUser)
-                except ObjectDoesNotExist:
-                    addresses = {}
-
-                context = {
-                    'addresses': addresses,
-                    'person': theUser,
-                }
-
-                return render(self.request, "moderator/edit_addresses.html", context)
-            elif 'delete' in self.request.POST.keys():
-                # deleting adress
-                if 'id' in self.request.POST.keys() and 'u_id' in self.request.POST.keys():
-                    a_id = int(self.request.POST['id'])
-                    theAddress = Address.objects.get(id=a_id)
-                    u_id = int(self.request.POST['u_id'])
-                    theUser = User.objects.get(id=u_id)
-                    # check that this address isn't connected to a company
-                    addressUnconnected = False
-                    try:
-                        numberOfCompanies = CompanyInfo.objects.filter(
-                            addressID=theAddress).count()
-                        if numberOfCompanies >= 1:
-                            # a company with that address exists, redisplay page without changes
-                            messages.warning(
-                                self.request, info_message_26)
-                            try:
-                                addresses = Address.objects.filter(
-                                    user=theUser)
-                            except ObjectDoesNotExist:
-                                addresses = {}
-
-                            context = {
-                                'addresses': addresses,
-                                'person': theUser,
-                            }
-
-                            return render(self.request, "moderator/edit_addresses.html", context)
-                        else:
-                            # no companies with that address
-                            addressUnconnected = True
-                    except ObjectDoesNotExist:
-                        # no companies with that address
-                        addressUnconnected = True
-                    # check that this address isn't connected to a subscription
-                    try:
-                        numberOfSubscriptionsShipping = Subscription.objects.filter(
-                            shipping_address=theAddress).count()
-                        numberOfSubscriptionsBilling = Subscription.objects.filter(
-                            billing_address=theAddress).count()
-                        if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
-                            # a subscription is tied to this address
-                            messages.warning(
-                                self.request, error_message_62)
-                            try:
-                                addresses = Address.objects.filter(
-                                    user=theUser)
-                            except ObjectDoesNotExist:
-                                addresses = {}
-
-                            context = {
-                                'addresses': addresses,
-                                'person': theUser,
-                            }
-
-                            return render(self.request, "moderator/edit_addresses.html", context)
-                        else:
-                            # no subsriptions with that address set conenction to true
-                            addressUnconnected = True
-                    except ObjectDoesNotExist:
-                        # no subscriptions with that address
-                        addressUnconnected = True
-
-                    theAddress.delete()
-                    messages.info(
-                        self.request, info_message_26)
-                    # get the specific user's addresses
-                    try:
-                        addresses = Address.objects.filter(user=theUser)
-                    except ObjectDoesNotExist:
-                        addresses = {}
-
-                    context = {
-                        'addresses': addresses,
-                        'person': theUser,
-                    }
-
-                    return render(self.request, "moderator/edit_addresses.html", context)
-            else:
-                messages.warning(
-                    self.request, error_message_63)
-                return redirect("moderator:search_users")
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_64)
-            return redirect("moderator:search_users")
-
-
-class EditAdress(View):
-    def get(self, *args, **kwargs):
-        # return to search
-
-        messages.warning(
-            self.request, error_message_65)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        if "theClient" in self.request.POST.keys():
-            user_id = int(self.request.POST['theClient'])
-            theUser = User.objects.get(id=user_id)
-            # which one are we looking for
-            where = where_am_i(self)
-            # get this address
-            hasAddress = False
-            try:
-                address = Address.objects.get(slug=where)
-                hasAddress = True
-            except ObjectDoesNotExist:
-                address = Address()
-
-            form = addressForm(address)
-
-            context = {
-                'person': theUser,
-                'form': form,
-                'address': address,
-                'address_choices': ADDRESS_CHOICES
-            }
-
-            return render(self.request, "moderator/edit_address.html", context)
-
-        elif 'saveAddress' in self.request.POST.keys():
-            # client
-            user_id = 0
-            if 'u_id' in self.request.POST['u_id']:
-                user_id = int(self.request.POST['u_id'])
-            theUser = User.objects.get(id=user_id)
-            # which one are we looking for
-            where = where_am_i(self)
-            # get this address
-            hasAddress = False
-            try:
-                address = Address.objects.get(slug=where)
-                hasAddress = True
-            except ObjectDoesNotExist:
-                address = Address()
-            # get the form
-            form = addressForm(data=self.request.POST, address=address)
-            # check form
-            if form.is_valid():
-
-                address.street_address = form.cleaned_data.get(
-                    'street_address')
-                address.apartment_address = form.cleaned_data.get(
-                    'apartment_address')
-                address.post_town = form.cleaned_data.get('post_town')
-                address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
-                if 'address_type' in self.request.POST.keys():
-                    address_type = self.request.POST['address_type']
-                    if address_type == "B":
-                        address.address_type = "B"
-                    elif address_type == "S":
-                        address.address_type = "B"
-                    else:
-                        # someone is manipulating the code
-                        messages.warning(
-                            self.request, error_message_66)
-                        return redirect("moderator:user_search")
-                else:
-                    # rerender form
-
-                    context = {
-                        'form': form,
-                        'address': address,
-                        'address_choices': ADDRESS_CHOICES
-                    }
-
-                    return render(self.request, "moderator/edit_address.html", context)
-                if address.default is True:
-                    if 'default_address' in self.request.POST.keys():
-                        address.default = True
-                        new_address_default(address)
-
-                testString = address.street_address + \
-                    address.address_type + str(address.user.id)
-                toSlug = slugify(testString)
-                if toSlug != address.slug:
-                    # street address has changed. Create new slug
-
-                    address.slug = create_slug_address(address)
-
-                # save the address and return to list
-                address.save()
-
-                messages.info(self.request, info_message_27)
-
-                # render the users addresses for a soft redirect
-                # get the specific user's addresses
-                try:
-                    addresses = Address.objects.filter(user=theUser)
-                except ObjectDoesNotExist:
-                    addresses = {}
-
-                context = {
-                    'addresses': addresses,
-                    'person': theUser,
-                }
-
-                return render(self.request, "moderator/edit_addresses.html", context)
-            else:
-                # rerender form
-
-                context = {
-                    'form': form,
-                    'address': address,
-                    'address_choices': ADDRESS_CHOICES
-                }
-
-                messages.info(self.request, info_message_28)
-
-                return render(self.request, "moderator/edit_address.html", context)
-
-
-class NewAddress(View):
-    def get(self, *args, **kwargs):
-        # return to search as we dont know the user
-
-        messages.warning(
-            self.request, error_message_67)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        if "theClient" in self.request.POST.keys():
-            user_id = int(self.request.POST['theClient'])
-            theUser = User.objects.get(id=user_id)
-            # get form for this using the user id
-            form = NewAddressForm()
-
-            context = {
-                'form': form,
-                'person': theUser,
-                'address_choices': ADDRESS_CHOICES_EXTENDED
-            }
-
-            return render(self.request, "moderator/new_address.html", context)
-        elif 'saveAddress' in self.request.POST.keys():
-            # client
-            user_id = 0
-            if 'user_id' in self.request.POST.keys():
-                user_id = int(self.request.POST['theUser'])
-            theUser = User.objects.get(id=user_id)
-            # make an address object
-            address = Address()
-            form = NewAddressForm(self.request.POST)
-
-            if form.is_valid():
-                # start by checking that we dont already have this address
-                sameBilling = 0
-                sameShipping = 0
-                form_street_address = form.cleaned_data.get(
-                    'form_street_address')
-                form_post_town = form.cleaned_data.get('post_town')
-                form_address_type = form.cleaned_data.get('address_type')
-                default = False
-                if 'default_address' in self.request.POST.keys():
-                    default = True
-                sameShipping, sameBilling, message = sameAddress_moderator(
-                    theUser, form_street_address, form_post_town, form_address_type, default)
-                if message != "":
-                    # render the users addresses for a soft redirect
-                    # get the specific user's addresses
-                    try:
-                        addresses = Address.objects.filter(user=theUser)
-                    except ObjectDoesNotExist:
-                        addresses = {}
-
-                    context = {
-                        'addresses': addresses,
-                        'person': theUser,
-                    }
-
-                    messages.info(
-                        self.request, message)
-                    return render(self.request, "moderator/edit_addresses.html", context)
-
-                # get values
-                address = Address()
-
-                address.user = theUser
-                address.street_address = form_street_address
-                address.apartment_address = form.cleaned_data.get(
-                    'apartment_address')
-                address.post_town = form_post_town
-                address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
-
-                # check what kind of address we have
-                address_type = form_address_type
-
-                # confirm that it isn't the same type as we already have (this only happens when we save both) set the values to the one we don't already have unless we have both saved
-                if sameBilling > 0 and sameShipping > 0:
-                    # test for defaulting
-                    testShipping = Address.objects.get(id=sameShipping)
-                    testBilling = Address.objects.get(id=sameBilling)
-                    message = info_message_29
-                    if default:
-                        message = info_message_30
-                        new_address_default(testShipping)
-                        new_address_default(testBilling)
-
-                    messages.info(
-                        self.request, message)
-                    # render the users addresses for a soft redirect
-                    # get the specific user's addresses
-                    try:
-                        addresses = Address.objects.filter(user=theUser)
-                    except ObjectDoesNotExist:
-                        addresses = {}
-
-                    context = {
-                        'addresses': addresses,
-                        'person': theUser,
-                    }
-                    return render(self.request, "moderator/edit_addresses.html", context)
-
-                elif sameBilling > 0:
-                    address_type = "S"
-                elif sameShipping > 0:
-                    address_type = "B"
-
-                if address_type == "A":
-                    # we want two copies of this address
-                    address2 = Address()
-                    address2.user = address.user
-                    address2.street_address = address.street_address
-                    address2.apartment_address = address.apartment_address
-                    address2.post_town = address.post_town
-                    address2.zip = address.zip
-                    address2.country = address.country
-                    if default:
-                        address2.default = True
-                        new_address_default(address2)
-
-                    address2.address_type = "S"
-                    address2.slug = create_slug_address(address2)
-
-                    # save the second copy of the address
-                    address2.save()
-                    address.address_type = "B"
-                else:
-                    address.address_type = address_type
-
-                if default:
-                    address.default = True
-                    new_address_default(address)
-                # create a slug
-                address.slug = create_slug_address(address)
-                # save the address and return to list
-                address.save()
-
-                messages.info(self.request, info_message_31)
-                # render the users addresses for a soft redirect
-                # get the specific user's addresses
-                try:
-                    addresses = Address.objects.filter(user=theUser)
-                except ObjectDoesNotExist:
-                    addresses = {}
-
-                context = {
-                    'addresses': addresses,
-                    'person': theUser,
-                }
-
-                return render(self.request, "moderator/edit_addresses.html", context)
-            else:
-
-                context = {
-                    'form': form,
-                    'person': theUser,
-                    'address_choices': ADDRESS_CHOICES_EXTENDED
-                }
-
-                messages.info(
-                    self.request, error_message_68)
-
-                return render(self.request, "moderator/edit_address.html", context)
-
-
-class SettingsView(View):
-    def get(self, *args, **kwargs):
-        # return to search
-
-        messages.warning(
-            self.request, error_message_95)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        try:
-            if 'lookAtSettings' in self.request.POST.keys():
-                user = int(self.request.POST['lookAtSettings'])
-                theUser = User.objects.get(id=user)
-                # get cookie model, fill in with previous info if there is any
-                form = CookieSettingsForm()
-                form.populate(theUser)
-
-                context = {
-                    'form': form,
-                }
-
-                return render(self.request, "moderator/client_settings.html", context)
-        except ObjectDoesNotExist:
-            message = error_message_69
-            messages.warning(self.request, message)
-            return redirect("core:home")
-
-
-class Subscriptions(View):
-    def get(self, *args, **kwargs):
-        # shouldnt be here redirect
-
-        messages.warning(
-            self.request, error_message_70)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        try:
-            if 'lookAtSubscriptions' in self.request.POST.keys():
-                # get the client
-                user_id = int(self.request.POST['lookAtSubscriptions'])
-                theUser = User.objects.get(id=user_id)
-                # get the specific user's subscriptions
-                try:
-                    subscriptions = Subscription.objects.filter(user=theUser)
-                except ObjectDoesNotExist:
-                    subscriptions = {}
-
-                context = {
-                    'subscriptions': subscriptions,
-                    'person': theUser,
-                }
-
-                return render(self.request, "moderator/subscriptions.html", context)
-            elif 'delete' in self.request.POST.keys():
-                # message for later
-                message = ""
-                # get the client
-                if 'theUser' in self.request.POST.keys():
-                    user_id = int(self.request.POST['theUser'])
-                    theUser = User.objects.get(id=user_id)
-                    # get the subscription id
-                    sub_id = int(self.request.POST['id'])
-                    try:
-                        subscription = Subscription.objects.get(
-                            user=theUser, id=sub_id)
-                        # check that there is an order connected
-                        if subscription.active:
-                            # get the order
-                            try:
-                                order = Order.objects.get(
-                                    id=subscription.next_order)
-                                # get the orderItem
-                                orderItemQuery = order.items.all()
-                                # enter the query
-                                for orderItem in orderItemQuery:
-                                    # delete order item
-                                    orderItem.delete()
-                                # delete order
-                                order.delete()
-                                # delete subscription
-                                subscription.delete()
-                                message = info_message_32
-                            except ObjectDoesNotExist:
-                                message = error_message_71
-                                messages.warning(
-                                    self.request, message)
-                                message = info_message_33
-                        else:
-                            # delete subscription
-                            subscription.delete()
-                            message = info_message_34
-                    except ObjectDoesNotExist:
-                        # no such subscription
-                        message = error_message_72
-
-                    # get the specific user's subscriptions
-                    try:
-                        subscriptions = Subscription.objects.filter(
-                            user=theUser)
-                    except ObjectDoesNotExist:
-                        subscriptions = {}
-
-                    context = {
-                        'subscriptions': subscriptions,
-                        'person': theUser,
-                    }
-
-                    messages.info(
-                        self.request, message)
-                    return render(self.request, "moderator/subscriptions.html", context)
-                else:
-                    messages.warning(
-                        self.request, error_message_73)
-                    return redirect("moderator:search_users")
-            else:
-                messages.warning(
-                    self.request, error_message_74)
-                return redirect("moderator:search_users")
-
-        except ObjectDoesNotExist:
-            messages.warning(
-                self.request, error_message_75)
-            return redirect("moderator:search_users")
-
-
-class SpecificSubscription(View):
-    def get(self, *args, **kwargs):
-        # shouldnt be here redirect
-
-        messages.warning(
-            self.request, error_message_76)
-        return redirect("moderator:search_users")
-
-    def post(self, *args, **kwargs):
-        try:
-            if 'see' in self.request.POST.keys() and 'u_id' in self.request.POST.keys():
-                # get the user
-                user_id = int(self.request.POST['u_id'])
-                theUser = User.objects.get(id=user_id)
-                # where are we
-                path = self.request.get_full_path()
-                # we are editing a specific Subscription
-                slug = where_am_i(self)
-                try:
-                    # get the subscription
-                    subscription = Subscription.objects.get(slug=slug)
-                    if subscription.active:
-                        active = True
-                    else:
-                        active = False
-                    old = True
-                    sub_date = subscription.start_date.strftime("%Y-%m-%d")
-                    number_of_products = subscription.number_of_items
-                    # get the form
-                    form = EditSubscriptionForm()
-                    form.populate(theUser, subscription, old)
-
-                    context = {
-                        'form': form,
-                        'sub_date': sub_date,
-                        'subscription': subscription,
-                        'number_of_products': number_of_products,
-                        'old': old,
-                        'active': active,
-                        'path': path,
-                        'person': theUser,
-                    }
-
-                    return render(self.request, "moderator/edit_subscription.html", context)
-
-                except ObjectDoesNotExist:
-                    messages.warning(
-                        self.request, error_message_77)
-                    return redirect("moderator:my_subscriptions")
-
-            elif 'saveSubscription' in self.request.POST.keys() and 'u_id' in self.request.POST.keys() and 'sub_id' in self.request.POST.keys():
-                # saving subscription
-                # get the user
-                u_id = int(self.request.POST['u_id'])
-                theUser = User.objects.get(id=u_id)
-                sub_id = int(self.request.POST['sub_id'])
-                # where are we
-                path = self.request.get_full_path()
-                # validate
-                form = EditSubscriptionForm(self.request.POST)
-                if form.is_valid():
-                    # check if new or old
-                    if self.request.POST['new_or_old'] == 'old':
-                        # get the old subscription
-                        try:
-                            sub = Subscription.objects.get(id=sub_id)
-                            message = ''
-                            # take in the data
-
-                            # start date
-                            # make sure the date is in the correct format
-                            sub.start_date = form.cleaned_data.get(
-                                'start_date')
-                            # intervall
-                            sub.intervall = form.cleaned_data.get('intervall')
-                            # all user addresses
-                            addresses = Address.objects.filter(
-                                user=self.request.user)
-                            # shipping_address
-                            shipping_address = form.cleaned_data.get(
-                                'shipping_address')
-                            # billing_address
-                            billing_address = form.cleaned_data.get(
-                                'billing_address')
-                            for address in addresses:
-                                if address.id == shipping_address:
-                                    sub.shipping_address = address
-                                elif address.id == billing_address:
-                                    sub.billing_address = address
-                            # number_of_products
-                            sub.number_of_items = int(
-                                self.request.POST['number_of_products'])
-
-                            # calcuate the rest of the data
-                            sub.updated_date = make_aware(datetime.now())
-                            sub.active = True
-                            sub.next_order_date = get_next_order_date(
-                                sub.start_date, sub.intervall)
-
-                            # save subscription
-                            sub.save()
-
-                            # get the connected order
-                            if sub.next_order > 0:
-                                theOrder = Order.objects.get(
-                                    id=sub.next_order)
-
-                                theOrder.subscription_date = sub.next_order_date
-                                theOrder.updated_date = make_aware(
-                                    datetime.now())
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered = True
-                                theOrder.received = False
-                                theOrder.being_delivered = False
-                                theOrder.shipping_address = sub.shipping_address
-                                theOrder.billing_address = sub.shipping_address
-                                theOrder.save()
-
-                                # remove old order items and subitems
-                                orderItems = theOrder.items.all()
-                                for item in orderItems:
-                                    item.delete()
-                                subItems = SubscriptionItem.objects.filter(
-                                    subscription=sub.id)
-                                for subItem in subItems:
-                                    subItem.delete()
-
-                                # and then make new the order and sub items
-
-                                i = 1
-                                for i in range(sub.number_of_items):
-                                    i += 1
-                                    p_string = 'product%s' % (i,)
-                                    a_string = 'amount%s' % (i,)
-                                    product_id = int(
-                                        self.request.POST[p_string])
-                                    amount = int(self.request.POST[a_string])
-                                    product = Item.objects.get(
-                                        id=product_id)
-                                    # saving subscription and order items
-
-                                    orderItem = save_subItems_and_orderItems(
-                                        sub, amount, product)
-                                    theOrder.items.add(orderItem)
-                                    message = info_message_34
-                                    messages.info(self.request, message)
-
-                                    # soft redirect
-                                    # get the specific user's subscriptions
-                                    try:
-                                        subscriptions = Subscription.objects.filter(
-                                            user=theUser)
-                                    except ObjectDoesNotExist:
-                                        subscriptions = {}
-
-                                    context = {
-                                        'subscriptions': subscriptions,
-                                        'person': theUser,
-                                    }
-
-                                    return render(self.request, "moderator/subscriptions.html", context)
-
-                            else:
-                                # it isn't so we make a new one
-                                theOrder = Order()
-
-                                theOrder.user = sub.user
-
-                                # create a reference code and check that there isnt already one before setting the orders ref code to the code
-                                ref_code = create_ref_code()
-                                ref_test = True
-
-                                while ref_test:
-                                    try:
-                                        numberofOrders = Order.objects.filter(
-                                            ref_code=ref_code).count()
-                                        if numberofOrders >= 1:
-                                            refcode = create_ref_code()
-                                        else:
-                                            ref_test = False
-                                    except ObjectDoesNotExist:
-                                        ref_test = False
-
-                                theOrder.ref_code = ref_code
-                                theOrder.subscription_order = True
-                                theOrder.subscription_date = sub.next_order_date
-                                theOrder.updated_date = make_aware(
-                                    datetime.now())
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered_date = sub.start_date
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered = True
-                                theOrder.received = False
-                                theOrder.being_delivered = False
-                                theOrder.shipping_address = sub.shipping_address
-                                theOrder.billing_address = sub.shipping_address
-                                theOrder.save()
-                                sub.next_order = theOrder.id
-                                sub.save()
-
-                                # remove old subitems
-                                subItems = SubscriptionItem.objects.filter(
-                                    subscription=sub.id)
-                                for subItem in subItems:
-                                    subItem.delete()
-
-                                i = 1
-                                for i in range(sub.number_of_items):
-                                    i += 1
-                                    p_string = 'product%s' % (i,)
-                                    a_string = 'amount%s' % (i,)
-                                    product_id = int(
-                                        self.request.POST[p_string])
-                                    amount = int(self.request.POST[a_string])
-                                    product = Item.objects.get(id=product_id)
-                                    # saving subscription and order items
-                                    orderItem = save_subItems_and_orderItems(
-                                        sub, amount, product)
-                                    theOrder.items.add(orderItem)
-                                    message = info_message_34
-                                    messages.info(self.request, message)
-                                    # soft redirect
-                                    # get the specific user's subscriptions
-                                    try:
-                                        subscriptions = Subscription.objects.filter(
-                                            user=theUser)
-                                    except ObjectDoesNotExist:
-                                        subscriptions = {}
-
-                                    context = {
-                                        'subscriptions': subscriptions,
-                                        'person': theUser,
-                                    }
-
-                                    return render(self.request, "moderator/subscriptions.html", context)
-                        except ObjectDoesNotExist:
-                            message = error_message_78
-                            messages.info(self.request, message)
-
-                            # get the specific user's subscriptions
-                            try:
-                                subscriptions = Subscription.objects.filter(
-                                    user=theUser)
-                            except ObjectDoesNotExist:
-                                subscriptions = {}
-
-                            context = {
-                                'subscriptions': subscriptions,
-                                'person': theUser,
-                            }
-
-                            return render(self.request, "moderator/subscriptions.html", context)
-                    else:
-                        # somehow this is not an old subscription. Return to subscriptions
-                        message = error_message_79
-                        messages.warning(self.request, message)
-
-                        # get the specific user's subscriptions
-                        try:
-                            subscriptions = Subscription.objects.filter(
-                                user=theUser)
-                        except ObjectDoesNotExist:
-                            subscriptions = {}
-
-                        context = {
-                            'subscriptions': subscriptions,
-                            'person': theUser,
-                        }
-
-                        return render(self.request, "moderator/subscriptions.html", context)
-
-                else:
-                    # figure out how to rerender the form here
-                    subscription = Subscription.objects.get(id=sub_id)
-                    active = subscription.active
-                    form.populate_from_submit(self.request.POST)
-                    sub_date = make_aware(datetime.strptime(
-                        self.request.POST['start_date'], '%Y-%m-%d'))
-                    number_of_products = self.request.POST['number_of_products']
-                    old = self.request.POST['new_or_old']
-
-                    context = {
-                        'form': form,
-                        'sub_date': sub_date,
-                        'number_of_products': number_of_products,
-                        'old': old,
-                        'subscription': subscription,
-                        'path': path,
-                        'person': theUser,
-                        'active': active,
-                    }
-
-                    return render(self.request, "moderator/edit_subscription.html", context)
-
-            elif 'deactivateSubscription' in self.request.POST.keys():
-                user_id = 0
-                if 'u_id' in self.request.POST.keys():
-                    user_id = int(self.request.POST['u_id'])
-                theUser = User.objects.get(id=user_id)
-
-                if 'sub_id' in self.request.POST.keys():
-                    sub_id = int(self.request.POST['sub_id'])
-                    sub = Subscription.objects.get(
-                        user=theUser, id=sub_id)
-                    # deactivate subscription
-                    if sub.active is False:
-                        messages.info(
-                            self.request, info_message_35)
-                        return redirect("member:my_subscriptions")
-                    else:
-                        sub.active = False
-
-                        try:
-                            # delete the order connected to the sub
-                            theOrder = Order.objects.get(id=sub.next_order)
-                            # first get the list of items
-                            theOrderItems = theOrder.items.all()
-                            # then go through the items one by one
-                            for item in theOrderItems:
-                                # delete the items
-                                item.delete()
-                            # delete order
-                            theOrder.delete()
-                            message = info_message_36
-                        except ObjectDoesNotExist:
-                            message = info_message_37
-                        sub.next_order = 0
-                        sub.save()
-
-                        messages.info(
-                            self.request, message)
-                        # soft redirect
-                        # get the specific user's subscriptions
-                        try:
-                            subscriptions = Subscription.objects.filter(
-                                user=theUser)
-                        except ObjectDoesNotExist:
-                            subscriptions = {}
-
-                        context = {
-                            'subscriptions': subscriptions,
-                            'person': theUser,
-                        }
-
-                        return render(self.request, "moderator/subscriptions.html", context)
-                else:
-                    messages.warning(
-                        self.request, error_message_80)
-                    # soft redirect
-                    # get the specific user's subscriptions
-                    try:
-                        subscriptions = Subscription.objects.filter(
-                            user=theUser)
-                    except ObjectDoesNotExist:
-                        subscriptions = {}
-
-                    context = {
-                        'subscriptions': subscriptions,
-                        'person': theUser,
-                    }
-
-                    return render(self.request, "moderator/subscriptions.html", context)
-            else:
-                messages.warning(
-                    self.request, error_message_81)
-                return redirect("moderator:search_user")
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, error_message_82)
-            return redirect("moderator:search_user")
 
 
 class ProfileView(View):
@@ -4370,7 +1460,7 @@ class OrderHandlingView(View):
         # get max pages regular orders
         r_pages = 1
         reg_orders = Order.objects.filter(
-            ordered=True, being_delivered=False, subscription_order=False)
+            ordered=True, being_delivered=False, subscription_order=False).order_by('id')
         number_reg_orders = reg_orders.count()
 
         if number_reg_orders > 10:
@@ -4441,7 +1531,19 @@ class OrderHandlingView(View):
 
         s_current_page = 1
 
+        # make search form for specific order or customer
+
+        form = searchOrderForm()
+
+        # set the hidden value for wether or not we have done a search
+
+        search_type = "None"
+        search_value = "None"
+
         context = {
+            'form': form,
+            'search_type': search_type,
+            'search_value': search_value,
             'reg_orders': reg_orders,
             'sub_orders': sub_orders,
             'rmax': r_pages,
@@ -4460,6 +1562,13 @@ class OrderHandlingView(View):
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
     def post(self, *args, **kwargs):
+        # set the search type and value here before we go into the rest
+        search_type = "None"
+        search_value = "None"
+        if 'search_type' in self.request.POST.keys():
+            search_type = int(self.request.POST['search_type'])
+        if 'search_value' in self.request.POST.keys():
+            search_value = int(self.request.POST['search_value'])
         # handle status change and pagination
         r_current_page = int(self.request.POST['r_current_page'])
         s_current_page = int(self.request.POST['s_current_page'])
@@ -4494,16 +1603,129 @@ class OrderHandlingView(View):
             if testS != s_pages:
                 s_pages = int(s_pages)
                 s_pages += 1
+        if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+            if not 'previousPageRegOrder' in self.request.POST.keys() or not 'nextPageRegOrder' in self.request.POST.keys() or not 'r_page' in self.request.POST.keys() or not 'previousPageSubOrder' in self.request.POST.keys() or not 'nextPageSubOrder' in self.request.POST.keys() or not 's_page' in self.request.POST.keys():
+                # make a form and populate so we can clean the data
+                form = searchOrderForm(self.request.POST)
 
-        if 'statusChange' in self.request.POST.keys():
-            try:
-                order_id = int(self.request.POST['statusChange'])
-                order = Order.object.get(id=order_id)
-                order.being_delivered = True
-                order.save()
-            except ObjectDoesNotExist:
-                errors.append(
-                    "Can not change order status as the order does not exist.")
+                if form.is_valid():
+                    # get the values
+                    order_ref = form.cleaned_data.get('order_ref')
+                    order_id = form.cleaned_data.get('order_id')
+                    user_id = form.cleaned_data.get('user_id')
+                    if len(order_ref) == 20:
+                        # search done on order reference
+                        search_value = order_ref
+                        # display all unsent orders, oldest first
+                        # first get the constants
+                        # get max pages regular orders
+                        r_pages = 1
+                        reg_orders = Order.objects.filter(
+                            ref_code=search_value, subscription_order=False).order_by('id')
+                        number_reg_orders = 1
+                        r_pages = 1
+
+                        # create a list for a ul to work through
+
+                        more_reg_orders = [{'number': 1}]
+
+                        # current page for regular
+
+                        r_current_page = 1
+
+                        # get max pages subscription orders
+                        s_pages = 1
+                        sub_orders = Order.objects.filter(
+                            ref_code=search_value, subscription_order=True).order_by('id')
+                        number_sub_orders = 1
+
+                        # create a list for a ul to work through
+
+                        more_sub_orders = [{'number': 1}]
+
+                        # current page for regular
+
+                        s_current_page = 1
+
+                        # set the search type
+
+                        search_type = "Reference"
+
+                        context = {
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'reg_orders': reg_orders,
+                            'sub_orders': sub_orders,
+                            'rmax': r_pages,
+                            'r_current_page': r_current_page,
+                            'more_reg_orders': more_reg_orders,
+                            's_current_page': s_current_page,
+                            'more_sub_orders': more_sub_orders,
+                            'smax': s_pages,
+                        }
+
+                        return render(self.request, "moderator/mod_orderhandling.html", context)
+
+                    elif order_id != None:
+                        # search done on order reference
+                        search_value = order_id
+                        # display all unsent orders, oldest first
+                        # first get the constants
+                        # get max pages regular orders
+                        r_pages = 1
+                        reg_orders = Order.objects.filter(
+                            id=search_value, subscription_order=False).order_by('id')
+                        number_reg_orders = 1
+                        r_pages = 1
+
+                        # create a list for a ul to work through
+
+                        more_reg_orders = [{'number': 1}]
+
+                        # current page for regular
+
+                        r_current_page = 1
+
+                        # get max pages subscription orders
+                        s_pages = 1
+                        sub_orders = Order.objects.filter(
+                            id=search_value, subscription_order=True).order_by('id')
+                        number_sub_orders = 1
+
+                        # create a list for a ul to work through
+
+                        more_sub_orders = [{'number': 1}]
+
+                        # current page for regular
+
+                        s_current_page = 1
+
+                        # set the search type
+
+                        search_type = "Reference"
+
+                        context = {
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'reg_orders': reg_orders,
+                            'sub_orders': sub_orders,
+                            'rmax': r_pages,
+                            'r_current_page': r_current_page,
+                            'more_reg_orders': more_reg_orders,
+                            's_current_page': s_current_page,
+                            'more_sub_orders': more_sub_orders,
+                            'smax': s_pages,
+                        }
+
+                        return render(self.request, "moderator/mod_orderhandling.html", context)
+                    else:
+                        messages.warning(self.request, error_message_117)
+                        return redirect("moderator:orderhandling")
+            else:
+                # this should never happen
+                return redirect("moderator:orderhandling")
         elif 'previousPageRegOrder' in self.request.POST.keys():
             if r_current_page >= 2:
                 r_current_page -= 1
@@ -4587,8 +1809,14 @@ class OrderHandlingView(View):
         for i in range(s_pages):
             i += 1
             more_sub_orders.append({'number': i})
+        # make search form for specific order or customer
+
+        form = searchOrderForm()
 
         context = {
+            'form': form,
+            'search_type': search_type,
+            'search_value': search_value,
             'reg_orders': reg_orders,
             'sub_orders': sub_orders,
             'rmax': r_pages,
@@ -4632,7 +1860,6 @@ class SpecificOrderHandlingView(View):
                 messages.warning(
                     self.request, error_message_106)
                 return redirect("moderator:orderhandling")
-
             context = {
                 'path': path,
                 'order': order,
@@ -4655,10 +1882,12 @@ class SpecificOrderHandlingView(View):
 
                 for item in orderItems:
                     if str(item.id) in self.request.POST.keys():
+                        print('here')
                         item.sent = True
                         some_sent = True
                         item.save()
                     else:
+                        print('here2')
                         not_filled = True
 
                 if not_filled:
@@ -4666,11 +1895,14 @@ class SpecificOrderHandlingView(View):
                         # we are sending part of the order not the entire thing
                         order.comment = "Part of the order has been sent."
                         order.being_delivered = False
+                        order.comment = 'Partial'
                     else:
                         # we havent packed anything, abort
+                        order.comment = 'Nothing'
                         order.being_delivered = False
 
-                if order.subscription_order:
+                if order.subscription_order and order.comment != 'Partial' and order.comment != 'Nothing':
+                    print('oh no')
                     sub = Subscription.objects.get(next_order=order.id)
                     sub.next_order_date = get_next_order_date(
                         make_aware(datetime.now()), sub.intervall)
@@ -4702,12 +1934,8 @@ class SpecificOrderHandlingView(View):
                     new_order.being_read = False
                     new_order.shipping_address = order.shipping_address
                     new_order.billing_address = order.billing_address
-                    new_order.payment = order.payment
+                    new_order.payment_type = order.payment_type
                     new_order.coupon = order.coupon
-                    new_order.being_delivered = False
-                    new_order.received = False
-                    new_order.refund_requested = False
-                    new_order.refund_granted = False
                     new_order.save()
                     sub.next_order = new_order.id
 
@@ -4721,7 +1949,7 @@ class SpecificOrderHandlingView(View):
                         orderItem = save_orderItem(subItem)
                         new_order.items.add(orderItem)
                         total_order_price = total_order_price + orderItem.total_price
-                    new_order.total_price = total_order_price
+                    new_order.total_price = total_order_price + new_order.freight
                     new_order.save()
                     if sub.comment == 0:
                         if order.being_delivered is False:
@@ -4735,11 +1963,16 @@ class SpecificOrderHandlingView(View):
                         messages.warning(
                             self.request, error_message_108 + str(order.user.id))
                         return redirect("moderator:orderhandling")
+                order.comment = ""
                 order.save()
 
                 if order.being_delivered:
                     messages.info(
                         self.request, info_message_51)
+                else:
+                    messages.warning(
+                        self.request, error_message_108)
+
                 return redirect("moderator:orderhandling")
             except ObjectDoesNotExist:
                 messages.warning(
@@ -4748,9 +1981,438 @@ class SpecificOrderHandlingView(View):
         elif 'back' in self.request.POST.keys():
             order = Order.objects.get(id=int(self.request.POST['back']))
             order.being_read = False
+            order.save()
             return redirect("moderator:orderhandling")
         else:
             # something wrong redirect
             messages.warning(
                 self.request, error_message_107)
             return redirect("moderator:orderhandling")
+
+
+class FreightView(View):
+    def get(self, *args, **kwargs):
+        # get the 20 first current freights
+        freights = Freight.objects.all().order_by('title')[:20]
+        number_of_freights = Freight.objects.all().count()
+
+        f_pages = 1
+
+        if number_of_freights > 20:
+            # if there are more we divide by 20
+            f_pages = number_of_freights / 20
+            # see if there is a decimal
+            testO = int(f_pages)
+            # if there isn't an even number of ten make an extra page for the last group
+            if testO != f_pages:
+                f_pages = int(f_pages)
+                f_pages += 1
+
+        # create a list for a ul to work through
+
+        more_freights = []
+
+        i = 0
+        # populate the list with the amount of pages there are
+        for i in range(f_pages):
+            i += 1
+            more_freights.append({'number': i})
+
+        # make an empty freight for the new form
+        freight = Freight()
+        # search form
+        form = searchFreightForm()
+
+        # set current page, search type and search_value to start values
+        current_page = 1
+        search_type = "None"
+
+        context = {
+            'freights': freights,
+            'freight': freight,
+            'form': form,
+            'current_page': current_page,
+            'search_type': search_type,
+            'more_freights': more_freights,
+            'max_pages': f_pages,
+        }
+
+        return render(self.request, "moderator/mod_freights.html", context)
+
+    def post(self, *args, **kwargs):
+        if 'delete' in self.request.POST.keys():
+            # delete freight
+            # get id
+            freight_id = int(self.request.POST['delete'])
+            freight = Freight.objects.get(id=freight_id)
+            freight.delete()
+            messages.info(self.request, info_message_76)
+            return redirect("moderator:freights")
+        elif 'previousPage' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+
+                if current_page >= 2:
+                    # get the right 20 freights
+                    current_page -= 1
+                    offset = current_page
+                    freights = Freight.objects.all().order_by('title')[
+                        20:offset]
+                    number_of_freights = Freight.objects.all().count()
+
+                    f_pages = 1
+
+                    if number_of_freights > 20:
+                        # if there are more we divide by 20
+                        f_pages = number_of_freights / 20
+                        # see if there is a decimal
+                        testO = int(f_pages)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testO != f_pages:
+                            f_pages = int(f_pages)
+                            f_pages += 1
+
+                    # create a list for a ul to work through
+
+                    more_freights = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(f_pages):
+                        i += 1
+                        more_freights.append({'number': i})
+
+                    # make an empty freight for the new form
+                    freight = Freight()
+                    # search form
+                    form = searchFreightForm()
+
+                    context = {
+                        'freights': freights,
+                        'freight': freight,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'more_freights': more_freights,
+                        'max_pages': f_pages,
+                    }
+
+                    return render(self.request, "moderator/mod_freights.html", context)
+                if current_page == 1:
+                    # this shouldnt happen but to make sure
+                    # get the right 20 freights
+                    freights = Freight.objects.all().order_by('title')[:20]
+                    number_of_freights = Freight.objects.all().count()
+
+                    f_pages = 1
+
+                    if number_of_freights > 20:
+                        # if there are more we divide by 20
+                        f_pages = number_of_freights / 20
+                        # see if there is a decimal
+                        testO = int(f_pages)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testO != f_pages:
+                            f_pages = int(f_pages)
+                            f_pages += 1
+
+                    # create a list for a ul to work through
+
+                    more_freights = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(f_pages):
+                        i += 1
+                        more_freights.append({'number': i})
+
+                    # make an empty freight for the new form
+                    freight = Freight()
+                    # search form
+                    form = searchFreightForm()
+
+                    context = {
+                        'freights': freights,
+                        'freight': freight,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'more_freights': more_freights,
+                        'max_pages': f_pages,
+                    }
+
+                    return render(self.request, "moderator/mod_freights.html", context)
+        elif 'page' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+                page = int(self.request.POST['page'])
+
+                # we need the max pages first
+
+                number_of_freights = Freight.objects.all().count()
+
+                f_pages = 1
+
+                if number_of_freights > 20:
+                    # if there are more we divide by 20
+                    f_pages = number_of_freights / 20
+                    # see if there is a decimal
+                    testO = int(f_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != f_pages:
+                        f_pages = int(f_pages)
+                        f_pages += 1
+
+                if page == 1:
+                    freights = Freight.objects.all().order_by('title')[
+                        :20]
+                    # create a list for a ul to work through
+
+                    more_freights = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(f_pages):
+                        i += 1
+                        more_freights.append({'number': i})
+
+                    # make an empty freight for the new form
+                    freight = Freight()
+                    # search form
+                    form = searchFreightForm()
+
+                    context = {
+                        'freights': freights,
+                        'freight': freight,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'more_freights': more_freights,
+                        'max_pages': f_pages,
+                    }
+
+                    return render(self.request, "moderator/mod_freights.html", context)
+                elif page > f_pages:
+                    page = f_pages
+
+                # get the right 20 freights
+                offset = page
+                freights = Freight.objects.all().order_by('title')[
+                    20:offset]
+
+                # create a list for a ul to work through
+
+                more_freights = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(f_pages):
+                    i += 1
+                    more_freights.append({'number': i})
+
+                # make an empty freight for the new form
+                freight = Freight()
+                # search form
+                form = searchFreightForm()
+
+                current_page = page
+
+                context = {
+                    'freights': freights,
+                    'freight': freight,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'more_freights': more_freights,
+                    'max_pages': f_pages,
+                }
+
+                return render(self.request, "moderator/mod_freights.html", context)
+
+        elif 'nextPage' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+
+                # first we need the max amount of pages
+
+                number_of_freights = Freight.objects.all().count()
+
+                f_pages = 1
+
+                if number_of_freights > 20:
+                    # if there are more we divide by 20
+                    f_pages = number_of_freights / 20
+                    # see if there is a decimal
+                    testO = int(f_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != f_pages:
+                        f_pages = int(f_pages)
+                        f_pages += 1
+
+                if current_page < f_pages:
+                    current_page += 1
+
+                offset = current_page
+                freights = Freight.objects.all().order_by('title')[
+                    20:offset]
+
+                # create a list for a ul to work through
+
+                more_freights = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(f_pages):
+                    i += 1
+                    more_freights.append({'number': i})
+
+                # make an empty freight for the new form
+                freight = Freight()
+                # search form
+                form = searchFreightForm()
+
+                context = {
+                    'freights': freights,
+                    'freight': freight,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'more_freights': more_freights,
+                    'max_pages': f_pages,
+                }
+
+                return render(self.request, "moderator/mod_freights.html", context)
+        elif 'search' in self.request.POST.keys():
+            # get the 20 first current freights
+            if 'freight_id' in self.request.POST.keys():
+                freight_id = int(self.request.POST['freight_id'])
+                freights = Freight.objects.filter(id=freight_id)
+                f_pages = 1
+                more_freights = [{'number': 1}]
+
+                # make an empty freight for the new form
+                freight = Freight()
+                # search form
+                form = searchFreightForm()
+                form.populate(freight_id)
+                current_page = 1
+                search_type = "freight_id"
+
+                context = {
+                    'freights': freights,
+                    'freight': freight,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'more_freights': more_freights,
+                    'max_pages': f_pages,
+                }
+
+            return render(self.request, "moderator/mod_freights.html", context)
+
+
+class SpecificFreightView(View):
+    def get(self, *args, **kwargs):
+        test = 1
+
+    def post(self, *args, **kwargs):
+        if 'see' in self.request.POST.keys():
+            # get the id
+            freight_id = int(self.request.POST['see'])
+            # get freight form
+            form = freightForm()
+            form.populate(freight_id)
+            context = {
+                'form': form,
+                'new': False,
+                'freight': freight_id,
+            }
+
+            return render(self.request, "moderator/mod_single_freight.html", context)
+        elif 'new' in self.request.POST.keys():
+            # get freight form
+            form = freightForm()
+
+            context = {
+                'form': form,
+                'new': True,
+                'freight': '',
+            }
+
+            return render(self.request, "moderator/mod_single_freight.html", context)
+        elif 'saveOld' in self.request.POST.keys():
+            # get the id
+            freight_id = int(self.request.POST['saveOld'])
+            # populate a form
+            form = freightForm(self.request.POST)
+            if form.is_valid():
+                # get the freight
+                freight = Freight.objects.get(id=freight_id)
+                if freight.title != form.cleaned_data.get('title'):
+                    today = datetime.now()
+                    toSlug = slugify(freight.title + str(today.date))
+                    testSlug = True
+                    i = 1
+                    while(testSlug):
+                        try:
+                            freight = Freight.objects.get(slug=toSlug)
+                            toSlug = toSlug + str(i)
+                            i += 1
+                        except ObjectDoesNotExist:
+                            testSlug = False
+
+                    freight.slug = toSlug
+                freight.title = form.cleaned_data.get('title')
+                freight.amount = form.cleaned_data.get('amount')
+                freight.save()
+                messages.info(self.request, info_message_74)
+                return redirect("moderator:freights")
+            else:
+                context = {
+                    'form': form,
+                    'new': False,
+                    'freight': freight_id,
+                }
+                messages.warning(self.request, error_message_115)
+                return render(self.request, "moderator/mod_single_freight.html", context)
+
+        elif 'saveNew' in self.request.POST.keys():
+            # populate a form
+            form = freightForm(self.request.POST)
+            if form.is_valid():
+                # get the freight
+                freight = Freight()
+                today = datetime.now()
+                freight.title = form.cleaned_data.get('title')
+                freight.amount = form.cleaned_data.get('amount')
+                toSlug = slugify(freight.title + str(today.date))
+                testSlug = True
+                i = 1
+                while(testSlug):
+                    try:
+                        freight = Freight.objects.get(slug=toSlug)
+                        toSlug = toSlug + str(i)
+                        i += 1
+                    except ObjectDoesNotExist:
+                        testSlug = False
+
+                freight.slug = toSlug
+                freight.save()
+                messages.info(self.request, info_message_75)
+                return redirect("moderator:freights")
+            else:
+                context = {
+                    'form': form,
+                    'new': True,
+                    'freight': '',
+                }
+                messages.warning(self.request, error_message_116)
+                return render(self.request, "moderator/mod_single_freight.html", context)
+        else:
+            return redirect("moderator:freights")
