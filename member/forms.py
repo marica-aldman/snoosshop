@@ -74,11 +74,9 @@ class EditSubscriptionForm(forms.Form):
         # make the lists to tuples for use with choicefield
         the_freights_tuple = tuple(the_freights)
 
-        self.fields['freight'] = forms.ChoiceField(choices=the_freights_tuple)
+        self.fields['freight'] = forms.ChoiceField(
+            choices=the_freights_tuple, required=False)
         self.fields['freight'].label = ""
-        print(freights)
-        print(the_freights)
-        print(the_freights_tuple)
 
     def get_product_fields(self):
         for field_name in self.fields:
