@@ -254,7 +254,9 @@ class Order(models.Model):
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
     total_price = models.FloatField(blank=True, null=True)
-    freight = models.FloatField(blank=True, null=True)
+    freight = models.ForeignKey('Freight',
+                                on_delete=models.SET_NULL, blank=True, null=True)
+    freight_price = models.FloatField(blank=True, null=True)
     sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
@@ -345,6 +347,7 @@ class Payment(models.Model):
 
 class Coupon(models.Model):
     code = models.CharField(max_length=15)
+    coupon_type = models.CharField(max_length=20, default='Percent')
     amount = models.FloatField()
 
     def __str__(self):
@@ -420,6 +423,9 @@ class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
+    freight = models.ForeignKey(
+        'Freight', on_delete=models.SET_NULL, blank=True, null=True)
+    freight_price = models.FloatField(blank=True, null=True)
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order = models.IntegerField(default=1)
@@ -441,10 +447,17 @@ class Subscription(models.Model):
             'slug': self.slug
         })
 
-    # for the moderator
+    # for the moderatorsupport_get_absolute_url
 
     def moderator_get_absolute_url(self):
         return reverse("moderator:subscription", kwargs={
+            'slug': self.slug
+        })
+
+    # for the support
+
+    def support_get_absolute_url(self):
+        return reverse("support:subscription", kwargs={
             'slug': self.slug
         })
 

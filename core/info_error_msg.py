@@ -211,7 +211,7 @@ info_message_33 = "Subscription was not deleted."
 # single subscription
 # save
 
-info_message_34 = "Subscription saved and activated."
+info_message_76 = "Subscription saved and activated."
 
 # already deactivated
 
@@ -685,6 +685,10 @@ error_message_79 = "It seems like you are trying to create a new subscription. I
 # trying to deactivate without a subid
 
 error_message_80 = "Something is wrong with the subscription deactivation. Please contact IT support for assistance."
+
+# trying to deactivate while order is being packed
+
+error_message_118 = "Order is being packed. Notify user and cancel after the order has been shipped."
 
 # post not deactivate, save or see
 

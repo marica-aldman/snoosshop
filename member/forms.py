@@ -8,7 +8,8 @@ from core.models import *
 
 PAYMENT_CHOICES = (
     ('S', 'Stripe'),
-    ('P', 'PayPal')
+    ('P', 'PayPal'),
+    ('I', 'Invoice'),
 )
 
 ADDRESS_CHOICES = (
@@ -34,6 +35,7 @@ INTERVALL_CHOICES = (
 
 class EditSubscriptionForm(forms.Form):
     start_date = forms.DateTimeField()
+    payment = forms.ChoiceField(choices=PAYMENT_CHOICES)
     intervall = forms.ChoiceField(choices=INTERVALL_CHOICES)
 
     def __init__(self, *args, **kwargs):
@@ -63,6 +65,20 @@ class EditSubscriptionForm(forms.Form):
 
         self.fields['list_of_products'] = forms.CharField(
             widget=forms.HiddenInput(), initial='products_html')
+
+        # create freight option
+        freights = Freight.objects.all()
+        the_freights = []
+        for f in freights:
+            the_freights.append((f.id, f.title))
+        # make the lists to tuples for use with choicefield
+        the_freights_tuple = tuple(the_freights)
+
+        self.fields['freight'] = forms.ChoiceField(choices=the_freights_tuple)
+        self.fields['freight'].label = ""
+        print(freights)
+        print(the_freights)
+        print(the_freights_tuple)
 
     def get_product_fields(self):
         for field_name in self.fields:
@@ -147,7 +163,10 @@ class EditSubscriptionForm(forms.Form):
                 self.fields[field_name2].label = ""
                 # increment i
                 i += 1
-
+            # check the freight
+            if sub.freight is not None:
+                self.fields['freight'].widget.attrs.update(
+                    {'initial': sub.freight})
             # add hidden fields for checking if it is a new or old save
             self.fields['new_or_old'] = forms.CharField(
                 widget=forms.HiddenInput(), initial='old')
@@ -224,7 +243,9 @@ class EditSubscriptionForm(forms.Form):
         # make the lists to tuples for use with choicefield
         addresses_s_tuple = tuple(the_s_adresses)
         addresses_b_tuple = tuple(the_b_adresses)
-
+        # Freight
+        self.fields['freight'].widget.attrs.update(
+            {'initial': self.request.POST['freight']})
         # get all available products
         all_products = Item.objects.all()
         # create a list for the products

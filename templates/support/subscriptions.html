@@ -62,7 +62,7 @@
                     </td>
                         {% endif %}
                     <td>
-                        <form method="POST" action="{{ subscription.moderator_get_absolute_url }}">
+                        <form method="POST" action="{{ subscription.support_get_absolute_url }}">
                             <input type="hidden" name="u_id" value="{{person.id}}">
                             <input type="hidden" name="id" value={{subscription.id}}>
                             {% csrf_token %}

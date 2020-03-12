@@ -210,3 +210,34 @@ def sameAddress_support(theUser, form_street_address, form_post_town, form_addre
 
 def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
+
+
+def get_order_total(order):
+    # calculate total
+    total = 0
+    # items total
+    orderItems = order.items.all()
+    i = 0
+    for item in OrderItems:
+        if discount_price > 0:
+            total = total + item.discount_price
+        else:
+            total = total + item.price
+        i = i + item.amount
+    # coupons
+    coupon = order.coupon
+    if coupon is not None:
+        if coupon_type == "Percent":
+            total = total * coupon.amount
+        elif coupon_type == "Amount":
+            total = total - coupon.amount
+        # if we do any other types this will need adding to
+
+    # freight
+    freight = order.freight
+    if freight is not None:
+        # need to add the amount to the database later for easier adjustment. Also check with company what the amount is
+        if i < 6:
+            total = total + freight.amount
+    # return total
+    return total

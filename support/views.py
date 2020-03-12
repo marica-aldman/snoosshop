@@ -2761,6 +2761,10 @@ class SpecificSubscription(View):
                                 'start_date')
                             # intervall
                             sub.intervall = form.cleaned_data.get('intervall')
+                            # Freight type
+                            freight_id = form.cleaned_data.get('freight')
+                            sub.freight = Freight.objects.get(id=freight_id)
+                            sub.freight_price = sub.freight.amount
                             # all user addresses
                             addresses = Address.objects.filter(
                                 user=self.request.user)
@@ -2793,6 +2797,8 @@ class SpecificSubscription(View):
                                 theOrder = Order.objects.get(
                                     id=sub.next_order)
 
+                                theOrder.freight = sub.freight
+                                theOrder.freight_price = sub.freight_price
                                 theOrder.subscription_date = sub.next_order_date
                                 theOrder.updated_date = make_aware(
                                     datetime.now())
@@ -2833,20 +2839,24 @@ class SpecificSubscription(View):
                                     message = info_message_34
                                     messages.info(self.request, message)
 
-                                    # soft redirect
-                                    # get the specific user's subscriptions
-                                    try:
-                                        subscriptions = Subscription.objects.filter(
-                                            user=theUser)
-                                    except ObjectDoesNotExist:
-                                        subscriptions = {}
+                                theOrder.total_price = get_order_total(
+                                    theOrder)
+                                theOrder.save()
+                                # change to get redirect with attributes
+                                # soft redirect
+                                # get the specific user's subscriptions
+                                try:
+                                    subscriptions = Subscription.objects.filter(
+                                        user=theUser)
+                                except ObjectDoesNotExist:
+                                    subscriptions = {}
 
-                                    context = {
-                                        'subscriptions': subscriptions,
-                                        'person': theUser,
-                                    }
+                                context = {
+                                    'subscriptions': subscriptions,
+                                    'person': theUser,
+                                }
 
-                                    return render(self.request, "support/subscriptions.html", context)
+                                return render(self.request, "support/subscriptions.html", context)
 
                             else:
                                 # it isn't so we make a new one
@@ -2905,22 +2915,26 @@ class SpecificSubscription(View):
                                     orderItem = save_subItems_and_orderItems(
                                         sub, amount, product)
                                     theOrder.items.add(orderItem)
-                                    message = info_message_34
-                                    messages.info(self.request, message)
-                                    # soft redirect
-                                    # get the specific user's subscriptions
-                                    try:
-                                        subscriptions = Subscription.objects.filter(
-                                            user=theUser)
-                                    except ObjectDoesNotExist:
-                                        subscriptions = {}
+                                message = info_message_76
+                                messages.info(self.request, message)
 
-                                    context = {
-                                        'subscriptions': subscriptions,
-                                        'person': theUser,
-                                    }
+                                theOrder.total_price = get_order_total(
+                                    theOrder)
+                                theOrder.save()
+                                # soft redirect
+                                # get the specific user's subscriptions
+                                try:
+                                    subscriptions = Subscription.objects.filter(
+                                        user=theUser)
+                                except ObjectDoesNotExist:
+                                    subscriptions = {}
 
-                                    return render(self.request, "support/subscriptions.html", context)
+                                context = {
+                                    'subscriptions': subscriptions,
+                                    'person': theUser,
+                                }
+
+                                return render(self.request, "support/subscriptions.html", context)
                         except ObjectDoesNotExist:
                             message = error_message_78
                             messages.info(self.request, message)
@@ -2990,12 +3004,20 @@ class SpecificSubscription(View):
                     sub_id = int(self.request.POST['sub_id'])
                     sub = Subscription.objects.get(
                         user=theUser, id=sub_id)
+
                     # deactivate subscription
                     if sub.active is False:
                         messages.info(
                             self.request, info_message_35)
-                        return redirect("member:my_subscriptions")
+                        return redirect("support:subscriptions")
                     else:
+                        # check that the order isnt being packed
+                        order = Order.objects.get(id=sub.next_order)
+                        if order.being_read:
+                            messages.warning(
+                                self.request, error_message_118)
+                            return redirect("support:subscriptions")
+
                         sub.active = False
 
                         try:
