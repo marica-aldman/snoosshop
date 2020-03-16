@@ -11,6 +11,9 @@ from .views import (
     AddCouponView,
     RequestRefundView,
     CategoryView,
+    om_oss_view,
+    teamet_view,
+    vision_view,
 )
 
 app_name = 'core'
@@ -28,4 +31,7 @@ urlpatterns = [
     path('payment/<payment_option>/', PaymentView.as_view(), name='payment'),
     path('request-refund/', RequestRefundView.as_view(), name='request-refund'),
     path('category/<slug>', CategoryView.as_view(), name='category'),
+    path('omoss', om_oss_view, name='om-oss'),
+    path('team', teamet_view, name='teamet'),
+    path('vision', vision_view, name='vision'),
 ]
