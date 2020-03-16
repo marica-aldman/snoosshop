@@ -5,26 +5,6 @@ from django_countries.widgets import CountrySelectWidget
 from core.models import *
 
 
-PAYMENT_CHOICES = (
-    ('S', 'Stripe'),
-    ('P', 'PayPal')
-)
-
-ADDRESS_CHOICES = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
-)
-
-INTERVALL_CHOICES = (
-    ('001', 'En gång i veckan'),
-    ('002', 'Varannan vecka'),
-    ('010', 'En gång i månaden'),
-    ('020', 'Varannan månad'),
-    ('100', 'Var sjätte månad'),
-    ('200', 'En gång om året'),
-)
-
-
 class searchOrderForm(forms.Form):
     order_ref = forms.CharField(max_length=20, required=False, label="")
     order_id = forms.IntegerField(required=False, label="")
@@ -49,36 +29,6 @@ class searchCategoryForm(forms.Form):
     def populate(self, category_id, *args, **kwargs):
         self.fields['category_id'].widget.attrs.update(
             {'value': category_id})
-
-
-class searchFreightForm(forms.Form):
-    freight_id = forms.IntegerField(required=False, label="")
-
-    def populate(self, freight_id, *args, **kwargs):
-        self.fields['freight_id'].widget.attrs.update(
-            {'value': freight_id})
-
-
-class freightForm(forms.ModelForm):
-    # sort this meta class out
-
-    class Meta:
-        model = Freight
-        fields = ['title', 'amount']
-
-    def __init__(self, *args, **kwargs):
-        super(freightForm, self).__init__(*args, **kwargs)
-        self.fields['title'].label = ""
-        self.fields['amount'].label = ""
-        self.fields['title'].required = True
-        self.fields['amount'].required = True
-
-    def populate(self, freight_id, *args, **kwargs):
-        freight = Freight.objects.get(id=freight_id)
-        self.fields['title'].widget.attrs.update(
-            {'value': freight.title})
-        self.fields['amount'].widget.attrs.update(
-            {'value': freight.amount})
 
 
 class editOrCreateProduct(forms.ModelForm):

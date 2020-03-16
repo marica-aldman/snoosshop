@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="container h-75">
+<div class="container mt-3">
 
     <div class="row border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
@@ -70,7 +70,7 @@
                         {{ person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_user' %}">
+                        <form method="POST" action="{% url 'support:edit_user' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtProfile" class='btn btn-primary'>
                                 Se
@@ -78,7 +78,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_company' %}">
+                        <form method="POST" action="{% url 'support:edit_company' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtCompany" class='btn btn-primary'>
                                 Se
@@ -86,7 +86,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
+                        <form method="POST" action="{% url 'support:edit_addresses' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtAddresses" class='btn btn-primary'>
                                 Se
@@ -94,7 +94,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:user_settings' %}">
+                        <form method="POST" action="{% url 'support:user_settings' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
                                 Se
@@ -102,7 +102,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
+                        <form method="POST" action="{% url 'support:subscriptions' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
@@ -110,7 +110,7 @@
                         </form>
                     </td>
                     {% comment %} <td>
-                        <form method="POST" action="{% url 'moderator:support' %}">
+                        <form method="POST" action="{% url 'support:support' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
                                 Se
@@ -133,43 +133,49 @@
                         {{ person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_user' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtProfile">
+                        <form method="POST" action="{% url 'support:edit_user' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtProfile" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_company' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtCompany">
+                        <form method="POST" action="{% url 'support:edit_company' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtCompany" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:edit_addresses' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtAddresses">
+                        <form method="POST" action="{% url 'support:edit_addresses' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtAddresses" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:user_settings' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtSettings">
+                        <form method="POST" action="{% url 'support:user_settings' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'moderator:subscriptions' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions">
+                        <form method="POST" action="{% url 'support:subscriptions' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
                     {% comment %} <td>
-                        <form method="POST" action="{% url 'moderator:support' %}">
-                            <button type="submit" value="{{person.id}}" name="lookAtSupport">
+                        <form method="POST" action="{% url 'support:support' %}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
@@ -188,7 +194,7 @@
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="previousPageOrder" class="page-link">
+                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
                 </form>
@@ -199,7 +205,7 @@
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ user.number }}" name="page" {% if current_page_orders == user.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                    <button type="submit" value="{{ user.number }}" name="page" {% if current_page == user.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
                         {{user.number}}
                     </button>
                 </form>
@@ -211,7 +217,7 @@
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchvalue" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPage" class="page-link">
+                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
                         >
                     </button>
                 </form>

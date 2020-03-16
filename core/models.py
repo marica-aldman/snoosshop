@@ -4,23 +4,22 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Sum
 from django.shortcuts import reverse
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 from django_countries.fields import CountryField
 
-class fake_class(models.Model):
-    test = models.CharField(max_length= 42)
+# standardised variables
 
+ADDRESS_CHOICES = [
+    {'key': 'B', 'name': 'Fakturaaddress'},
+    {'key': 'S', 'name': 'Leveransaddress'},
+]
 
-CATEGORY_CHOICES = (
-    ('TS', 'Tobaksfritt Snus'),
-    ('KS', 'Klassikt Snus'),
-    ('TB', 'Tillbehör')
-)
-
-ADDRESS_CHOICES = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
-)
+ADDRESS_CHOICES_EXTENDED = [
+    {'key': 'B', 'name': 'Fakturaaddress'},
+    {'key': 'S', 'name': 'Leveransaddress'},
+    {'key': 'BOTH', 'name': 'Båda'},
+]
 
 LANGUAGE_CHOICES = (
     ('SWE', 'Svenska'),
@@ -37,6 +36,12 @@ INTERVALL_CHOICES = (
     ('100', 'Var sjätte månad'),
     ('200', 'En gång om året'),
 )
+
+PAYMENT_CHOICES = [
+    {'key': 'S', 'name': 'Stripe'},
+    {'key': 'P', 'name': 'Paypal'},
+    {'key': 'I', 'name': 'Invoice'},
+]
 
 
 class UserProfile(models.Model):
@@ -70,10 +75,10 @@ class Address(models.Model):
             'slug': self.slug
         })
 
-    # for the moderator
+    # for the support
 
-    def moderator_get_absolute_url(self):
-        return reverse("moderator:edit_address", kwargs={
+    def support_get_absolute_url(self):
+        return reverse("support:edit_address", kwargs={
             'slug': self.slug
         })
 
@@ -93,7 +98,7 @@ class CompanyInfo(models.Model):
     slug = models.SlugField(default='company')
 
     def __str__(self):
-        return self.id
+        return self.company
 
     def get_absolute_url(self):
         return reverse("member:edit_companyInfo", kwargs={
@@ -137,6 +142,26 @@ class UserInfo(models.Model):
         })
 
 
+class Freight(models.Model):
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=False)
+    amount = models.FloatField(blank=True, null=True)
+    test = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:freight", kwargs={
+            'slug': self.slug
+        })
+
+    def get_absolute_url_moderator_new(self):
+        return reverse("moderator:freight", kwargs={
+            'slug': 'new'
+        })
+
+
 class Category(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=False)
@@ -161,7 +186,7 @@ class Item(models.Model):
         Category, on_delete=models.SET_NULL, null=True)
 
     description = models.TextField()
-    image = models.ImageField()
+    image = models.ImageField(upload_to="media_root/")
     slug = models.SlugField(default='item', unique=True)
 
     def __str__(self):
@@ -194,6 +219,11 @@ class OrderItem(models.Model):
     price = models.FloatField(blank=True, null=True)
     discount_price = models.FloatField(blank=True, null=True)
     total_price = models.FloatField(blank=True, null=True)
+    sent = models.BooleanField(default=False)
+    returned_flag = models.BooleanField(default=False)
+    returned = models.BooleanField(default=False)
+    refund_flag = models.BooleanField(default=False)
+    refund = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -212,6 +242,11 @@ class OrderItem(models.Model):
             return self.get_total_discount_item_price()
         return self.get_total_item_price()
 
+    def get_absolute_url_support(self):
+        return reverse("support:orderItem", kwargs={
+            'slug': self.id
+        })
+
 
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -219,7 +254,9 @@ class Order(models.Model):
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
     total_price = models.FloatField(blank=True, null=True)
-    freight = models.FloatField(blank=True, null=True)
+    freight = models.ForeignKey('Freight',
+                                on_delete=models.SET_NULL, blank=True, null=True)
+    freight_price = models.FloatField(blank=True, null=True)
     sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
@@ -230,15 +267,19 @@ class Order(models.Model):
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
         'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
+    payment_type = models.CharField(
+        max_length=1, choices=PAYMENT_CHOICES, default='S')
     payment = models.ForeignKey(
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
     coupon = models.ForeignKey(
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
     received = models.BooleanField(default=False)
+    returned_flag = models.BooleanField(default=False)
+    returned = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
-    slug = models.SlugField(default='order')
+    comment = models.CharField(max_length=500, blank=True, null=True)
 
     '''
     1. Item added to cart
@@ -264,8 +305,33 @@ class Order(models.Model):
 
     def get_absolute_url_member(self):
         return reverse("member:my_order", kwargs={
-            'slug': self.slug
+            'slug': self.ref_code
         })
+
+    def get_absolute_url_support(self):
+        return reverse("support:vieworder", kwargs={
+            'slug': self.ref_code
+        })
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:specific_order", kwargs={
+            'slug': self.ref_code
+        })
+
+    def red_flag(self):
+        date = make_aware(datetime.now())
+        if date >= self.sub_out_date:
+            return True
+        else:
+            return False
+
+    def warning(self):
+        date1 = make_aware(datetime.now() + timedelta(days=1))
+        date2 = make_aware(datetime.now() + timedelta(days=3))
+        if date1 <= self.sub_out_date and date2 >= self.sub_out_date:
+            return True
+        else:
+            return False
 
 
 class Payment(models.Model):
@@ -281,6 +347,7 @@ class Payment(models.Model):
 
 class Coupon(models.Model):
     code = models.CharField(max_length=15)
+    coupon_type = models.CharField(max_length=20, default='Percent')
     amount = models.FloatField()
 
     def __str__(self):
@@ -356,9 +423,13 @@ class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
+    freight = models.ForeignKey(
+        'Freight', on_delete=models.SET_NULL, blank=True, null=True)
+    freight_price = models.FloatField(blank=True, null=True)
     next_order_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     next_order = models.IntegerField(default=1)
+    comment = models.IntegerField(default=0)
     intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
     shipping_address = models.ForeignKey(
         Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
@@ -376,10 +447,17 @@ class Subscription(models.Model):
             'slug': self.slug
         })
 
-    # for the moderator
+    # for the moderatorsupport_get_absolute_url
 
     def moderator_get_absolute_url(self):
         return reverse("moderator:subscription", kwargs={
+            'slug': self.slug
+        })
+
+    # for the support
+
+    def support_get_absolute_url(self):
+        return reverse("support:subscription", kwargs={
             'slug': self.slug
         })
 

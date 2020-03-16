@@ -10,25 +10,11 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
 from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, Category
+from core.functions import *
 
-import random
-import string
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
-
-def om_oss_view(request):
-    return render(request, 'omoss.html')
-
-def teamet_view(request):
-    return render(request, 'team.html')
-
-def vision_view(request):
-    return render(request, 'vision.html')
-
-def create_ref_code():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 
 def products(request):

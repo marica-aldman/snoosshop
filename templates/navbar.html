@@ -48,18 +48,12 @@
                 Moderator menu
               {% endcomment %}
           <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-user"></i>
+            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-weight: bolder; font-size: 25px;">
+              M
             </div>
             <div class="dropdown-menu" aria-labelledby="dropdownMenu">
               <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:overview' %}">
                   Översikt
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:orders' %}">
-                  Order Sökning
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:search_users' %}">
-                  Användarsökning
               </a>
               <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:products' %}">
                   Produkthantering
@@ -67,10 +61,42 @@
               <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:categories' %}">
                   Produktkategorier
               </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:orderhandling' %}">
+                  Orderhantering
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:freights' %}">
+                  Frakthantering
+              </a>
               <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:my_profile' %}">
                   Min Profil
               </a>
               <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:settings' %}">
+                  Mina inställningar
+              </a>
+            </div>
+          </li>
+          {% elif group.1 == 'support' %}
+              {% comment %}
+                Support menu
+              {% endcomment %}
+          <li class="nav-item dropdown" style="top: 10px">
+            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-weight: bolder; font-size: 25px;">
+              S
+            </div>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:overview' %}">
+                  Översikt
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:orders' %}">
+                  Order Sökning
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:search_users' %}">
+                  Användarsökning
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:my_profile' %}">
+                  Min Profil
+              </a>
+              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:settings' %}">
                   Mina inställningar
               </a>
             </div>

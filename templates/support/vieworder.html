@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--orders-->
+<!--active-->
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <div>
+            <div>
+                <button type="submit" class='btn btn-primary' name="back" value="1">
+                    Tillbaka
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="order" value="{{order.id}}">
+        <div class="row border border-warning" >
+            <h1>Order {{order.id}}</h1>
+            <table class="table-striped table-hover w-100  mb-2">
+                <tbody>
+                    <tr>
+                        <td>
+                            Kundid
+                        </td>
+                        <td>
+                            {{ theClient.id }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {% if theClientInfo.company %}
+                                Kontaktperson
+                            {% else %}
+                                Namn
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ theClientInfo.first_name }} {{ theClientInfo.last_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            OrderID
+                        </td>
+                        <td>
+                            {{ order.id }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Orderreferens
+                        </td>
+                        <td>
+                            {{ order.ref_code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Frakt
+                        </td>
+                        <td>
+                            {{ order.freight }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Kupongkod
+                        </td>
+                        <td>
+                            {% if hasCoupon %}
+                            {{ coupon.code }}
+                            {% else %}
+                            ---
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Kupongsvärde
+                        </td>
+                        <td>
+                            {% if hasCoupon %}
+                            {{ coupon.amount }}
+                            {% else %}
+                            ---
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Totalpris
+                        </td>
+                        <td>
+                            {{ order.total_price }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Betalad
+                        </td>
+                        <td>
+                            {% if hasPayment %}
+                            {{ payment.timestamp }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Betalat
+                        </td>
+                        <td>
+                            {{ payment.amount }}
+                            {% else %}
+                            ---
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Leveransaddress
+                        </td>
+                        <td>
+                            {{ shipping_address.street_address }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Faktureringsaddress
+                        </td>
+                        <td>
+                            {{ billing_address.street_address }}
+                        </td>
+                    </tr>
+                    {% if order.subscription_order and not order.being_delivered %}
+                    
+                    <tr>
+                        <td>
+                            Premunation startad
+                        </td>
+                        <td>
+                            {{ subscription.start_date|date:"d m Y" }}
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            Nästa utskick
+                        </td>
+                        <td>
+                            {{ order.sub_out_date|date:"d m Y" }}
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td>
+                            Beställd
+                        </td>
+                        <td>
+                            {{ order.ordered_date|date:"d m Y"  }}
+                        </td>
+                    </tr>
+
+                    {% endif %}
+                    <tr>
+                        <td>
+                            Status
+                        </td>
+                        <td>
+                            {% if order.being_delivered %}
+                                Skickad
+                            {% elif order.being_read %}
+                                Packas
+                            {% elif order.refund_requested %}
+                                {% if order.refund_granted %}
+                                    Återbetalningbegärd
+                                {% else %}
+                                    Återbetalningbeviljad
+                                {% endif %}
+                            {% elif order.refund_requested %}
+                                {% if order.refund_granted %}
+                                    Återbetalningbegärd
+                                {% else %}
+                                    Återbetalningbeviljad
+                                {% endif %}
+                            {% elif order.returned_flag %}
+                                {% if order.returned %}
+                                    Flaggad för retur
+                                {% else %}
+                                    Returnerad
+                                {% endif %}
+                            {% else %}
+                                Inte hanterad
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Markera hela ordern för retur
+                        </td>
+                        <td>
+                            <input type="checkbox" name="OrderToReturn" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Avmarkera hela ordern för retur
+                        </td>
+                        <td>
+                            <input type="checkbox" name="OrderToReturnUn" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Markera hela ordern som returnerad
+                        </td>
+                        <td>
+                            <input type="checkbox" name="OrderReturned" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Markera hela ordern som oreturnerad
+                        </td>
+                        <td>
+                            <input type="checkbox" name="OrderUnReturned" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Markera Återbetalningbegärd
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackRequested" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Avmarkera Återbetalningbegärd
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackRequestCancel" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Godkänn återbetalning av hela orddern
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackApproved" value="True">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Avbryt återbetalning av hela orddern
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackCancel" value="True">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='submit' class='btn btn-primary' name="save" value="True">Spara</button>
+        </div>
+    </form>
+
+        <!--recently completed-->
+        <div class="row border border-dark">
+            <h1>Order delar</h1>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead>
+                    <tr>
+                        <th>
+                            Vara
+                        </th>
+                        <th>
+                            Mängd
+                        </th>
+                        <th>
+                            Styckepris
+                        </th>
+                        <th>
+                            Reapris
+                        </th>
+                        <th>
+                            Totalpris
+                        </th>
+                        <th>
+                            Skickad
+                        </th>
+                        <th>
+                            Returflagga
+                        </th>
+                        <th>
+                            Returnerad
+                        </th>
+                        <th>
+                            Hantera produkten
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for item in orderItems %}
+                    <tr>
+                        <td>
+                            {{ item.title }}
+                        </td>
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+                        <td>
+                            {{ item.price }}
+                        </td>
+                        <td>
+                            {{ item.discount_price }}
+                        </td>
+                        <td>
+                            {{ item.total_price }}
+                        </td>
+                        <td>
+                            {% if item.sent %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.returned %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.returned_flag %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{item.get_absolute_url_support}}">
+                                {% csrf_token %}
+                                <input type="hidden" name="order" value="{{order.id}}">
+                                <input type="hidden" name="item" value="{{item.id}}">
+                                <button type='submit' class='btn btn-primary' name="handle" value="True">Hantera</button>
+                            </form>
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+</div>
+
+
+{% endblock content %}

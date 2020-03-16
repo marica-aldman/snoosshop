@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST" class="w-100">
+            {% csrf_token %}
+            <input type="hidden" value="{{current_page}}" name="current_page">
+            <div class="d-flex justify-content-around">
+                <div>
+                    Reference: {{form.order_ref|as_crispy_field}}
+                </div>
+                <div>
+                    Order id: {{form.order_id|as_crispy_field}}
+                </div>
+                <div>
+                    Kund id: {{form.user_id|as_crispy_field}}
+                </div>
+                <div>
+                    <button type="submit" name="search" class='btn btn-primary mt-3' value="True">Sök</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- results or all orders -->
+    <div class="row border border-dark mb-3 p-2">
+        <h3>Ordrar</h3>
+        <table class="table-striped table-hover w-100  mb-2">
+            <thead class="mdb-color lighten-5">
+                <tr>
+                    <th>
+                        Order Ref
+                    </th>
+                    <th>
+                        Typ
+                    </th>
+                    <th>
+                        Premuneration skickas
+                    </th>
+                    <th>
+                        Beställd
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                    <th>
+                        Titta på ordern
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {% if multiple %}
+        {% for order in orders %}
+                <tr>
+                    <td>
+                        {{ order.ref_code }}
+                    </td>
+                    <td>
+                        {% if order.subscription_order %}
+                            Prenumeration
+                        {% else %}
+                            Vanlig
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.subscription_order %}
+                            {{ order.sub_out_date }}
+                        {% else %}
+                            ---
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ order.ordered_date }}
+                    </td>
+                    <td>
+                        {% if order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.returned %}
+                            Order returnerad
+                        {% elif order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.refund_requested %}
+                            Återbetalning begärd
+                        {% elif order.returned_flag %}
+                            Order påväg i retur
+                        {% elif order.being_delivered %}
+                            Skickad
+                        {% elif order.being_read %}
+                            Packas
+                        {% else %}
+                            Underbehandling
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ order.get_absolute_url_support }}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                                Se order
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+        {% endfor %}
+    {% else %}
+                <tr>
+                    <td>
+                        {{ order.ref_code }}
+                    </td>
+                    <td>
+                        {% if order.subscription_order %}
+                            Prenumeration
+                        {% else %}
+                            Vanlig
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.subscription_order %}
+                            {{ order.sub_out_date }}
+                        {% else %}
+                            ---
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ order.ordered_date }}
+                    </td>
+                    <td>
+                        {% if order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.returned %}
+                            Order returnerad
+                        {% elif order.refund_granted%}
+                            Återbetalning godkänd
+                        {% elif order.refund_requested %}
+                            Återbetalning begärd
+                        {% elif order.returned_flag %}
+                            Order påväg i retur
+                        {% elif order.being_delivered %}
+                            Skickad
+                        {% elif order.being_read %}
+                            Packas
+                        {% else %}
+                            Underbehandling
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ order.get_absolute_url_support }}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                                Se order
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+    {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="d-flex w-100 justify-content-around">
+        <ul class="pagination">
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
+                        <
+                    </button>
+                </form>
+            </li>
+            {% for order in more_orders %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="{{ order.number }}" name="page" {% if current_page == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{order.number}}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
+                        >
+                    </button>
+                </form>
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+
+{% endblock content %}

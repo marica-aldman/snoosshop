@@ -18,9 +18,10 @@ from .views import (
     Settings,
     SubscriptionsView,
     SubscriptionView,
-    DeactivateSubscriptionView,
     CookieSettingsView,
-    DeleteOrder,
+    CancelOrder,
+    ReturnOrder,
+    ReturnItem,
 )
 
 app_name = 'member'
@@ -44,14 +45,12 @@ urlpatterns = [
     path('my_subscriptions/', SubscriptionsView.as_view(), name='my_subscriptions'),
     path('my_subscription/<slug>',
          SubscriptionView.as_view(), name='my_subscription'),
-    path('deactivating',
-         DeactivateSubscriptionView.as_view(), name='deactivating'),
-    path('deleteOrder',
-         DeleteOrder.as_view(), name='deleteOrder'),
     path('cancelOrder',
-         DeleteOrder.as_view(), name='cancelOrder'),
+         CancelOrder.as_view(), name='cancelOrder'),
     path('returnOrder',
-         DeleteOrder.as_view(), name='returnOrder'),
+         ReturnOrder.as_view(), name='returnOrder'),
+    path('returnItem',
+         ReturnItem.as_view(), name='returnItem'),
 ]
 
 # move cookies for general use to base

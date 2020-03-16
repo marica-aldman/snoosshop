@@ -14,178 +14,23 @@ from datetime import datetime, timedelta
 from core.models import *
 from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm, SetupAddressForm
 from django.utils.dateparse import parse_datetime
-from core.views import create_ref_code
-from slugify import slugify
-
-import random
-import string
-
-
-def test_slug_address(slug):
-    test = False
-    addressQuery = Address.objects.filter(slug=slug)
-    if len(addressQuery) > 0:
-        test = True
-    return test
-
-
-def test_slug_address_of_user(slug, theUser):
-    test = False
-    addressQuery = Address.objects.filter(user=theUser, slug=slug)
-    if len(addressQuery) > 0:
-        test = True
-    return test
-
-
-def create_slug_address(address):
-    toSlug = address.street_address + \
-        "B" + str(address.user.id)
-    testSlug = slugify(toSlug)
-    existingSlug = test_slug_address(testSlug)
-    i = 1
-    while existingSlug:
-        toSlug = address.street_address + \
-            "B" + str(address.user.id) + "_" + str(i)
-        testSlug = slugify(toSlug)
-        existingSlug = test_slug_address(testSlug)
-        i += 1
-
-    return testSlug
-
-
-def new_address_default(address):
-    # remove default from any other default address of the same type
-    otherAddresses = Address.objects.filter(
-        address_type=address.address_type, default=True)
-    for otherAddress in otherAddresses:
-        otherAddress.default = False
-        otherAddress.save()
-
-
-def test_slug_company(slug):
-    test = False
-    companyQuery = CompanyInfo.objects.filter(slug=slug)
-    if len(companyQuery) > 0:
-        test = True
-    return test
-
-
-def create_ref_code():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
-
-
-def where_am_i(self):
-    path = self.request.get_full_path()
-    split_path = path.split("/")
-    page = split_path[-1]
-    if page == "":
-        page = split_path[-2]
-    return page
-
-
-def get_next_order_date(subdate, intervall):
-    if intervall == '001':
-        # add a week
-        d = timedelta(days=7)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-
-    elif intervall == '002':
-        # add two weeks
-        d = timedelta(days=14)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-
-    elif intervall == '010':
-        # add a month
-        d = timedelta(days=30)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '020':
-        # add two months
-        d = timedelta(days=60)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '100':
-        # add six months
-        d = timedelta(days=182)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    elif intervall == '200':
-        # add a year
-        d = timedelta(days=365)
-        add_date = subdate
-        next_date = add_date + d
-
-        return next_date
-    else:
-        # this shouldnt be able to happen. do nothing
-        return subdate
-
-
-def save_subItems_and_orderItems(sub, amount, product):
-    # create a subscription item object
-    subItem = SubscriptionItem()
-    subItem.user = sub.user
-    subItem.subscription = sub
-    subItem.item = product
-    subItem.item_title = product.title
-    subItem.price = product.price
-    discount_price = 1
-    if product.discount_price is not None:
-        discount_price = product.discount_price
-    subItem.discount_price = discount_price
-    subItem.quantity = amount
-    total_price = product.price * discount_price * amount
-    subItem.total_price = total_price
-
-    # new orderItem object
-    orderItem = OrderItem()
-    # set basic valeus
-    orderItem.user = sub.user
-    orderItem.ordered = True
-    orderItem.item = product
-    orderItem.title = product.title
-    orderItem.quantity = subItem.quantity
-    orderItem.price = product.price
-    orderItem.discount_price = discount_price
-    orderItem.total_price = total_price
-    # save orderitem
-    orderItem.save()
-    # save subitems
-    subItem.save()
-    return orderItem
+from core.functions import *
+from core.info_error_msg import *
 
 
 class Setup(View):
     def get(self, *args, **kwargs):
-        try:
-            form_user = UserInformationForm()
-            form_company = CompanyInfoForm()
-            form_address = SetupAddressForm()
+        form_user = UserInformationForm()
+        form_company = CompanyInfoForm()
+        form_address = SetupAddressForm()
 
-            context = {
-                'userForm': form_user,
-                'companyForm': form_company,
-                'addressForm': form_address,
-            }
+        context = {
+            'userForm': form_user,
+            'companyForm': form_company,
+            'addressForm': form_address,
+        }
 
-            return render(self.request, "member/setup.html", context)
-
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Något gick fel när vi försökte ladda formuläret för din information. Var vänlig kontakta supporten för hjälp.")
-            return redirect("core:home")
+        return render(self.request, "member/setup.html", context)
 
     def post(self, *args, **kwargs):
         try:
@@ -279,7 +124,7 @@ class Setup(View):
                         theUser.save()
 
                         messages.info(
-                            self.request, "Uppgifter sparade. Du kan uppdatera och lägga till information under din profil")
+                            self.request, info_message_1)
                         return redirect("member:my_overview")
                     else:
 
@@ -288,15 +133,15 @@ class Setup(View):
                             'companyForm': form_company,
                             'addressForm': form_address,
                         }
-                        messages.info(
-                            self.request, "2 Det saknas information i något av de obligatoriska fälten.")
+                        messages.warning(
+                            self.request, error_message_1)
                         return render(self.request, "member/setup.html", context)
                 else:
                     userInfo.company = False
                     userInfo.save()
 
                     messages.info(
-                        self.request, "Uppgifter sparade. Du kan uppdatera och lägga till information under din profil")
+                        self.request, info_message_1)
                     return redirect("member:my_overview")
             else:
 
@@ -306,12 +151,12 @@ class Setup(View):
                     'addressForm': form_address,
                 }
 
-                messages.info(
-                    self.request, "1 Det saknas information i något av de obligatoriska fälten.")
+                messages.warning(
+                    self.request, error_message_1)
                 return render(self.request, "member/setup.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Något gick fel när vi försökte ställa in ditt konto. Kontakta supporten för hjälp.")
+            messages.warning(
+                self.request, error_message_2)
             return redirect("core:home")
 
 
@@ -361,19 +206,19 @@ class CompanyView(View):
                     # no change in adress just save and redirect
                     compInfo.save()
                     messages.info(
-                        self.request, "Informationen sparad.")
+                        self.request, info_message_2)
                     return redirect("member:my_profile")
                 else:
                     compInfo.addressID = addressTest
                     compInfo.save()
                     messages.info(
-                        self.request, "Informationen sparad.")
+                        self.request, info_message_2)
                     return redirect("member:my_profile")
             except ObjectDoesNotExist:
                 # something is wrong here rerender the form, with message
 
                 messages.info(
-                    self.request, "Någonting gick fel. Kontakta support för assistans.")
+                    self.request, error_message_3)
 
                 addresses = Address.objects.filter(user=theUser)
 
@@ -387,8 +232,8 @@ class CompanyView(View):
         else:
             # form not valid rerender
 
-            messages.info(
-                self.request, "Något i formuläret saknas Var god fyll i hela formuläret.")
+            messages.warning(
+                self.request, error_message_4)
 
             addresses = Address.objects.filter(user=theUser)
 
@@ -491,8 +336,8 @@ class Overview(View):
             return render(self.request, "member/my_overview.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your overview. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_5)
             return redirect("core:home")
 
 
@@ -528,12 +373,17 @@ class Orders(View):
             return render(self.request, "member/my_orders.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your orderlistspage. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_6)
             return redirect("member:my_overview")
 
 
 class OrderView(LoginRequiredMixin, View):
+    def get(self, *args, **kwargs):
+        messages.warning(
+            self.request, error_message_7)
+        return redirect("member:my_orders")
+
     def post(self, *args, **kwargs):
         try:
             orderQuery = Order.objects.filter(
@@ -604,8 +454,8 @@ class OrderView(LoginRequiredMixin, View):
                 return render(self.request, "member/my_order.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Can't find this order. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_7)
             return redirect("member:my_orders")
 
 
@@ -633,8 +483,8 @@ class SupportView(View):
 
             return render(self.request, "member/my_support.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing this page. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_8)
             return redirect("member:my_overview")
 
 
@@ -652,8 +502,8 @@ class NewErrandView(View):
             return render(self.request, "member/new_errand.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_9)
             return redirect("member:my_overview")
 
 
@@ -684,8 +534,8 @@ class ErrandView(View):
             return render(self.request, "member/my_errand.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Can't find this errand. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_10)
             return redirect("member:my_overview")
 
 
@@ -722,8 +572,8 @@ class Profile(View):
 
             return render(self.request, "member/my_profile.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_11)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -739,8 +589,8 @@ class Profile(View):
                         addressID=theAddress).count()
                     if numberOfCompanies >= 1:
                         # a company with that address exists
-                        messages.info(
-                            self.request, "This address is connected to your company. Please change your companys address before deleting this address.")
+                        messages.warning(
+                            self.request, error_message_12)
                         return redirect("member:my_profile")
                     else:
                         # no companies with that address
@@ -756,8 +606,8 @@ class Profile(View):
                         billing_address=theAddress).count()
                     if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
                         # a subscription is tied to this address
-                        messages.info(
-                            self.request, "This address is connected to at least one of your subscriptions. Please change your subscriptions address before deleting this address.")
+                        messages.warning(
+                            self.request, error_message_13)
                         return redirect("member:my_profile")
                     else:
                         # no subsriptions with that address set conenction to true
@@ -769,7 +619,7 @@ class Profile(View):
 
                 theAddress.delete()
                 messages.info(
-                    self.request, "Address deleted")
+                    self.request, info_message_3)
                 return redirect("member:my_profile")
 
 
@@ -793,45 +643,31 @@ class InfoView(View):
 
             return render(self.request, "member/my_info.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your information. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_14)
             return redirect("member:my_profile")
 
     def post(self, *args, **kwargs):
-        try:
-            form = UserInformationForm(self.request.POST)
+        form = UserInformationForm(self.request.POST)
 
-            if 'edit' in self.request.POST.keys():
+        if 'edit' in self.request.POST.keys():
 
-                # check if there is a company connected
-                try:
-                    info = UserInfo.objects.get(user=self.request.user)
-                except ObjectDoesNotExist:
-                    info = UserInfo()
+            # check if there is a company connected
+            try:
+                info = UserInfo.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                info = UserInfo()
 
-                context = {
-                    'form': form,
-                    'info': info,
-                }
+            context = {
+                'form': form,
+                'info': info,
+            }
 
-                return render(self.request, "member/my_info.html", context)
+            return render(self.request, "member/my_info.html", context)
 
-            if form.is_valid():
-                try:
-                    info = UserInfo.objects.get(user=self.request.user)
-                    info.first_name = form.cleaned_data.get('first_name')
-                    info.last_name = form.cleaned_data.get('last_name')
-                    info.email = form.cleaned_data.get('email')
-                    info.telephone = form.cleaned_data.get('telephone')
-
-                    info.save()
-                    messages.info(
-                        self.request, "User information saved.")
-                    return redirect("member:my_profile")
-                except ObjectDoesNotExist:
-                    info = UserInfo()
-
-                info.user = self.request.user
+        if form.is_valid():
+            try:
+                info = UserInfo.objects.get(user=self.request.user)
                 info.first_name = form.cleaned_data.get('first_name')
                 info.last_name = form.cleaned_data.get('last_name')
                 info.email = form.cleaned_data.get('email')
@@ -839,28 +675,36 @@ class InfoView(View):
 
                 info.save()
                 messages.info(
-                    self.request, "User information saved.")
+                    self.request, info_message_4)
                 return redirect("member:my_profile")
-            else:
-                try:
-                    info = UserInfo.objects.get(user=self.request.user)
-                except ObjectDoesNotExist:
-                    info = UserInfo()
+            except ObjectDoesNotExist:
+                info = UserInfo()
 
-                context = {
-                    'form': form,
-                    'info': info,
-                }
+            info.user = self.request.user
+            info.first_name = form.cleaned_data.get('first_name')
+            info.last_name = form.cleaned_data.get('last_name')
+            info.email = form.cleaned_data.get('email')
+            info.telephone = form.cleaned_data.get('telephone')
 
-                messages.info(
-                    self.request, "Missing certain information.")
-
-                return render(self.request, "member/my_info.html", context)
-
-        except ObjectDoesNotExist:
+            info.save()
             messages.info(
-                self.request, "Something went wrong when saving your information. Contact the support for assistance.")
+                self.request, info_message_4)
             return redirect("member:my_profile")
+        else:
+            try:
+                info = UserInfo.objects.get(user=self.request.user)
+            except ObjectDoesNotExist:
+                info = UserInfo()
+
+            context = {
+                'form': form,
+                'info': info,
+            }
+
+            messages.warning(
+                self.request, error_message_15)
+
+            return render(self.request, "member/my_info.html", context)
 
 # switch this to SetupAddressForm
 
@@ -891,8 +735,8 @@ class Editaddress(View):
 
                 return render(self.request, "member/edit_address.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_16)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -923,8 +767,8 @@ class Editaddress(View):
                         address.address_type = "B"
                     else:
                         # someone is manipulating the code
-                        messages.info(
-                            self.request, "Something went wrong when saving the address. Contact IT support for assistance.")
+                        messages.warning(
+                            self.request, error_message_17)
                         return redirect("member:my_profile")
                 else:
                     # rerender form
@@ -956,7 +800,7 @@ class Editaddress(View):
                 # save the address and return to list
                 address.save()
 
-                messages.info(self.request, "Address have been saved.")
+                messages.info(self.request, info_message_5)
                 return redirect("member:my_profile")
             else:
                 # rerender form
@@ -974,26 +818,21 @@ class Editaddress(View):
                 return render(self.request, "member/edit_address.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your address. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_18)
             return redirect("member:my_overview")
 
 
 class Newaddress(View):
     def get(self, *args, **kwargs):
-        try:
-            # get form for this using the user id
-            form = NewAddressForm()
+        # get form for this using the user id
+        form = NewAddressForm()
 
-            context = {
-                'form': form,
-            }
+        context = {
+            'form': form,
+        }
 
-            return render(self.request, "member/new_address.html", context)
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
-            return redirect("member:my_overview")
+        return render(self.request, "member/new_address.html", context)
 
     def post(self, *args, **kwargs):
         try:
@@ -1016,7 +855,7 @@ class Newaddress(View):
                                 elif anAddress.address_type == "B":
                                     sameBilling = anAddress.id
                             elif anAddress.address_type == form.cleaned_data.get('address_type'):
-                                message = "Address already exists"
+                                message = info_message_6
                                 if 'default_address' in self.request.POST.keys() and not anAddress.default:
                                     # remove default from other addresses of same type
 
@@ -1031,7 +870,7 @@ class Newaddress(View):
                                     # add default to this address
                                     anAddress.default = True
                                     anAddress.save()
-                                    message = "Address already exists. Default changed."
+                                    message = info_message_7
                                 messages.info(
                                     self.request, message)
                                 return redirect("member:my_profile")
@@ -1055,7 +894,7 @@ class Newaddress(View):
                     # test for defaulting
                     testShipping = Address.objects.get(id=sameShipping)
                     testBilling = Address.objects.get(id=sameBilling)
-                    message = "You already have these addresses saved."
+                    message = info_message_8
                     if 'default_address' in self.request.POST.keys():
                         addresses = Address.objects.filter(user=theUser)
                         if not testShipping.default:
@@ -1080,7 +919,7 @@ class Newaddress(View):
                             # change the thest one to true here
                             testBilling.default = True
                             testBilling.save()
-                        message = message + " Default changed."
+                        message = info_message_9
 
                     messages.info(
                         self.request, message)
@@ -1122,7 +961,7 @@ class Newaddress(View):
                 # save the address and return to list
                 address.save()
 
-                messages.info(self.request, "Address have been saved.")
+                messages.info(self.request, info_message_10)
                 return redirect("member:my_profile")
             else:
                 context = {
@@ -1131,8 +970,8 @@ class Newaddress(View):
 
                 return render(self.request, "member/new_address.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your profile. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_19)
             return redirect("member:my_overview")
 
 
@@ -1153,8 +992,8 @@ class Settings(View):
             return render(self.request, "member/my_settings.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your settings. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_20)
             return redirect("member:my_overview")
 
 
@@ -1180,8 +1019,8 @@ class SubscriptionsView(View):
 
             return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_21)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -1209,14 +1048,14 @@ class SubscriptionsView(View):
                             order.delete()
                             # delete subscription
                             sub.delete()
-                            message = 'subscription and corresponding order deleted'
+                            message = info_message_11
                         except ObjectDoesNotExist:
                             orderQuery = {}
-                            message = "Subscription was active but had no connected order. If you still see an order under your orders that should be connected to this one contact support for assitance."
+                            message = error_message_22
                     else:
                         # delete subscription
                         sub.delete()
-                        message = 'subscription deleted'
+                        message = info_message_12
                 # get all subscriptions
                 try:
                     subscriptions = Subscription.objects.filter(
@@ -1237,489 +1076,442 @@ class SubscriptionsView(View):
 
                 return render(self.request, "member/my_subscriptions.html", context)
             else:
-                messages.info(
-                    self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+                messages.warning(
+                    self.request, error_message_23)
                 return redirect("member:my_overview")
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your subscriptions. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_24)
             return redirect("member:my_overview")
 
 
 class SubscriptionView(View):
     def post(self, *args, **kwargs):
-        try:
-            if 'see' in self.request.POST.keys():
-                # get the user
-                theUser = self.request.user
-                # where are we
-                path = self.request.get_full_path()
-                # if we are editing get the specific Subscription otherwise set values for new
-                slug = where_am_i(self)
-                if slug == 'new':
+        if 'see' in self.request.POST.keys():
+            # get the user
+            theUser = self.request.user
+            # where are we
+            path = self.request.get_full_path()
+            # if we are editing get the specific Subscription otherwise set values for new
+            slug = where_am_i(self)
+            if slug == 'new':
 
-                    # set additional values
-                    sub_date = datetime.now().strftime("%Y-%m-%d")
-                    number_of_products = 1
-                    old = False
-                    active = False
-                    subscription = Subscription()
+                # set additional values
+                sub_date = datetime.now().strftime("%Y-%m-%d")
+                number_of_products = 1
+                old = False
+                active = False
+                subscription = Subscription()
 
-                    # get the form
-                    form = EditSubscriptionForm()
-                    form.populate(theUser, subscription, old)
+                # get the form
+                form = EditSubscriptionForm()
+                form.populate(theUser, subscription, old)
 
-                    context = {
-                        'form': form,
-                        'sub_date': sub_date,
-                        'number_of_products': number_of_products,
-                        'old': old,
-                        'subscription': subscription,
-                        'path': path,
-                        'active': active,
-                        'person': theUser,
-                    }
+                context = {
+                    'form': form,
+                    'sub_date': sub_date,
+                    'number_of_products': number_of_products,
+                    'old': old,
+                    'subscription': subscription,
+                    'path': path,
+                    'active': active,
+                    'person': theUser,
+                }
 
-                    return render(self.request, "member/my_subscription.html", context)
-                else:
-                    try:
-                        sub = Subscription.objects.get(
-                            user=theUser, slug=slug)
-                        if sub is not None:
-                            old = True
-                            active = sub.active
-                            sub_date = sub.start_date.strftime("%Y-%m-%d")
-                            number_of_products = sub.number_of_items
+                return render(self.request, "member/my_subscription.html", context)
+            else:
+                try:
+                    sub = Subscription.objects.get(
+                        user=theUser, slug=slug)
+                    if sub is not None:
+                        old = True
+                        active = sub.active
+                        sub_date = sub.start_date.strftime("%Y-%m-%d")
+                        number_of_products = sub.number_of_items
 
-                            # get the form
-                            form = EditSubscriptionForm()
-                            form.populate(theUser, sub, old)
+                        # get the form
+                        form = EditSubscriptionForm()
+                        form.populate(theUser, sub, old)
 
-                            context = {
-                                'form': form,
-                                'sub_date': sub_date,
-                                'subscription': sub,
-                                'number_of_products': number_of_products,
-                                'old': old,
-                                'active': active,
-                                'path': path,
-                                'person': theUser,
-                            }
+                        context = {
+                            'form': form,
+                            'sub_date': sub_date,
+                            'subscription': sub,
+                            'number_of_products': number_of_products,
+                            'old': old,
+                            'active': active,
+                            'path': path,
+                            'person': theUser,
+                        }
 
-                            return render(self.request, "member/my_subscription.html", context)
-                        else:
-                            messages.info(
-                                self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
-                            return redirect("member:my_subscriptions")
-
-                    except ObjectDoesNotExist:
-                        messages.info(
-                            self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
+                        return render(self.request, "member/my_subscription.html", context)
+                    else:
+                        messages.warning(
+                            self.request, error_message_25)
                         return redirect("member:my_subscriptions")
 
-            elif 'saveSubscription' in self.request.POST.keys():
-                # saving subscription
-                # get the user
-                u_id = 0
-                if 'u_id' in self.request.POST.keys():
-                    u_id = int(self.request.POST['u_id'])
-                theUser = User.objects.get(id=u_id)
-                sub_id = 0
-                if 'sub_id' in self.request.POST.keys():
-                    sub_id = int(self.request.POST['sub_id'])
-                # where are we
-                path = self.request.get_full_path()
-                # validate
-                form = EditSubscriptionForm(self.request.POST)
-                if form.is_valid():
-                    # check if new or old
-                    if self.request.POST['new_or_old'] == 'old':
-                        # get the old subscription
-                        try:
-                            sub = Subscription.objects.get(id=sub_id)
-                            message = ''
-                            # take in the data
+                except ObjectDoesNotExist:
+                    messages.warning(
+                        self.request, error_message_26)
+                    return redirect("member:my_subscriptions")
 
-                            # start date
-                            # make sure the date is in the correct format
-                            sub.start_date = form.cleaned_data.get(
-                                'start_date')
-                            # intervall
-                            sub.intervall = form.cleaned_data.get('intervall')
-                            # all user addresses
-                            addresses = Address.objects.filter(
-                                user=self.request.user)
-                            # shipping_address
-                            shipping_address = form.cleaned_data.get(
-                                'shipping_address')
-                            # billing_address
-                            billing_address = form.cleaned_data.get(
-                                'billing_address')
-                            for address in addresses:
-                                if address.id == shipping_address:
-                                    sub.shipping_address = address
-                                elif address.id == billing_address:
-                                    sub.billing_address = address
-                            # number_of_products
-                            sub.number_of_items = int(
-                                self.request.POST['number_of_products'])
-
-                            # calcuate the rest of the data
-                            sub.updated_date = make_aware(datetime.now())
-                            sub.active = True
-                            sub.next_order_date = get_next_order_date(
-                                sub.start_date, sub.intervall)
-
-                            # save subscription
-                            sub.save()
-
-                            # get the connected order
-                            if sub.next_order > 0:
-                                theOrder = Order.objects.get(
-                                    id=sub.next_order)
-
-                                theOrder.subscription_date = sub.next_order_date
-                                theOrder.updated_date = make_aware(
-                                    datetime.now())
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered = True
-                                theOrder.received = False
-                                theOrder.being_delivered = False
-                                theOrder.shipping_address = sub.shipping_address
-                                theOrder.billing_address = sub.shipping_address
-                                theOrder.save()
-
-                                # remove old order items and subitems
-                                orderItems = theOrder.items.all()
-                                for item in orderItems:
-                                    item.delete()
-                                subItems = SubscriptionItem.objects.filter(
-                                    subscription=sub.id)
-                                for subItem in subItems:
-                                    subItem.delete()
-
-                                # and then make new the order and sub items
-
-                                i = 1
-                                for i in range(sub.number_of_items):
-                                    i += 1
-                                    p_string = 'product%s' % (i,)
-                                    a_string = 'amount%s' % (i,)
-                                    product_id = int(
-                                        self.request.POST[p_string])
-                                    amount = int(self.request.POST[a_string])
-                                    product = Item.objects.get(
-                                        id=product_id)
-                                    # saving subscription and order items
-
-                                    orderItem = save_subItems_and_orderItems(
-                                        sub, amount, product)
-                                    theOrder.items.add(orderItem)
-                                    message = "Subscription saved and activated."
-                                    messages.info(self.request, message)
-                                    return redirect("member:my_subscriptions")
-
-                            else:
-                                # it isn't so we make a new one
-                                theOrder = Order()
-
-                                theOrder.user = sub.user
-
-                                # create a reference code and check that there isnt already one before setting the orders ref code to the code
-                                ref_code = create_ref_code()
-                                ref_test = True
-
-                                while ref_test:
-                                    try:
-                                        numberofOrders = Order.objects.filter(
-                                            ref_code=ref_code).count()
-                                        if numberofOrders >= 1:
-                                            refcode = create_ref_code()
-                                        else:
-                                            ref_test = False
-                                    except ObjectDoesNotExist:
-                                        ref_test = False
-
-                                theOrder.ref_code = ref_code
-                                theOrder.subscription_order = True
-                                theOrder.subscription_date = sub.next_order_date
-                                theOrder.updated_date = make_aware(
-                                    datetime.now())
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered_date = sub.start_date
-                                theOrder.sub_out_date = sub.start_date
-                                theOrder.ordered = True
-                                theOrder.received = False
-                                theOrder.being_delivered = False
-                                theOrder.shipping_address = sub.shipping_address
-                                theOrder.billing_address = sub.shipping_address
-                                theOrder.save()
-                                sub.next_order = theOrder.id
-                                sub.save()
-
-                                # remove old subitems
-                                subItems = SubscriptionItem.objects.filter(
-                                    subscription=sub.id)
-                                for subItem in subItems:
-                                    subItem.delete()
-
-                                i = 1
-                                for i in range(sub.number_of_items):
-                                    i += 1
-                                    p_string = 'product%s' % (i,)
-                                    a_string = 'amount%s' % (i,)
-                                    product_id = int(
-                                        self.request.POST[p_string])
-                                    amount = int(self.request.POST[a_string])
-                                    product = Item.objects.get(id=product_id)
-                                    # saving subscription and order items
-                                    orderItem = save_subItems_and_orderItems(
-                                        sub, amount, product)
-                                    theOrder.items.add(orderItem)
-                                    message = "Subscription saved and activated."
-                                    messages.info(self.request, message)
-                                    return redirect("member:my_subscriptions")
-                        except ObjectDoesNotExist:
-                            message = "We can't access your subscription right now. Please contact support for assistance."
-                            messages.info(self.request, message)
-                            return redirect("member:my_subscriptions")
-                    else:
+        elif 'saveSubscription' in self.request.POST.keys():
+            # saving subscription
+            # get the user
+            u_id = 0
+            if 'u_id' in self.request.POST.keys():
+                u_id = int(self.request.POST['u_id'])
+            theUser = User.objects.get(id=u_id)
+            sub_id = 0
+            if 'sub_id' in self.request.POST.keys():
+                sub_id = int(self.request.POST['sub_id'])
+            # where are we
+            path = self.request.get_full_path()
+            # validate
+            form = EditSubscriptionForm(self.request.POST)
+            if form.is_valid():
+                # check if new or old
+                if self.request.POST['new_or_old'] == 'old':
+                    # get the old subscription
+                    try:
+                        sub = Subscription.objects.get(id=sub_id)
                         message = ''
-
-                        # make a subscription object
-                        sub = Subscription()
                         # take in the data
-                        # user
-                        sub.user = theUser
 
                         # start date
                         # make sure the date is in the correct format
-                        sub.start_date = form.cleaned_data.get('start_date')
+                        sub.start_date = form.cleaned_data.get(
+                            'start_date')
                         # intervall
                         sub.intervall = form.cleaned_data.get('intervall')
                         # all user addresses
                         addresses = Address.objects.filter(
                             user=self.request.user)
                         # shipping_address
-                        shipping_address = int(
-                            self.request.POST['shipping_address'])
+                        shipping_address = form.cleaned_data.get(
+                            'shipping_address')
                         # billing_address
-                        billing_address = int(
-                            self.request.POST['billing_address'])
+                        billing_address = form.cleaned_data.get(
+                            'billing_address')
                         for address in addresses:
                             if address.id == shipping_address:
                                 sub.shipping_address = address
                             elif address.id == billing_address:
                                 sub.billing_address = address
-                        # number of products
+                        # number_of_products
                         sub.number_of_items = int(
                             self.request.POST['number_of_products'])
 
                         # calcuate the rest of the data
                         sub.updated_date = make_aware(datetime.now())
                         sub.active = True
-
-                        # get_next_order_date
                         sub.next_order_date = get_next_order_date(
                             sub.start_date, sub.intervall)
-
-                        # temp slug
-                        sub.slug = "temp2"
 
                         # save subscription
                         sub.save()
 
-                        # set unique slug
-                        sub.slug = "s" + str(sub.id) + \
-                            "u" + str(self.request.user.id)
+                        # get the connected order
+                        if sub.next_order > 0:
+                            theOrder = Order.objects.get(
+                                id=sub.next_order)
+                            total_order_price = 0
+                            theOrder.subscription_date = sub.next_order_date
+                            theOrder.updated_date = make_aware(
+                                datetime.now())
+                            theOrder.sub_out_date = sub.start_date
+                            theOrder.ordered = True
+                            theOrder.received = False
+                            theOrder.being_delivered = False
+                            theOrder.shipping_address = sub.shipping_address
+                            theOrder.billing_address = sub.shipping_address
+                            theOrder.save()
 
-                        # resave
-                        sub.save()
+                            # remove old order items and subitems
+                            orderItems = theOrder.items.all()
+                            for item in orderItems:
+                                item.delete()
+                            subItems = SubscriptionItem.objects.filter(
+                                subscription=sub.id)
+                            for subItem in subItems:
+                                subItem.delete()
 
-                        # save the order
-                        # first create the order
+                            # and then make new the order and sub items
 
-                        theOrder = Order()
+                            i = 1
+                            for i in range(sub.number_of_items):
+                                i += 1
+                                p_string = 'product%s' % (i,)
+                                a_string = 'amount%s' % (i,)
+                                product_id = int(
+                                    self.request.POST[p_string])
+                                amount = int(self.request.POST[a_string])
+                                product = Item.objects.get(
+                                    id=product_id)
+                                # saving subscription and order items
 
-                        theOrder.user = sub.user
-                        # create a reference code and check that there isnt already one before setting the orders ref code to the code
-                        ref_code = create_ref_code()
-                        ref_test = True
+                                orderItem = save_subItems_and_orderItems(
+                                    sub, amount, product)
+                                theOrder.items.add(orderItem)
+                                total_order_price = total_order_price + orderItem.total_price
+                            message = info_message_13
+                            theOrder.total_price = total_order_price
+                            theOrder.save()
+                            print(theOrder.total_price)
+                            messages.info(self.request, message)
+                            return redirect("member:my_subscriptions")
 
-                        while ref_test:
-                            try:
-                                numberofOrders = Order.objects.filter(
-                                    ref_code=ref_code).count()
-                                if numberofOrders >= 1:
-                                    refcode = create_ref_code()
-                                else:
+                        else:
+                            # it isn't so we make a new one
+                            theOrder = Order()
+
+                            theOrder.user = sub.user
+
+                            # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                            ref_code = create_ref_code()
+                            ref_test = True
+
+                            while ref_test:
+                                try:
+                                    numberofOrders = Order.objects.filter(
+                                        ref_code=ref_code).count()
+                                    if numberofOrders >= 1:
+                                        refcode = create_ref_code()
+                                    else:
+                                        ref_test = False
+                                except ObjectDoesNotExist:
                                     ref_test = False
-                            except ObjectDoesNotExist:
-                                ref_test = False
+                            total_order_price = 0
+                            theOrder.ref_code = ref_code
+                            theOrder.subscription_order = True
+                            theOrder.subscription_date = sub.next_order_date
+                            theOrder.updated_date = make_aware(
+                                datetime.now())
+                            theOrder.sub_out_date = sub.start_date
+                            theOrder.ordered_date = sub.start_date
+                            theOrder.sub_out_date = sub.start_date
+                            theOrder.ordered = True
+                            theOrder.received = False
+                            theOrder.being_delivered = False
+                            theOrder.shipping_address = sub.shipping_address
+                            theOrder.billing_address = sub.shipping_address
+                            theOrder.save()
+                            sub.next_order = theOrder.id
+                            sub.save()
 
-                        theOrder.ref_code = ref_code
-                        theOrder.subscription_order = True
-                        theOrder.updated_date = make_aware(datetime.now())
-                        theOrder.ordered_date = make_aware(datetime.now())
-                        theOrder.sub_out_date = sub.start_date
-                        theOrder.ordered_date = sub.start_date
-                        theOrder.ordered = True
-                        theOrder.received = False
-                        theOrder.being_delivered = False
-                        theOrder.shipping_address = sub.shipping_address
-                        theOrder.billing_address = sub.billing_address
-                        theOrder.save()
+                            # remove old subitems
+                            subItems = SubscriptionItem.objects.filter(
+                                subscription=sub.id)
+                            for subItem in subItems:
+                                subItem.delete()
 
-                        sub.next_order = theOrder.id
-                        sub.save()
-
-                        # create subscription items and corresponding orderItems
-
-                        i = 1
-                        for i in range(sub.number_of_items):
-                            i += 1
-                            p_string = 'product%s' % (i,)
-                            a_string = 'amount%s' % (i,)
-                            product_id = int(self.request.POST[p_string])
-                            amount = int(self.request.POST[a_string])
-                            product = Item.objects.get(id=product_id)
-                            # saving subscription and order items
-                            orderItem = save_subItems_and_orderItems(
-                                sub, amount, product)
-                            theOrder.items.add(orderItem)
-                            message = "Subscription saved and activated."
+                            i = 1
+                            for i in range(sub.number_of_items):
+                                i += 1
+                                p_string = 'product%s' % (i,)
+                                a_string = 'amount%s' % (i,)
+                                product_id = int(
+                                    self.request.POST[p_string])
+                                amount = int(self.request.POST[a_string])
+                                product = Item.objects.get(id=product_id)
+                                # saving subscription and order items
+                                orderItem = save_subItems_and_orderItems(
+                                    sub, amount, product)
+                                theOrder.items.add(orderItem)
+                                total_order_price = total_order_price + orderItem.total_price
+                            message = info_message_13
+                            theOrder.total_price = total_order_price
+                            theOrder.save()
+                            print(theOrder.total_price)
+                            messages.info(self.request, message)
+                            return redirect("member:my_subscriptions")
+                    except ObjectDoesNotExist:
+                        message = error_message_26
                         messages.info(self.request, message)
                         return redirect("member:my_subscriptions")
                 else:
-                    # figure out how to rerender the form here
-                    subscription = Subscription.objects.get(id=sub_id)
-                    active = subscription.active
-                    form.populate_from_submit(self.request.POST)
-                    sub_date = make_aware(datetime.strptime(
-                        self.request.POST['start_date'], '%Y-%m-%d'))
-                    number_of_products = self.request.POST['number_of_products']
-                    old = self.request.POST['new_or_old']
+                    message = ''
 
-                    context = {
-                        'form': form,
-                        'sub_date': sub_date,
-                        'number_of_products': number_of_products,
-                        'old': old,
-                        'subscription': subscription,
-                        'path': path,
-                        'person': theUser,
-                        'active': active,
-                    }
+                    # make a subscription object
+                    sub = Subscription()
+                    # take in the data
+                    # user
+                    sub.user = theUser
 
-                    return render(self.request, "member/my_subscription.html", context)
+                    # start date
+                    # make sure the date is in the correct format
+                    sub.start_date = form.cleaned_data.get('start_date')
+                    # intervall
+                    sub.intervall = form.cleaned_data.get('intervall')
+                    # all user addresses
+                    addresses = Address.objects.filter(
+                        user=self.request.user)
+                    # shipping_address
+                    shipping_address = int(
+                        self.request.POST['shipping_address'])
+                    # billing_address
+                    billing_address = int(
+                        self.request.POST['billing_address'])
+                    for address in addresses:
+                        if address.id == shipping_address:
+                            sub.shipping_address = address
+                        elif address.id == billing_address:
+                            sub.billing_address = address
+                    # number of products
+                    sub.number_of_items = int(
+                        self.request.POST['number_of_products'])
 
-            elif 'deactivateSubscription' in self.request.POST.keys():
-                user_id = 0
-                if 'u_id' in self.request.POST.keys():
-                    user_id = int(self.request.POST['u_id'])
-                theUser = User.objects.get(id=user_id)
+                    # calcuate the rest of the data
+                    sub.updated_date = make_aware(datetime.now())
+                    sub.active = True
 
-                if 'sub_id' in self.request.POST.keys():
-                    sub_id = int(self.request.POST['sub_id'])
-                    sub = Subscription.objects.get(
-                        user=theUser, id=sub_id)
-                    # deactivate subscription
-                    if sub.active is False:
-                        messages.info(
-                            self.request, "Subscription already deactivated")
-                        return redirect("member:my_subscriptions")
-                    else:
-                        sub.active = False
+                    # get_next_order_date
+                    sub.next_order_date = get_next_order_date(
+                        sub.start_date, sub.intervall)
 
+                    # temp slug
+                    sub.slug = "temp2"
+
+                    # save subscription
+                    sub.save()
+
+                    # set unique slug
+                    sub.slug = "s" + str(sub.id) + \
+                        "u" + str(self.request.user.id)
+
+                    # resave
+                    sub.save()
+
+                    # save the order
+                    # first create the order
+
+                    theOrder = Order()
+
+                    theOrder.user = sub.user
+                    # create a reference code and check that there isnt already one before setting the orders ref code to the code
+                    ref_code = create_ref_code()
+                    ref_test = True
+
+                    while ref_test:
                         try:
-                            # delete the order connected to the sub
-                            theOrder = Order.objects.get(id=sub.next_order)
-                            # first get the list of items
-                            theOrderItems = theOrder.items.all()
-                            # then go through the items one by one
-                            for item in theOrderItems:
-                                # delete the items
-                                item.delete()
-                            # delete order
-                            theOrder.delete()
-                            message = "Subscription deactivated."
+                            numberofOrders = Order.objects.filter(
+                                ref_code=ref_code).count()
+                            if numberofOrders >= 1:
+                                refcode = create_ref_code()
+                            else:
+                                ref_test = False
                         except ObjectDoesNotExist:
-                            message = "Subscription deactivated no order detected."
-                        sub.next_order = 0
-                        sub.save()
+                            ref_test = False
 
-                        messages.info(
-                            self.request, message)
-                        return redirect("member:my_subscriptions")
-                else:
-                    messages.info(
-                        self.request, "Something is wrong with the subscription deactivation. Please contact support for assistance.")
+                    total_order_price = 0
+                    theOrder.ref_code = ref_code
+                    theOrder.subscription_order = True
+                    theOrder.updated_date = make_aware(datetime.now())
+                    theOrder.ordered_date = make_aware(datetime.now())
+                    theOrder.sub_out_date = sub.start_date
+                    theOrder.ordered_date = sub.start_date
+                    theOrder.ordered = True
+                    theOrder.received = False
+                    theOrder.being_delivered = False
+                    theOrder.shipping_address = sub.shipping_address
+                    theOrder.billing_address = sub.billing_address
+                    theOrder.save()
+
+                    sub.next_order = theOrder.id
+                    sub.save()
+
+                    # create subscription items and corresponding orderItems
+
+                    i = 1
+                    for i in range(sub.number_of_items):
+                        i += 1
+                        p_string = 'product%s' % (i,)
+                        a_string = 'amount%s' % (i,)
+                        product_id = int(self.request.POST[p_string])
+                        amount = int(self.request.POST[a_string])
+                        product = Item.objects.get(id=product_id)
+                        # saving subscription and order items
+                        orderItem = save_subItems_and_orderItems(
+                            sub, amount, product)
+                        total_order_price = total_order_price + orderItem.total_price
+                        theOrder.items.add(orderItem)
+                        message = info_message_13
+                    theOrder.total_price = total_order_price
+                    theOrder.save()
+                    messages.info(self.request, message)
                     return redirect("member:my_subscriptions")
             else:
-                messages.info(
-                    self.request, "Something is wrong with the subscription deactivation. Please contact support for assistance.")
-                return redirect("member:my_subscriptions")
-        except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing your subscription. Contact the support for assistance.")
-            return redirect("member:my_subscriptions")
+                # figure out how to rerender the form here
+                subscription = Subscription.objects.get(id=sub_id)
+                active = subscription.active
+                form.populate_from_submit(self.request.POST)
+                sub_date = make_aware(datetime.strptime(
+                    self.request.POST['start_date'], '%Y-%m-%d'))
+                number_of_products = self.request.POST['number_of_products']
+                old = self.request.POST['new_or_old']
 
+                context = {
+                    'form': form,
+                    'sub_date': sub_date,
+                    'number_of_products': number_of_products,
+                    'old': old,
+                    'subscription': subscription,
+                    'path': path,
+                    'person': theUser,
+                    'active': active,
+                }
 
-class DeactivateSubscriptionView(View):
-    def post(self, *args, **kwargs):
-        if 'deactivateSubscription' in self.request.POST.keys():
-            subscription = Subscription.objects.filter(
-                user=self.request.user, id=int(self.request.POST['id']))
+                message = error_message_27
+                messages.warning(self.request, message)
 
-            for sub in subscription:
+                return render(self.request, "member/my_subscription.html", context)
+
+        elif 'deactivateSubscription' in self.request.POST.keys():
+            user_id = 0
+            if 'u_id' in self.request.POST.keys():
+                user_id = int(self.request.POST['u_id'])
+            theUser = User.objects.get(id=user_id)
+
+            if 'sub_id' in self.request.POST.keys():
+                sub_id = int(self.request.POST['sub_id'])
+                sub = Subscription.objects.get(
+                    user=theUser, id=sub_id)
                 # deactivate subscription
                 if sub.active is False:
                     messages.info(
-                        self.request, "Subscription already deactivated")
+                        self.request, info_message_14)
                     return redirect("member:my_subscriptions")
                 else:
                     sub.active = False
 
-                    # delete the order connected to the sub
-                    theOrder = Order.objects.filter(id=sub.next_order)
-                    # lets handle the query
-                    message = "Subscription deactivated no order detected."
-                    for order in theOrder:
+                    try:
+                        # delete the order connected to the sub
+                        theOrder = Order.objects.get(id=sub.next_order)
                         # first get the list of items
-                        theOrderItems = order.items.all()
+                        theOrderItems = theOrder.items.all()
                         # then go through the items one by one
-                        message = "Subscription deactivated no order items detected."
                         for item in theOrderItems:
                             # delete the items
                             item.delete()
-                            # delete order
-                            order.delete()
-                            message = "Subscription deactivated."
+                        # delete order
+                        theOrder.delete()
+                        message = info_message_15
+                    except ObjectDoesNotExist:
+                        message = info_message_16
                     sub.next_order = 0
                     sub.save()
 
                     messages.info(
                         self.request, message)
                     return redirect("member:my_subscriptions")
+            else:
+                messages.warning(
+                    self.request, error_message_28)
+                return redirect("member:my_subscriptions")
         else:
-            messages.info(self.request, "Fix buttons")
+            messages.warning(
+                self.request, error_message_29)
             return redirect("member:my_subscriptions")
-
-
-class DeleteOrder(View):
-    def post(self, *args, **kwargs):
-        postID = self.request.POST['id']
-        orderId = int(self.request.POST['id'])
-        orderQuery = Order.objects.filter(id=orderId)
-        for order in orderQuery:
-            oIs = order.items.all()
-            for item in oIs:
-                item.delete()
-            order.delete()
-            message = "Order deleted"
-
-        messages.info(self.request, message)
-        return redirect("member:my_orders")
 
 
 class CookieSettingsView(View):
@@ -1746,7 +1538,7 @@ class CookieSettingsView(View):
 
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
-            message = "Något gick fel vid laddningen av sidan. Kontakta support för hjälp."
+            message = error_message_30
             messages.warning(self.request, message)
             return redirect("core:home")
 
@@ -1773,7 +1565,7 @@ class CookieSettingsView(View):
                         test = ""
 
                     messages.info(
-                        self.request, "Dina inställningar har sparats.")
+                        self.request, info_message_17)
                     return redirect("core:home")
             else:
                 try:
@@ -1792,7 +1584,7 @@ class CookieSettingsView(View):
                 return render(self.request, "cookie_settings.html", context)
 
         except ObjectDoesNotExist:
-            message = "Något gick fel vid sparandet av dina inställningar. Kontakta support för hjälp."
+            message = error_message_31
             messages.warning(self.request, message)
             return redirect("core:home")
 
@@ -1809,8 +1601,8 @@ class GenericSupportFormView(View):
 
             return render(self.request, "member/support.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_32)
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
@@ -1863,7 +1655,7 @@ class GenericSupportFormView(View):
 
                 except BadHeaderError:
                     messages.warning(
-                        'Ämnet innehåller icke tillåtna karaktärer.')
+                        error_message_33)
 
                     context = {
                         'form': form,
@@ -1888,7 +1680,7 @@ class GenericSupportFormView(View):
                 support.save()
 
                 messages.info(
-                    self.request, 'Ärendet skickat. En kopia har skickats till din angivna emailadress.')
+                    self.request, info_message_18)
                 return redirect("core:home")
 
             # form isn't valid rerender
@@ -1899,6 +1691,18 @@ class GenericSupportFormView(View):
 
             return render(self.request, "member/support.html", context)
         except ObjectDoesNotExist:
-            messages.info(
-                self.request, "Something went wrong when accessing the cookie settings page. Contact the support for assistance.")
+            messages.warning(
+                self.request, error_message_34)
             return redirect("core:home")
+
+
+class CancelOrder(View):
+    test = "test"
+
+
+class ReturnOrder(View):
+    test = "test"
+
+
+class ReturnItem(View):
+    test = "test"

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--orders-->
+<!--active-->
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <div>
+            <div>
+                <button type="submit" class='btn btn-primary' name="back" value="{{order.id}}">
+                    Tillbaka
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'">
+        {% csrf_token %}
+        <div class="row border border-warning" >
+            <h1>Order {{order.id}}</h1>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead>
+                    <tr>
+                        <th>
+                            Order Ref
+                        </th>
+                        <th>
+                            Beställd
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            Ändra
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            {{ order.ref_code }}
+                        </td>
+                        <td>
+                            {{ order.ordered_date }}
+                        </td>
+                        <td>
+                            {% if order.being_delivered %}
+                                Skickad
+                            {% else %}
+                                Under behandling
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary'>
+                                Markera som skickad
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <!--recently completed-->
+        <div class="row border border-dark">
+            <h1>Order delar</h1>
+            <table class="table-striped table-hover w-100  mb-2">
+                <thead>
+                    <tr>
+                        <th>
+                            Vara
+                        </th>
+                        <th>
+                            Mängd
+                        </th>
+                        <th>
+                            Packad
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% for item in orderItems %}
+                    <tr>
+                        <td>
+                            {{ item.title }}
+                        </td>
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+                        <td>
+                            <input type="checkbox" name="{{item.id}}" value="{{item.id}}">
+                        </td>
+                    </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
+
+
+{% endblock content %}
