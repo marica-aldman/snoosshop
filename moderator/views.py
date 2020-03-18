@@ -248,7 +248,7 @@ class ProfileView(View):
 
             return render(self.request, "moderator/my_profile.html", context)
         except ObjectDoesNotExist:
-            messages.info(
+            messages.warning(
                 self.request, error_message_83)
             return redirect("moderator:my_overview")
 
@@ -266,7 +266,7 @@ class InfoView(View):
 
             return render(self.request, "moderator/my_info.html", context)
         except ObjectDoesNotExist:
-            messages.info(
+            messages.warning(
                 self.request, error_message_84)
             return redirect("moderator:my_profile")
 
@@ -291,8 +291,11 @@ class InfoView(View):
                     info.telephone = form.cleaned_data.get('telephone')
 
                     info.save()
+                    # get the users langaug prefference from cookies later
+                    language = 'Swe'
+                    info_message = get_message('info', 38, language)
                     messages.info(
-                        self.request, info_message_38)
+                        self.request, info_message)
                     return redirect("moderator:my_profile")
                 except ObjectDoesNotExist:
                     info = UserInfo()
@@ -303,8 +306,9 @@ class InfoView(View):
                     info.telephone = form.cleaned_data.get('telephone')
 
                     info.save()
-                    messages.info(
-                        self.request, info_message_39)
+                    # get the users langaug prefference from cookies later
+                    language = 'Swe'
+                    info_message = get_message('info', 39, language)
                     return redirect("moderator:my_profile")
             else:
 
@@ -312,13 +316,16 @@ class InfoView(View):
                     'form': form,
                 }
 
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info_message = get_message('info', 40, language)
                 messages.info(
-                    self.request, info_message_40)
+                    self.request, info_message)
 
                 return render(self.request, "moderator/my_info.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
+            messages.warning(
                 self.request, error_message_85)
             return redirect("moderator:my_profile")
 
@@ -384,7 +391,7 @@ class ProductsView(View):
             return render(self.request, "moderator/mod_products.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
+            messages.warning(
                 self.request, error_message_86)
             return redirect("moderator:overview")
 
@@ -443,8 +450,11 @@ class ProductsView(View):
                             return render(self.request, "moderator/mod_products.html", context)
 
                         except ObjectDoesNotExist:
+                            # get the users langaug prefference from cookies later
+                            language = 'Swe'
+                            info_message = get_message('info', 41, language)
                             messages.info(
-                                self.request, info_message_41)
+                                self.request, info_message)
                             return redirect("moderator:products")
                     else:
                         # if the product id is 0 we are probably trying to reset the form
@@ -490,8 +500,12 @@ class ProductsView(View):
 
                         except ObjectDoesNotExist:
                             if product_id is not None:
+                                # get the users langaug prefference from cookies later
+                                language = 'Swe'
+                                info_message = get_message(
+                                    'info', 42, language)
                                 messages.info(
-                                    self.request, info_message_42)
+                                    self.request, info_message)
                             return redirect("moderator:products")
                     else:
                         # rerender page with error message
@@ -686,7 +700,7 @@ class ProductsView(View):
                         return render(self.request, "moderator/mod_products.html", context)
 
                     except ObjectDoesNotExist:
-                        messages.info(
+                        messages.warning(
                             self.request, error_message_87)
                         return redirect("moderator:products")
 
@@ -762,8 +776,11 @@ class ProductsView(View):
                     product = Item.objects.get(id=product_id)
                     product.delete()
 
+                    # get the users langaug prefference from cookies later
+                    language = 'Swe'
+                    info_message = get_message('info', 48, language)
                     messages.info(
-                        self.request, info_message_48)
+                        self.request, info_message)
                     return redirect("moderator:products")
                 else:
                     return redirect("moderator:products")
@@ -778,7 +795,7 @@ class ProductsView(View):
 
 class SpecificProductsView(View):
     def get(self, *args, **kwargs):
-        messages.info(
+        messages.warning(
             self.request, error_message_90)
         return redirect("moderator:products")
 
@@ -841,6 +858,9 @@ class SpecificProductsView(View):
 
             if form.is_valid():
                 product_id = self.request.POST['old']
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info_message = get_message('info', 43, language)
                 if product_id == "new":
                     product = Item()
                     product.title = form.cleaned_data.get('title')
@@ -864,7 +884,7 @@ class SpecificProductsView(View):
                     product.save()
 
                     messages.info(
-                        self.request, info_message_43)
+                        self.request, info_message)
                     return redirect("moderator:products")
                 else:
                     product_id = int(product_id)
@@ -886,7 +906,7 @@ class SpecificProductsView(View):
                     product.save()
 
                     messages.info(
-                        self.request, info_message_43)
+                        self.request, info_message)
                     return redirect("moderator:products")
 
             else:
@@ -974,7 +994,7 @@ class CategoriesView(View):
             return render(self.request, "moderator/mod_categories.html", context)
 
         except ObjectDoesNotExist:
-            messages.info(
+            messages.warning(
                 self.request, error_message_96)
             return redirect("moderator:overview")
 
@@ -1034,8 +1054,11 @@ class CategoriesView(View):
                             return render(self.request, "moderator/mod_categories.html", context)
 
                         except ObjectDoesNotExist:
+                            # get the users langaug prefference from cookies later
+                            language = 'Swe'
+                            info_message = get_message('info', 44, language)
                             messages.info(
-                                self.request, info_message_44)
+                                self.request, info_message)
                             return redirect("moderator:categories")
                     else:
                         # if the product id is 0 we are probably trying to reset the form
@@ -1080,8 +1103,17 @@ class CategoriesView(View):
                             return render(self.request, "moderator/mod_categories.html", context)
 
                         except ObjectDoesNotExist:
-                            # most likely trying to reset the form
-                            return redirect("moderator:categories")
+                            # couldn't find the category check if the id is empty
+                            if category is None:
+                                # most likely trying to reset the form
+                                return redirect("moderator:categories")
+                            else:
+                                # get the users langaug prefference from cookies later
+                                language = 'Swe'
+                                info_message = get_message(
+                                    'info', 45, language)
+                                messages.info(self.request, info_message)
+                                return redirect("moderator:categories")
                     else:
                         # rerender page with error message
                         # get the first 20 categories and a count of all categories
@@ -1351,9 +1383,11 @@ class CategoriesView(View):
                     category_id = int(self.request.POST['id'])
                     category = Category.objects.get(id=category_id)
                     category.delete()
-
+                    # get the users langaug prefference from cookies later
+                    language = 'Swe'
+                    info_message = get_message('info', 47, language)
                     messages.info(
-                        self.request, info_message_47)
+                        self.request, info_message)
                     return redirect("moderator:categories")
 
                     # might want to change this to rerender the page where we left off
@@ -1409,6 +1443,9 @@ class SpecificCategoryView(View):
 
             if form.is_valid():
                 category_id = self.request.POST['old']
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info_message = get_message('info', 46, language)
                 if category_id == "new":
                     category = Category()
 
@@ -1421,7 +1458,7 @@ class SpecificCategoryView(View):
                     category.slug = "c" + str(category.id)
                     category.save()
                     messages.info(
-                        self.request, info_message_46)
+                        self.request, info_message)
                     return redirect("moderator:categories")
 
                 else:
@@ -1433,7 +1470,7 @@ class SpecificCategoryView(View):
                         'discount_price')
                     category.save()
                     messages.info(
-                        self.request, info_message_46)
+                        self.request, info_message)
                     return redirect("moderator:categories")
 
             else:
@@ -1448,7 +1485,7 @@ class SpecificCategoryView(View):
                 return render(self.request, "moderator/mod_single_category.html", context)
         else:
             # post with not correct varaibles
-            messages.info(
+            messages.warning(
                 self.request, error_message_102)
             return redirect("moderator:categories")
 
@@ -1493,7 +1530,9 @@ class OrderHandlingView(View):
             info1 = ""
         except ObjectDoesNotExist:
             reg_orders = {}
-            info1 = info_message_49
+            # get the users langaug prefference from cookies later
+            language = 'Swe'
+            info1 = get_message('info', 49, language)
 
         # create a list for a ul to work through
 
@@ -1515,7 +1554,9 @@ class OrderHandlingView(View):
             info2 = ""
         except ObjectDoesNotExist:
             sub_orders = {}
-            info2 = info_message_50
+            # get the users langaug prefference from cookies later
+            language = 'Swe'
+            info2 = get_message('info', 50, language)
 
         # create a list for a ul to work through
 
@@ -1761,14 +1802,18 @@ class OrderHandlingView(View):
                     ordered=True, being_delivered=False, subscription_order=False).order_by('id')[10:offset]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                info1 = info_message_49
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info1 = get_message('info', 49, language)
         else:
             try:
                 reg_orders = Order.objects.filter(
                     ordered=True, being_delivered=False, subscription_order=False).order_by('id')[:10]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                info1 = info_message_49
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info1 = get_message('info', 49, language)
 
         # create a list for a ul to work through
 
@@ -1790,7 +1835,9 @@ class OrderHandlingView(View):
                     being_delivered=False, subscription_order=True).order_by('sub_out_date')[10:offset]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                info2 = info_message_50
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info2 = get_message('info', 50, language)
         else:
             try:
                 # get todays date
@@ -1798,7 +1845,9 @@ class OrderHandlingView(View):
                     being_delivered=False, subscription_order=True).order_by('sub_out_date')[:10]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                info2 = info_message_50
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info2 = get_message('info', 50, language)
 
         # create a list for a ul to work through
 
@@ -1882,18 +1931,15 @@ class SpecificOrderHandlingView(View):
 
                 for item in orderItems:
                     if str(item.id) in self.request.POST.keys():
-                        print('here')
                         item.sent = True
                         some_sent = True
                         item.save()
                     else:
-                        print('here2')
                         not_filled = True
 
                 if not_filled:
                     if some_sent:
                         # we are sending part of the order not the entire thing
-                        order.comment = "Part of the order has been sent."
                         order.being_delivered = False
                         order.comment = 'Partial'
                     else:
@@ -1902,7 +1948,6 @@ class SpecificOrderHandlingView(View):
                         order.being_delivered = False
 
                 if order.subscription_order and order.comment != 'Partial' and order.comment != 'Nothing':
-                    print('oh no')
                     sub = Subscription.objects.get(next_order=order.id)
                     sub.next_order_date = get_next_order_date(
                         make_aware(datetime.now()), sub.intervall)
@@ -1967,8 +2012,11 @@ class SpecificOrderHandlingView(View):
                 order.save()
 
                 if order.being_delivered:
+                    # get the users langaug prefference from cookies later
+                    language = 'Swe'
+                    info_message = get_message('info', 51, language)
                     messages.info(
-                        self.request, info_message_51)
+                        self.request, info_message)
                 else:
                     messages.warning(
                         self.request, error_message_108)
@@ -2046,7 +2094,10 @@ class FreightView(View):
             freight_id = int(self.request.POST['delete'])
             freight = Freight.objects.get(id=freight_id)
             freight.delete()
-            messages.info(self.request, info_message_76)
+            # get the users langaug prefference from cookies later
+            language = 'Swe'
+            info_message = get_message('info', 76, language)
+            messages.info(self.request, info_message)
             return redirect("moderator:freights")
         elif 'previousPage' in self.request.POST.keys():
             if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
@@ -2371,7 +2422,10 @@ class SpecificFreightView(View):
                 freight.title = form.cleaned_data.get('title')
                 freight.amount = form.cleaned_data.get('amount')
                 freight.save()
-                messages.info(self.request, info_message_74)
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info_message = get_message('info', 74, language)
+                messages.info(self.request, info_message)
                 return redirect("moderator:freights")
             else:
                 context = {
@@ -2404,7 +2458,10 @@ class SpecificFreightView(View):
 
                 freight.slug = toSlug
                 freight.save()
-                messages.info(self.request, info_message_75)
+                # get the users langaug prefference from cookies later
+                language = 'Swe'
+                info_message = get_message('info', 75, language)
+                messages.info(self.request, info_message)
                 return redirect("moderator:freights")
             else:
                 context = {

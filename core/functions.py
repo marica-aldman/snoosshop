@@ -218,18 +218,18 @@ def get_order_total(order):
     # items total
     orderItems = order.items.all()
     i = 0
-    for item in OrderItems:
-        if discount_price > 0:
+    for item in orderItems:
+        if item.discount_price > 0:
             total = total + item.discount_price
         else:
             total = total + item.price
-        i = i + item.amount
+        i = i + item.quantity
     # coupons
     coupon = order.coupon
     if coupon is not None:
-        if coupon_type == "Percent":
+        if coupon.coupon_type == "Percent":
             total = total * coupon.amount
-        elif coupon_type == "Amount":
+        elif coupon.coupon_type == "Amount":
             total = total - coupon.amount
         # if we do any other types this will need adding to
 
@@ -241,3 +241,28 @@ def get_order_total(order):
             total = total + freight.amount
     # return total
     return total
+
+
+def calculate_freight(order, freight):
+    # calculate freight here for any order for now just return freight static amount as we dont have the relavant numbers
+    return freight.amount
+
+
+def get_message(theType, theCode, language):
+    if theType == "info":
+        if language == "Swe":
+            messageObject = InformationMessages.objects.get(code=theCode)
+            message = messageObject.Swedish
+            return message
+    elif theType == "warning":
+        if language == "Swe":
+            messageObject = ErrorMessages.objects.get(code=theCode)
+            message = messageObject.Swedish
+            return message
+    elif theType == "onSubmit":
+        if language == "Swe":
+            messageObject = WarningMessages.objects.get(code=theCode)
+            message = messageObject.Swedish
+            return message
+    else:
+        return "There was an error retrieving this message. Contact IT support imidiately."

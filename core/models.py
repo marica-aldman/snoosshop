@@ -37,12 +37,6 @@ INTERVALL_CHOICES = (
     ('200', 'En gång om året'),
 )
 
-PAYMENT_CHOICES = [
-    {'key': 'S', 'name': 'Stripe'},
-    {'key': 'P', 'name': 'Paypal'},
-    {'key': 'I', 'name': 'Invoice'},
-]
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -267,10 +261,9 @@ class Order(models.Model):
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
         'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
-    payment_type = models.CharField(
-        max_length=1, choices=PAYMENT_CHOICES, default='S')
     payment = models.ForeignKey(
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
+    paid = models.BooleanField(default=False)
     coupon = models.ForeignKey(
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
@@ -492,6 +485,59 @@ class Cookies(models.Model):
         return reverse("moderator:user_settings", kwargs={
             'slug': self.id
         })
+
+
+class InformationMessages(models.Model):
+    code = models.CharField(max_length=1024, null=True)
+    info_type = models.CharField(max_length=20, null=True)
+    description = models.TextField(null=True)
+    swedish = models.TextField(null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.code
+
+
+class ErrorMessages(models.Model):
+    code = models.CharField(max_length=1024, null=True)
+    info_type = models.CharField(max_length=20, null=True)
+    description = models.TextField(null=True)
+    swedish = models.TextField(null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.code
+
+
+class WarningMessages(models.Model):
+    code = models.CharField(max_length=1024, null=True)
+    info_type = models.CharField(max_length=20, null=True)
+    description = models.TextField(null=True)
+    swedish = models.TextField(null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.code
+
+
+class Text(models.Model):
+    code = models.CharField(max_length=1024, null=True)
+    info_type = models.CharField(max_length=20, null=True)
+    description = models.TextField(null=True)
+    swedish = models.TextField(null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.code
+
+
+class PaymentType(models.Model):
+    code = models.CharField(max_length=3, blank=True, null=True)
+    swedish = models.CharField(max_length=20, blank=True, null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.code
 
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
