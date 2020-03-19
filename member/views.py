@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail, BadHeaderError
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
@@ -12,7 +13,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 from core.models import *
-from .forms import UserInformationForm, CompanyInfoForm, InitialSupportForm, addressForm, NewSubscriptionForm, NewAddressForm, EditSubscriptionForm, GenericSupportForm, CookieSettingsForm, SetupAddressForm
+from .forms import *
 from django.utils.dateparse import parse_datetime
 from core.functions import *
 from core.info_error_msg import *
@@ -122,9 +123,7 @@ class Setup(View):
 
                         # save user too
                         theUser.save()
-                        # get the users langaug prefference from cookies later
-                        language = 'Swe'
-                        info_message = get_message('info', 1, language)
+                        info_message = get_message('info', 1)
                         messages.info(
                             self.request, info_message)
                         return redirect("member:my_overview")
@@ -135,16 +134,15 @@ class Setup(View):
                             'companyForm': form_company,
                             'addressForm': form_address,
                         }
+                        message = get_message('error', 1)
                         messages.warning(
-                            self.request, error_message_1)
+                            self.request, message)
                         return render(self.request, "member/setup.html", context)
                 else:
                     userInfo.company = False
                     userInfo.slug = slugify(theUser.username)
                     userInfo.save()
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 1, language)
+                    info_message = get_message('info', 1)
                     messages.info(
                         self.request, info_message)
                     return redirect("member:my_overview")
@@ -155,13 +153,14 @@ class Setup(View):
                     'companyForm': form_company,
                     'addressForm': form_address,
                 }
-
+                message = get_message('error', 1)
                 messages.warning(
-                    self.request, error_message_1)
+                    self.request, message)
                 return render(self.request, "member/setup.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 2)
             messages.warning(
-                self.request, error_message_2)
+                self.request, message)
             return redirect("core:home")
 
 
@@ -206,10 +205,7 @@ class CompanyView(View):
             addressID = self.request.POST['address']
             try:
                 addressTest = Address.objects.get(id=addressID)
-
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 2, language)
+                info_message = get_message('info', 2)
                 if addressTest.id == compInfo.addressID.id:
                     # no change in adress just save and redirect
                     compInfo.save()
@@ -224,9 +220,9 @@ class CompanyView(View):
                     return redirect("member:my_profile")
             except ObjectDoesNotExist:
                 # something is wrong here rerender the form, with message
-
+                message = get_message('error', 3)
                 messages.warning(
-                    self.request, error_message_3)
+                    self.request, message)
 
                 addresses = Address.objects.filter(user=theUser)
 
@@ -239,9 +235,9 @@ class CompanyView(View):
 
         else:
             # form not valid rerender
-
+            message = get_message('error', 4)
             messages.warning(
-                self.request, error_message_4)
+                self.request, message)
 
             addresses = Address.objects.filter(user=theUser)
 
@@ -344,8 +340,9 @@ class Overview(View):
             return render(self.request, "member/my_overview.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 5)
             messages.warning(
-                self.request, error_message_5)
+                self.request, message)
             return redirect("core:home")
 
 
@@ -381,15 +378,17 @@ class Orders(View):
             return render(self.request, "member/my_orders.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 6)
             messages.warning(
-                self.request, error_message_6)
+                self.request, message)
             return redirect("member:my_overview")
 
 
 class OrderView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        message = get_message('error', 7)
         messages.warning(
-            self.request, error_message_7)
+            self.request, message)
         return redirect("member:my_orders")
 
     def post(self, *args, **kwargs):
@@ -462,8 +461,9 @@ class OrderView(LoginRequiredMixin, View):
                 return render(self.request, "member/my_order.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 7)
             messages.warning(
-                self.request, error_message_7)
+                self.request, message)
             return redirect("member:my_orders")
 
 
@@ -491,8 +491,9 @@ class SupportView(View):
 
             return render(self.request, "member/my_support.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 8)
             messages.warning(
-                self.request, error_message_8)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -510,8 +511,9 @@ class NewErrandView(View):
             return render(self.request, "member/new_errand.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 9)
             messages.warning(
-                self.request, error_message_9)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -542,8 +544,9 @@ class ErrandView(View):
             return render(self.request, "member/my_errand.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 10)
             messages.warning(
-                self.request, error_message_10)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -573,6 +576,7 @@ class Profile(View):
             # place info in context and render page
 
             context = {
+                'user': self.request.user,
                 'info': info,
                 'company': company,
                 'addresses': addresses,
@@ -580,8 +584,9 @@ class Profile(View):
 
             return render(self.request, "member/my_profile.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 11)
             messages.warning(
-                self.request, error_message_11)
+                self.request, message)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -597,8 +602,9 @@ class Profile(View):
                         addressID=theAddress).count()
                     if numberOfCompanies >= 1:
                         # a company with that address exists
+                        message = get_message('error', 12)
                         messages.warning(
-                            self.request, error_message_12)
+                            self.request, message)
                         return redirect("member:my_profile")
                     else:
                         # no companies with that address
@@ -614,8 +620,9 @@ class Profile(View):
                         billing_address=theAddress).count()
                     if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
                         # a subscription is tied to this address
+                        message = get_message('error', 13)
                         messages.warning(
-                            self.request, error_message_13)
+                            self.request, message)
                         return redirect("member:my_profile")
                     else:
                         # no subsriptions with that address set conenction to true
@@ -624,13 +631,79 @@ class Profile(View):
                 except ObjectDoesNotExist:
                     # no subscriptions with that address
                     addressUnconnected = True
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 3, language)
+                info_message = get_message('info', 3)
                 theAddress.delete()
                 messages.info(
                     self.request, info_message)
                 return redirect("member:my_profile")
+
+
+class changePassword(View):
+    def get(self, *args, **kwargs):
+        message = get_message('error', 131)
+        messages.warning(
+            self.request, message)
+        return redirect("member:my_profile")
+
+    def post(self, *args, **kwargs):
+        if 'change' in self.request.POST.keys():
+            userID = int(self.request.POST['change'])
+            theUser = User.objects.get(id=userID)
+            # get form for this
+
+            form = changePasswordForm()
+
+            context = {
+                'form': form,
+                'theUser': theUser,
+            }
+
+            return render(self.request, "member/change_password.html", context)
+        if 'save' in self.request.POST.keys():
+            userID = int(self.request.POST['save'])
+            theUser = User.objects.get(id=userID)
+            form = changePasswordForm(self.request.POST)
+            if form.is_valid():
+                old_password = form.cleaned_data.get('old_password')
+                new_password = form.cleaned_data.get('new_password')
+                user = authenticate(
+                    username=theUser.username, password=old_password)
+                if user is not None:
+                    theUser.set_password(new_password)
+                    theUser.save()
+                    login(self.request, theUser)
+                    print(this)
+                    message = get_message('info', 81)
+                    messages.info(
+                        self.request, message)
+                    return redirect("member:my_profile")
+                else:
+
+                    context = {
+                        'form': form,
+                        'theUser': theUser,
+                    }
+
+                    message = get_message('info', 82)
+                    messages.info(
+                        self.request, message)
+                    return redirect("member:my_profile")
+
+                    return render(self.request, "member/change_password.html", context)
+            else:
+
+                context = {
+                    'form': form,
+                    'theUser': theUser,
+                }
+
+                return render(self.request, "member/change_password.html", context)
+        else:
+            # catch fail
+            message = get_message('error', 132)
+            messages.warning(
+                self.request, message)
+            return redirect("member:my_profile")
 
 
 class InfoView(View):
@@ -653,8 +726,9 @@ class InfoView(View):
 
             return render(self.request, "member/my_info.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 14)
             messages.warning(
-                self.request, error_message_14)
+                self.request, message)
             return redirect("member:my_profile")
 
     def post(self, *args, **kwargs):
@@ -676,9 +750,7 @@ class InfoView(View):
             return render(self.request, "member/my_info.html", context)
 
         if form.is_valid():
-            # get the users langaug prefference from cookies later
-            language = 'Swe'
-            info_message = get_message('info', 4, language)
+            info_message = get_message('info', 4)
             try:
                 info = UserInfo.objects.get(user=self.request.user)
                 info.first_name = form.cleaned_data.get('first_name')
@@ -714,8 +786,9 @@ class InfoView(View):
                 'info': info,
             }
 
+            message = get_message('error', 15)
             messages.warning(
-                self.request, error_message_15)
+                self.request, message)
 
             return render(self.request, "member/my_info.html", context)
 
@@ -748,8 +821,9 @@ class Editaddress(View):
 
                 return render(self.request, "member/edit_address.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 16)
             messages.warning(
-                self.request, error_message_16)
+                self.request, message)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -780,8 +854,9 @@ class Editaddress(View):
                         address.address_type = "B"
                     else:
                         # someone is manipulating the code
+                        message = get_message('error', 17)
                         messages.warning(
-                            self.request, error_message_17)
+                            self.request, message)
                         return redirect("member:my_profile")
                 else:
                     # rerender form
@@ -812,9 +887,7 @@ class Editaddress(View):
 
                 # save the address and return to list
                 address.save()
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 5, language)
+                info_message = get_message('info', 5)
                 messages.info(self.request, info_message)
                 return redirect("member:my_profile")
             else:
@@ -833,8 +906,9 @@ class Editaddress(View):
                 return render(self.request, "member/edit_address.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 18)
             messages.warning(
-                self.request, error_message_18)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -870,9 +944,7 @@ class Newaddress(View):
                                 elif anAddress.address_type == "B":
                                     sameBilling = anAddress.id
                             elif anAddress.address_type == form.cleaned_data.get('address_type'):
-                                # get the users langaug prefference from cookies later
-                                language = 'Swe'
-                                message = get_message('info', 6, language)
+                                message = get_message('info', 6)
                                 if 'default_address' in self.request.POST.keys() and not anAddress.default:
                                     # remove default from other addresses of same type
 
@@ -887,10 +959,8 @@ class Newaddress(View):
                                     # add default to this address
                                     anAddress.default = True
                                     anAddress.save()
-                                    # get the users langaug prefference from cookies later
-                                    language = 'Swe'
                                     info_message = get_message(
-                                        'info', 7, language)
+                                        'info', 7)
                                 messages.info(
                                     self.request, info_message)
                                 return redirect("member:my_profile")
@@ -914,9 +984,7 @@ class Newaddress(View):
                     # test for defaulting
                     testShipping = Address.objects.get(id=sameShipping)
                     testBilling = Address.objects.get(id=sameBilling)
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    message = get_message('info', 8, language)
+                    message = get_message('info', 8)
                     if 'default_address' in self.request.POST.keys():
                         addresses = Address.objects.filter(user=theUser)
                         if not testShipping.default:
@@ -941,9 +1009,7 @@ class Newaddress(View):
                             # change the thest one to true here
                             testBilling.default = True
                             testBilling.save()
-                        # get the users langaug prefference from cookies later
-                        language = 'Swe'
-                        message = get_message('info', 9, language)
+                        message = get_message('info', 9)
 
                     messages.info(
                         self.request, message)
@@ -984,9 +1050,7 @@ class Newaddress(View):
                 address.slug = create_slug_address(address)
                 # save the address and return to list
                 address.save()
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 10, language)
+                info_message = get_message('info', 10)
                 messages.info(self.request, info_message)
                 return redirect("member:my_profile")
             else:
@@ -996,8 +1060,9 @@ class Newaddress(View):
 
                 return render(self.request, "member/new_address.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 19)
             messages.warning(
-                self.request, error_message_19)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -1018,8 +1083,9 @@ class Settings(View):
             return render(self.request, "member/my_settings.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 20)
             messages.warning(
-                self.request, error_message_20)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -1045,8 +1111,9 @@ class SubscriptionsView(View):
 
             return render(self.request, "member/my_subscriptions.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 21)
             messages.warning(
-                self.request, error_message_21)
+                self.request, message)
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
@@ -1074,18 +1141,14 @@ class SubscriptionsView(View):
                             order.delete()
                             # delete subscription
                             sub.delete()
-                            # get the users langaug prefference from cookies later
-                            language = 'Swe'
-                            message = get_message('info', 11, language)
+                            message = get_message('info', 11)
                         except ObjectDoesNotExist:
                             orderQuery = {}
                             message = error_message_22
                     else:
                         # delete subscription
                         sub.delete()
-                        # get the users langaug prefference from cookies later
-                        language = 'Swe'
-                        message = get_message('info', 12, language)
+                        message = get_message('info', 12)
                 # get all subscriptions
                 try:
                     subscriptions = Subscription.objects.filter(
@@ -1106,12 +1169,14 @@ class SubscriptionsView(View):
 
                 return render(self.request, "member/my_subscriptions.html", context)
             else:
+                message = get_message('error', 23)
                 messages.warning(
-                    self.request, error_message_23)
+                    self.request, message)
                 return redirect("member:my_overview")
         except ObjectDoesNotExist:
+            message = get_message('error', 24)
             messages.warning(
-                self.request, error_message_24)
+                self.request, message)
             return redirect("member:my_overview")
 
 
@@ -1176,13 +1241,15 @@ class SubscriptionView(View):
 
                         return render(self.request, "member/my_subscription.html", context)
                     else:
+                        message = get_message('error', 25)
                         messages.warning(
-                            self.request, error_message_25)
+                            self.request, message)
                         return redirect("member:my_subscriptions")
 
                 except ObjectDoesNotExist:
+                    message = get_message('error', 26)
                     messages.warning(
-                        self.request, error_message_26)
+                        self.request, message)
                     return redirect("member:my_subscriptions")
 
         elif 'saveSubscription' in self.request.POST.keys():
@@ -1201,9 +1268,7 @@ class SubscriptionView(View):
             form = EditSubscriptionForm(self.request.POST)
             if form.is_valid():
                 # save message for when complete
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                message = get_message('info', 13, language)
+                message = get_message('info', 13)
                 # check if new or old
                 if self.request.POST['new_or_old'] == 'old':
                     # get the old subscription
@@ -1288,9 +1353,7 @@ class SubscriptionView(View):
                                 total_order_price = total_order_price + orderItem.total_price
                             theOrder.total_price = total_order_price
                             theOrder.save()
-                            # get the users langaug prefference from cookies later
-                            language = 'Swe'
-                            info1 = get_message('info', 49, language)
+                            info1 = get_message('info', 49)
                             messages.info(self.request, message)
                             return redirect("member:my_subscriptions")
 
@@ -1358,8 +1421,9 @@ class SubscriptionView(View):
                             messages.info(self.request, message)
                             return redirect("member:my_subscriptions")
                     except ObjectDoesNotExist:
-                        message = error_message_26
-                        messages.info(self.request, message)
+                        message = get_message('error', 26)
+                        messages.warning(
+                            self.request, message)
                         return redirect("member:my_subscriptions")
                 else:
 
@@ -1491,8 +1555,9 @@ class SubscriptionView(View):
                     'active': active,
                 }
 
-                message = error_message_27
-                messages.warning(self.request, message)
+                message = get_message('error', 27)
+                messages.warning(
+                    self.request, message)
 
                 return render(self.request, "member/my_subscription.html", context)
 
@@ -1508,9 +1573,7 @@ class SubscriptionView(View):
                     user=theUser, id=sub_id)
                 # deactivate subscription
                 if sub.active is False:
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 14, language)
+                    info_message = get_message('info', 14)
                     messages.info(
                         self.request, info_message)
                     return redirect("member:my_subscriptions")
@@ -1528,13 +1591,9 @@ class SubscriptionView(View):
                             item.delete()
                         # delete order
                         theOrder.delete()
-                        # get the users langaug prefference from cookies later
-                        language = 'Swe'
-                        message = get_message('info', 14, language)
+                        message = get_message('info', 14)
                     except ObjectDoesNotExist:
-                        # get the users langaug prefference from cookies later
-                        language = 'Swe'
-                        message = get_message('info', 16, language)
+                        message = get_message('info', 16)
                     sub.next_order = 0
                     sub.save()
 
@@ -1542,12 +1601,14 @@ class SubscriptionView(View):
                         self.request, message)
                     return redirect("member:my_subscriptions")
             else:
+                message = get_message('error', 28)
                 messages.warning(
-                    self.request, error_message_28)
+                    self.request, message)
                 return redirect("member:my_subscriptions")
         else:
+            message = get_message('error', 29)
             messages.warning(
-                self.request, error_message_29)
+                self.request, message)
             return redirect("member:my_subscriptions")
 
 
@@ -1575,8 +1636,9 @@ class CookieSettingsView(View):
 
             return render(self.request, "cookie_settings.html", context)
         except ObjectDoesNotExist:
-            message = error_message_30
-            messages.warning(self.request, message)
+            message = get_message('error', 30)
+            messages.warning(
+                self.request, message)
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
@@ -1601,9 +1663,7 @@ class CookieSettingsView(View):
                         # turn off addaptive adds and delete cookies here
                         test = ""
 
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 17, language)
+                    info_message = get_message('info', 17)
                     messages.info(
                         self.request, info_message)
                     return redirect("core:home")
@@ -1624,8 +1684,9 @@ class CookieSettingsView(View):
                 return render(self.request, "cookie_settings.html", context)
 
         except ObjectDoesNotExist:
-            message = error_message_31
-            messages.warning(self.request, message)
+            message = get_message('error', 31)
+            messages.warning(
+                self.request, message)
             return redirect("core:home")
 
 
@@ -1641,8 +1702,9 @@ class GenericSupportFormView(View):
 
             return render(self.request, "member/support.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 32)
             messages.warning(
-                self.request, error_message_32)
+                self.request, message)
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
@@ -1694,8 +1756,9 @@ class GenericSupportFormView(View):
                     )
 
                 except BadHeaderError:
+                    message = get_message('error', 33)
                     messages.warning(
-                        error_message_33)
+                        self.request, message)
 
                     context = {
                         'form': form,
@@ -1718,9 +1781,7 @@ class GenericSupportFormView(View):
                 # if you got this far save to database
 
                 support.save()
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 18, language)
+                info_message = get_message('info', 18)
                 messages.info(
                     self.request, info_message)
                 return redirect("core:home")
@@ -1733,8 +1794,9 @@ class GenericSupportFormView(View):
 
             return render(self.request, "member/support.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 34)
             messages.warning(
-                self.request, error_message_34)
+                self.request, message)
             return redirect("core:home")
 
 

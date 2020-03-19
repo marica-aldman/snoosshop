@@ -22,6 +22,7 @@ from .views import (
     CancelOrder,
     ReturnOrder,
     ReturnItem,
+    changePassword,
 )
 
 app_name = 'member'
@@ -51,6 +52,8 @@ urlpatterns = [
          ReturnOrder.as_view(), name='returnOrder'),
     path('returnItem',
          ReturnItem.as_view(), name='returnItem'),
+    path('changePassword',
+         changePassword.as_view(), name='changePassword'),
 ]
 
 # move cookies for general use to base

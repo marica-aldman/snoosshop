@@ -342,9 +342,20 @@ class Coupon(models.Model):
     code = models.CharField(max_length=15)
     coupon_type = models.CharField(max_length=20, default='Percent')
     amount = models.FloatField()
+    slug = models.SlugField(default='coupon')
 
     def __str__(self):
         return self.code
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:coupon", kwargs={
+            'slug': self.slug
+        })
+
+    def get_absolute_url_moderator_new(self):
+        return reverse("moderator:coupon", kwargs={
+            'slug': 'new'
+        })
 
 
 class Refund(models.Model):

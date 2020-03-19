@@ -5,7 +5,18 @@
 
 <main>
     <div class="container">
+                    {% comment %}
+                         change password
+                            and
+                         go to support
+                    {% endcomment %}
         <div class="w-100">
+            <form method="POST" action="{% url 'member:changePassword' %}">
+                {% csrf_token %}
+                <button class="btn btn-primary float-right" name="change" value="{{user.id}}">
+                    Ändra lösenord
+                </button>
+            </form>
             <a class="nav-link waves-effect float-right" href="{% url 'member:support' %}">
                 <span class="btn btn-primary"> Nytt supportärende </span>
             </a>
@@ -132,6 +143,7 @@
 
                 </tbody>
             </table>
+        </form>
                     {% endif %}
                     {% comment %}
                          addresses

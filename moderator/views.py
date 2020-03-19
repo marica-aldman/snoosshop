@@ -69,8 +69,9 @@ class Overview(View):
             return render(self.request, "moderator/mod_overview.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 35)
             messages.warning(
-                self.request, error_message_35)
+                self.request, message)
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
@@ -225,8 +226,9 @@ class Overview(View):
                 return render(self.request, "moderator/mod_overview.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 42)
             messages.warning(
-                self.request, error_message_42)
+                self.request, message)
             return redirect("moderator:overview")
 
 
@@ -248,8 +250,9 @@ class ProfileView(View):
 
             return render(self.request, "moderator/my_profile.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 83)
             messages.warning(
-                self.request, error_message_83)
+                self.request, message)
             return redirect("moderator:my_overview")
 
 
@@ -266,8 +269,9 @@ class InfoView(View):
 
             return render(self.request, "moderator/my_info.html", context)
         except ObjectDoesNotExist:
+            message = get_message('error', 84)
             messages.warning(
-                self.request, error_message_84)
+                self.request, message)
             return redirect("moderator:my_profile")
 
     def post(self, *args, **kwargs):
@@ -291,9 +295,7 @@ class InfoView(View):
                     info.telephone = form.cleaned_data.get('telephone')
 
                     info.save()
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 38, language)
+                    info_message = get_message('info', 38)
                     messages.info(
                         self.request, info_message)
                     return redirect("moderator:my_profile")
@@ -306,9 +308,7 @@ class InfoView(View):
                     info.telephone = form.cleaned_data.get('telephone')
 
                     info.save()
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 39, language)
+                    info_message = get_message('info', 39)
                     return redirect("moderator:my_profile")
             else:
 
@@ -316,17 +316,16 @@ class InfoView(View):
                     'form': form,
                 }
 
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 40, language)
+                info_message = get_message('info', 40)
                 messages.info(
                     self.request, info_message)
 
                 return render(self.request, "moderator/my_info.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 85)
             messages.warning(
-                self.request, error_message_85)
+                self.request, message)
             return redirect("moderator:my_profile")
 
 
@@ -377,6 +376,9 @@ class ProductsView(View):
             search_type = "None"
             search_value = "None"
 
+            # onsubmit warning
+            onsubmit = get_message('warning', 6)
+
             context = {
                 'search_type': search_type,
                 'search_value': search_value,
@@ -386,13 +388,15 @@ class ProductsView(View):
                 'form': form,
                 'current_page': current_page,
                 'max_pages': p_pages,
+                'onsubmit': onsubmit,
             }
 
             return render(self.request, "moderator/mod_products.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 86)
             messages.warning(
-                self.request, error_message_86)
+                self.request, message)
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
@@ -435,6 +439,8 @@ class ProductsView(View):
                             # get the form
                             form = searchProductForm()
                             form.populate(product_id)
+                            # onsubmit warning
+                            onsubmit = get_message('warning', 6)
 
                             context = {
                                 'search_type': search_type,
@@ -445,14 +451,13 @@ class ProductsView(View):
                                 'form': form,
                                 'current_page': current_page,
                                 'max_pages': p_pages,
+                                'onsubmit': onsubmit,
                             }
 
                             return render(self.request, "moderator/mod_products.html", context)
 
                         except ObjectDoesNotExist:
-                            # get the users langaug prefference from cookies later
-                            language = 'Swe'
-                            info_message = get_message('info', 41, language)
+                            info_message = get_message('info', 41)
                             messages.info(
                                 self.request, info_message)
                             return redirect("moderator:products")
@@ -484,6 +489,8 @@ class ProductsView(View):
                             # set the search type
 
                             search_type = "productID"
+                            # onsubmit warning
+                            onsubmit = get_message('warning', 6)
 
                             context = {
                                 'search_type': search_type,
@@ -494,16 +501,15 @@ class ProductsView(View):
                                 'form': form,
                                 'current_page': current_page,
                                 'max_pages': p_pages,
+                                'onsubmit': onsubmit,
                             }
 
                             return render(self.request, "moderator/mod_products.html", context)
 
                         except ObjectDoesNotExist:
                             if product_id is not None:
-                                # get the users langaug prefference from cookies later
-                                language = 'Swe'
                                 info_message = get_message(
-                                    'info', 42, language)
+                                    'info', 42)
                                 messages.info(
                                     self.request, info_message)
                             return redirect("moderator:products")
@@ -550,6 +556,8 @@ class ProductsView(View):
 
                         search_type = "None"
                         search_value = "None"
+                        # onsubmit warning
+                        onsubmit = get_message('warning', 6)
 
                         context = {
                             'search_type': search_type,
@@ -560,10 +568,12 @@ class ProductsView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': p_pages,
+                            'onsubmit': onsubmit,
                         }
                         if self.request.POST['product_id'] is not None:
+                            message = get_message('error', 103)
                             messages.warning(
-                                self.request, error_message_103)
+                                self.request, message)
                         return render(self.request, "moderator/mod_products.html", context)
 
             elif 'nextPage' in self.request.POST.keys():
@@ -619,6 +629,8 @@ class ProductsView(View):
 
                 search_type = "None"
                 search_value = "None"
+                # onsubmit warning
+                onsubmit = get_message('warning', 6)
 
                 context = {
                     'search_type': search_type,
@@ -629,6 +641,7 @@ class ProductsView(View):
                     'form': form,
                     'current_page': current_page,
                     'max_pages': p_pages,
+                    'onsubmit': onsubmit,
                 }
 
                 return render(self.request, "moderator/mod_products.html", context)
@@ -685,6 +698,8 @@ class ProductsView(View):
 
                         search_type = "None"
                         search_value = "None"
+                        # onsubmit warning
+                        onsubmit = get_message('warning', 6)
 
                         context = {
                             'search_type': search_type,
@@ -695,13 +710,15 @@ class ProductsView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': p_pages,
+                            'onsubmit': onsubmit,
                         }
 
                         return render(self.request, "moderator/mod_products.html", context)
 
                     except ObjectDoesNotExist:
+                        message = get_message('error', 87)
                         messages.warning(
-                            self.request, error_message_87)
+                            self.request, message)
                         return redirect("moderator:products")
 
                 else:
@@ -750,6 +767,8 @@ class ProductsView(View):
 
                         search_type = "None"
                         search_value = "None"
+                        # onsubmit warning
+                        onsubmit = get_message('warning', 6)
 
                         context = {
                             'search_type': search_type,
@@ -760,13 +779,15 @@ class ProductsView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': p_pages,
+                            'onsubmit': onsubmit,
                         }
 
                         return render(self.request, "moderator/mod_products.html", context)
 
                     except ObjectDoesNotExist:
+                        message = get_message('error', 88)
                         messages.warning(
-                            self.request, error_message_88)
+                            self.request, message)
                         return redirect("moderator:products")
 
             elif 'delete' in self.request.POST.keys():
@@ -776,9 +797,7 @@ class ProductsView(View):
                     product = Item.objects.get(id=product_id)
                     product.delete()
 
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 48, language)
+                    info_message = get_message('info', 48)
                     messages.info(
                         self.request, info_message)
                     return redirect("moderator:products")
@@ -788,15 +807,17 @@ class ProductsView(View):
                 return redirect("moderator:categories")
 
         except ObjectDoesNotExist:
+            message = get_message('error', 89)
             messages.warning(
-                self.request, error_message_89)
+                self.request, message)
             return redirect("moderator:overview")
 
 
 class SpecificProductsView(View):
     def get(self, *args, **kwargs):
+        message = get_message('error', 90)
         messages.warning(
-            self.request, error_message_90)
+            self.request, message)
         return redirect("moderator:products")
 
     def post(self, *args, **kwargs):
@@ -826,8 +847,9 @@ class SpecificProductsView(View):
 
                 return render(self.request, "moderator/mod_single_product.html", context)
             except ObjectDoesNotExist:
+                message = get_message('error', 91)
                 messages.warning(
-                    self.request, error_message_91)
+                    self.request, message)
                 return redirect("moderator:products")
         elif 'new' in self.request.POST.keys():
 
@@ -858,9 +880,7 @@ class SpecificProductsView(View):
 
             if form.is_valid():
                 product_id = self.request.POST['old']
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 43, language)
+                info_message = get_message('info', 43)
                 if product_id == "new":
                     product = Item()
                     product.title = form.cleaned_data.get('title')
@@ -980,6 +1000,9 @@ class CategoriesView(View):
             search_type = "None"
             search_value = "None"
 
+            # delete warning
+            onsubmit = get_message('warning', 4)
+
             context = {
                 'search_type': search_type,
                 'search_value': search_value,
@@ -989,13 +1012,15 @@ class CategoriesView(View):
                 'form': form,
                 'current_page': current_page,
                 'max_pages': c_pages,
+                'onsubmit': onsubmit,
             }
 
             return render(self.request, "moderator/mod_categories.html", context)
 
         except ObjectDoesNotExist:
+            message = get_message('error', 96)
             messages.warning(
-                self.request, error_message_96)
+                self.request, message)
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
@@ -1039,6 +1064,7 @@ class CategoriesView(View):
 
                             form = searchCategoryForm()
                             form.populate(category_id)
+                            onsubmit = get_message('warning', 4)
 
                             context = {
                                 'search_type': search_type,
@@ -1049,14 +1075,13 @@ class CategoriesView(View):
                                 'form': form,
                                 'current_page': current_page,
                                 'max_pages': c_pages,
+                                'onsubmit': onsubmit,
                             }
 
                             return render(self.request, "moderator/mod_categories.html", context)
 
                         except ObjectDoesNotExist:
-                            # get the users langaug prefference from cookies later
-                            language = 'Swe'
-                            info_message = get_message('info', 44, language)
+                            info_message = get_message('info', 44)
                             messages.info(
                                 self.request, info_message)
                             return redirect("moderator:categories")
@@ -1088,6 +1113,7 @@ class CategoriesView(View):
                             # set the search type
 
                             search_type = "categoryID"
+                            onsubmit = get_message('warning', 4)
 
                             context = {
                                 'search_type': search_type,
@@ -1098,6 +1124,7 @@ class CategoriesView(View):
                                 'form': form,
                                 'current_page': current_page,
                                 'max_pages': c_pages,
+                                'onsubmit': onsubmit,
                             }
 
                             return render(self.request, "moderator/mod_categories.html", context)
@@ -1108,10 +1135,8 @@ class CategoriesView(View):
                                 # most likely trying to reset the form
                                 return redirect("moderator:categories")
                             else:
-                                # get the users langaug prefference from cookies later
-                                language = 'Swe'
                                 info_message = get_message(
-                                    'info', 45, language)
+                                    'info', 45)
                                 messages.info(self.request, info_message)
                                 return redirect("moderator:categories")
                     else:
@@ -1158,6 +1183,8 @@ class CategoriesView(View):
                         search_type = "None"
                         search_value = "None"
 
+                        onsubmit = get_message('warning', 4)
+
                         context = {
                             'search_type': search_type,
                             'search_value': search_value,
@@ -1167,11 +1194,13 @@ class CategoriesView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': c_pages,
+                            'onsubmit': onsubmit,
                         }
 
                         if self.request.POST['category_id'] != "":
+                            message = get_message('error', 97)
                             messages.warning(
-                                self.request, error_message_97)
+                                self.request, message)
                         return render(self.request, "moderator/mod_categories.html", context)
 
             elif 'nextPage' in self.request.POST.keys():
@@ -1228,6 +1257,8 @@ class CategoriesView(View):
                 search_type = "None"
                 search_value = "None"
 
+                onsubmit = get_message('warning', 4)
+
                 context = {
                     'search_type': search_type,
                     'search_value': search_value,
@@ -1237,6 +1268,7 @@ class CategoriesView(View):
                     'form': form,
                     'current_page': current_page,
                     'max_pages': c_pages,
+                    'onsubmit': onsubmit,
                 }
 
                 return render(self.request, "moderator/mod_categories.html", context)
@@ -1293,6 +1325,7 @@ class CategoriesView(View):
 
                         search_type = "None"
                         search_value = "None"
+                        onsubmit = get_message('warning', 4)
 
                         context = {
                             'search_type': search_type,
@@ -1303,13 +1336,15 @@ class CategoriesView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': c_pages,
+                            'onsubmit': onsubmit,
                         }
 
                         return render(self.request, "moderator/mod_categories.html", context)
 
                     except ObjectDoesNotExist:
+                        message = get_message('error', 98)
                         messages.warning(
-                            self.request, error_message_98)
+                            self.request, message)
                         return redirect("moderator:categories")
 
                 else:
@@ -1358,6 +1393,7 @@ class CategoriesView(View):
 
                         search_type = "None"
                         search_value = "None"
+                        onsubmit = get_message('warning', 4)
 
                         context = {
                             'search_type': search_type,
@@ -1368,13 +1404,15 @@ class CategoriesView(View):
                             'form': form,
                             'current_page': current_page,
                             'max_pages': c_pages,
+                            'onsubmit': onsubmit,
                         }
 
                         return render(self.request, "moderator/mod_categories.html", context)
 
                     except ObjectDoesNotExist:
+                        message = get_message('error', 99)
                         messages.warning(
-                            self.request, error_message_99)
+                            self.request, message)
                         return redirect("moderator:categories")
 
             elif 'delete' in self.request.POST.keys():
@@ -1383,9 +1421,7 @@ class CategoriesView(View):
                     category_id = int(self.request.POST['id'])
                     category = Category.objects.get(id=category_id)
                     category.delete()
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 47, language)
+                    info_message = get_message('info', 47)
                     messages.info(
                         self.request, info_message)
                     return redirect("moderator:categories")
@@ -1397,15 +1433,17 @@ class CategoriesView(View):
                 return redirect("moderator:categories")
 
         except ObjectDoesNotExist:
+            message = get_message('error', 100)
             messages.warning(
-                self.request, error_message_100)
+                self.request, message)
             return redirect("moderator:overview")
 
 
 class SpecificCategoryView(View):
     def get(self, *args, **kwargs):
+        message = get_message('error', 104)
         messages.warning(
-            self.request, error_message_104)
+            self.request, message)
         return redirect("moderator:categories")
 
     def post(self, *args, **kwargs):
@@ -1443,9 +1481,7 @@ class SpecificCategoryView(View):
 
             if form.is_valid():
                 category_id = self.request.POST['old']
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 46, language)
+                info_message = get_message('info', 46)
                 if category_id == "new":
                     category = Category()
 
@@ -1481,12 +1517,14 @@ class SpecificCategoryView(View):
                     'form': form,
                     'old': old,
                 }
-                messages.warning(self.request, error_message_101)
+                message = get_message('error', 101)
+                messages.warning(self.request, message)
                 return render(self.request, "moderator/mod_single_category.html", context)
         else:
             # post with not correct varaibles
+            message = get_message('error', 102)
             messages.warning(
-                self.request, error_message_102)
+                self.request, message)
             return redirect("moderator:categories")
 
 
@@ -1530,9 +1568,7 @@ class OrderHandlingView(View):
             info1 = ""
         except ObjectDoesNotExist:
             reg_orders = {}
-            # get the users langaug prefference from cookies later
-            language = 'Swe'
-            info1 = get_message('info', 49, language)
+            info1 = get_message('info', 49)
 
         # create a list for a ul to work through
 
@@ -1554,9 +1590,7 @@ class OrderHandlingView(View):
             info2 = ""
         except ObjectDoesNotExist:
             sub_orders = {}
-            # get the users langaug prefference from cookies later
-            language = 'Swe'
-            info2 = get_message('info', 50, language)
+            info2 = get_message('info', 50)
 
         # create a list for a ul to work through
 
@@ -1613,8 +1647,6 @@ class OrderHandlingView(View):
         # handle status change and pagination
         r_current_page = int(self.request.POST['r_current_page'])
         s_current_page = int(self.request.POST['s_current_page'])
-        # a list of any errors
-        errors = []
         # get max pages regurlar orders
         r_pages = 1
         number_reg_orders = Order.objects.filter(
@@ -1762,7 +1794,9 @@ class OrderHandlingView(View):
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
                     else:
-                        messages.warning(self.request, error_message_117)
+                        message = get_message('error', 117)
+                        messages.warning(
+                            self.request, message)
                         return redirect("moderator:orderhandling")
             else:
                 # this should never happen
@@ -1802,18 +1836,14 @@ class OrderHandlingView(View):
                     ordered=True, being_delivered=False, subscription_order=False).order_by('id')[10:offset]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info1 = get_message('info', 49, language)
+                info1 = get_message('info', 49)
         else:
             try:
                 reg_orders = Order.objects.filter(
                     ordered=True, being_delivered=False, subscription_order=False).order_by('id')[:10]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info1 = get_message('info', 49, language)
+                info1 = get_message('info', 49)
 
         # create a list for a ul to work through
 
@@ -1835,9 +1865,7 @@ class OrderHandlingView(View):
                     being_delivered=False, subscription_order=True).order_by('sub_out_date')[10:offset]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info2 = get_message('info', 50, language)
+                info2 = get_message('info', 50)
         else:
             try:
                 # get todays date
@@ -1845,9 +1873,7 @@ class OrderHandlingView(View):
                     being_delivered=False, subscription_order=True).order_by('sub_out_date')[:10]
             except ObjectDoesNotExist:
                 # no orders left to complete
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info2 = get_message('info', 50, language)
+                info2 = get_message('info', 50)
 
         # create a list for a ul to work through
 
@@ -1881,18 +1907,15 @@ class OrderHandlingView(View):
         if info2 != "":
             messages.info(self.request, info2)
 
-        # check for error messages
-        for error in errors:
-            messages.warning(self.request, error)
-
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
 
 class SpecificOrderHandlingView(View):
     def get(self, *args, **kwargs):
         # reroute
+        message = get_message('error', 105)
         messages.warning(
-            self.request, error_message_105)
+            self.request, message)
         return redirect("moderator:orderhandling")
 
     def post(self, *args, **kwargs):
@@ -1906,8 +1929,9 @@ class SpecificOrderHandlingView(View):
                 orderItems = order.items.all()
                 path = self.request.get_full_path()
             except ObjectDoesNotExist:
+                message = get_message('error', 106)
                 messages.warning(
-                    self.request, error_message_106)
+                    self.request, message)
                 return redirect("moderator:orderhandling")
             context = {
                 'path': path,
@@ -1996,35 +2020,23 @@ class SpecificOrderHandlingView(View):
                         total_order_price = total_order_price + orderItem.total_price
                     new_order.total_price = total_order_price + new_order.freight
                     new_order.save()
-                    if sub.comment == 0:
-                        if order.being_delivered is False:
-                            sub.comment = order.id
-                            sub.save()
-                        else:
-                            sub.comment = 0
-                            sub.save()
-                    else:
-                        # this person already has orders backed up. Abort and alert
-                        messages.warning(
-                            self.request, error_message_108 + str(order.user.id))
-                        return redirect("moderator:orderhandling")
                 order.comment = ""
                 order.save()
 
                 if order.being_delivered:
-                    # get the users langaug prefference from cookies later
-                    language = 'Swe'
-                    info_message = get_message('info', 51, language)
+                    info_message = get_message('info', 51)
                     messages.info(
                         self.request, info_message)
                 else:
+                    message = get_message('error', 108)
                     messages.warning(
-                        self.request, error_message_108)
+                        self.request, message)
 
                 return redirect("moderator:orderhandling")
             except ObjectDoesNotExist:
+                message = get_message('error', 106)
                 messages.warning(
-                    self.request, error_message_106)
+                    self.request, message)
                 return redirect("moderator:orderhandling")
         elif 'back' in self.request.POST.keys():
             order = Order.objects.get(id=int(self.request.POST['back']))
@@ -2033,8 +2045,9 @@ class SpecificOrderHandlingView(View):
             return redirect("moderator:orderhandling")
         else:
             # something wrong redirect
+            message = get_message('error', 107)
             messages.warning(
-                self.request, error_message_107)
+                self.request, message)
             return redirect("moderator:orderhandling")
 
 
@@ -2074,6 +2087,9 @@ class FreightView(View):
         # set current page, search type and search_value to start values
         current_page = 1
         search_type = "None"
+        search_value = "None"
+
+        onSubmit = get_message('warning', 5)
 
         context = {
             'freights': freights,
@@ -2081,8 +2097,10 @@ class FreightView(View):
             'form': form,
             'current_page': current_page,
             'search_type': search_type,
+            'search_value': search_value,
             'more_freights': more_freights,
             'max_pages': f_pages,
+            'onSubmit': onSubmit,
         }
 
         return render(self.request, "moderator/mod_freights.html", context)
@@ -2094,9 +2112,7 @@ class FreightView(View):
             freight_id = int(self.request.POST['delete'])
             freight = Freight.objects.get(id=freight_id)
             freight.delete()
-            # get the users langaug prefference from cookies later
-            language = 'Swe'
-            info_message = get_message('info', 76, language)
+            info_message = get_message('info', 76)
             messages.info(self.request, info_message)
             return redirect("moderator:freights")
         elif 'previousPage' in self.request.POST.keys():
@@ -2139,6 +2155,7 @@ class FreightView(View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    onSubmit = get_message('warning', 5)
 
                     context = {
                         'freights': freights,
@@ -2146,8 +2163,10 @@ class FreightView(View):
                         'form': form,
                         'current_page': current_page,
                         'search_type': search_type,
+                        'search_value': search_value,
                         'more_freights': more_freights,
                         'max_pages': f_pages,
+                        'onSubmit': onSubmit,
                     }
 
                     return render(self.request, "moderator/mod_freights.html", context)
@@ -2183,6 +2202,7 @@ class FreightView(View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    onSubmit = get_message('warning', 5)
 
                     context = {
                         'freights': freights,
@@ -2190,8 +2210,10 @@ class FreightView(View):
                         'form': form,
                         'current_page': current_page,
                         'search_type': search_type,
+                        'search_value': search_value,
                         'more_freights': more_freights,
                         'max_pages': f_pages,
+                        'onSubmit': onSubmit,
                     }
 
                     return render(self.request, "moderator/mod_freights.html", context)
@@ -2235,6 +2257,7 @@ class FreightView(View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    onSubmit = get_message('warning', 5)
 
                     context = {
                         'freights': freights,
@@ -2242,8 +2265,10 @@ class FreightView(View):
                         'form': form,
                         'current_page': current_page,
                         'search_type': search_type,
+                        'search_value': search_value,
                         'more_freights': more_freights,
                         'max_pages': f_pages,
+                        'onSubmit': onSubmit,
                     }
 
                     return render(self.request, "moderator/mod_freights.html", context)
@@ -2271,6 +2296,7 @@ class FreightView(View):
                 form = searchFreightForm()
 
                 current_page = page
+                onSubmit = get_message('warning', 5)
 
                 context = {
                     'freights': freights,
@@ -2278,8 +2304,10 @@ class FreightView(View):
                     'form': form,
                     'current_page': current_page,
                     'search_type': search_type,
+                    'search_value': search_value,
                     'more_freights': more_freights,
                     'max_pages': f_pages,
+                    'onSubmit': onSubmit,
                 }
 
                 return render(self.request, "moderator/mod_freights.html", context)
@@ -2327,6 +2355,7 @@ class FreightView(View):
                 freight = Freight()
                 # search form
                 form = searchFreightForm()
+                onSubmit = get_message('warning', 5)
 
                 context = {
                     'freights': freights,
@@ -2334,8 +2363,10 @@ class FreightView(View):
                     'form': form,
                     'current_page': current_page,
                     'search_type': search_type,
+                    'search_value': search_value,
                     'more_freights': more_freights,
                     'max_pages': f_pages,
+                    'onSubmit': onSubmit,
                 }
 
                 return render(self.request, "moderator/mod_freights.html", context)
@@ -2354,6 +2385,8 @@ class FreightView(View):
                 form.populate(freight_id)
                 current_page = 1
                 search_type = "freight_id"
+                search_value = freight_id
+                onSubmit = get_message('warning', 5)
 
                 context = {
                     'freights': freights,
@@ -2361,8 +2394,10 @@ class FreightView(View):
                     'form': form,
                     'current_page': current_page,
                     'search_type': search_type,
+                    'search_value': search_value,
                     'more_freights': more_freights,
                     'max_pages': f_pages,
+                    'onSubmit': onSubmit,
                 }
 
             return render(self.request, "moderator/mod_freights.html", context)
@@ -2422,9 +2457,7 @@ class SpecificFreightView(View):
                 freight.title = form.cleaned_data.get('title')
                 freight.amount = form.cleaned_data.get('amount')
                 freight.save()
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 74, language)
+                info_message = get_message('info', 74)
                 messages.info(self.request, info_message)
                 return redirect("moderator:freights")
             else:
@@ -2433,7 +2466,9 @@ class SpecificFreightView(View):
                     'new': False,
                     'freight': freight_id,
                 }
-                messages.warning(self.request, error_message_115)
+                message = get_message('error', 115)
+                messages.warning(
+                    self.request, message)
                 return render(self.request, "moderator/mod_single_freight.html", context)
 
         elif 'saveNew' in self.request.POST.keys():
@@ -2458,9 +2493,7 @@ class SpecificFreightView(View):
 
                 freight.slug = toSlug
                 freight.save()
-                # get the users langaug prefference from cookies later
-                language = 'Swe'
-                info_message = get_message('info', 75, language)
+                info_message = get_message('info', 75)
                 messages.info(self.request, info_message)
                 return redirect("moderator:freights")
             else:
@@ -2469,7 +2502,486 @@ class SpecificFreightView(View):
                     'new': True,
                     'freight': '',
                 }
-                messages.warning(self.request, error_message_116)
+                message = get_message('error', 116)
+                messages.warning(
+                    self.request, message)
                 return render(self.request, "moderator/mod_single_freight.html", context)
         else:
             return redirect("moderator:freights")
+
+
+class CouponsView(View):
+    def get(self, *args, **kwargs):
+        # get the 20 first current freights
+        coupons = Coupon.objects.all().order_by('code')[:20]
+        number_of_coupons = Coupon.objects.all().count()
+
+        c_pages = 1
+
+        if number_of_coupons > 20:
+            # if there are more we divide by 20
+            c_pages = number_of_coupons / 20
+            # see if there is a decimal
+            testC = int(c_pages)
+            # if there isn't an even number of ten make an extra page for the last group
+            if testC != c_pages:
+                c_pages = int(c_pages)
+                c_pages += 1
+
+        # create a list for a ul to work through
+
+        more_coupons = []
+
+        i = 0
+        # populate the list with the amount of pages there are
+        for i in range(c_pages):
+            i += 1
+            more_coupons.append({'number': i})
+
+        # make an empty coupon for the new form
+        coupon = Coupon()
+        # search form
+        form = searchCouponForm()
+
+        # set current page, search type and search_value to start values
+        current_page = 1
+        search_type = "None"
+        search_value = "None"
+
+        onSubmit = get_message('warning', 7)
+
+        context = {
+            'coupons': coupons,
+            'coupon': coupon,
+            'form': form,
+            'current_page': current_page,
+            'search_type': search_type,
+            'search_value': search_value,
+            'more_coupons': more_coupons,
+            'max_pages': c_pages,
+            'onSubmit': onSubmit,
+        }
+
+        return render(self.request, "moderator/mod_coupons.html", context)
+
+    def post(self, *args, **kwargs):
+        if 'delete' in self.request.POST.keys():
+            # delete coupon
+            # get id
+            coupon_id = int(self.request.POST['delete'])
+            coupon = Coupon.objects.get(id=coupon_id)
+            coupon.delete()
+            # change to coupon message version
+            info_message = get_message('info', 78)
+            messages.info(self.request, info_message)
+            return redirect("moderator:coupons")
+        elif 'previousPage' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+
+                if current_page >= 2:
+                    # get the right 20 coupons
+                    current_page -= 1
+                    offset = current_page
+                    coupons = Coupon.objects.all().order_by('code')[
+                        20:offset]
+                    number_of_coupons = Coupon.objects.all().count()
+
+                    c_pages = 1
+
+                    if number_of_coupons > 20:
+                        # if there are more we divide by 20
+                        c_pages = number_of_coupons / 20
+                        # see if there is a decimal
+                        testO = int(c_pages)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testO != c_pages:
+                            c_pages = int(c_pages)
+                            c_pages += 1
+
+                    # create a list for a ul to work through
+
+                    more_coupons = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(c_pages):
+                        i += 1
+                        more_coupons.append({'number': i})
+
+                    # make an empty coupon for the new form
+                    coupon = Coupon()
+                    # search form
+                    form = searchCouponForm()
+                    onSubmit = get_message('warning', 7)
+
+                    context = {
+                        'coupons': coupons,
+                        'coupon': coupon,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'more_coupons': more_coupons,
+                        'max_pages': c_pages,
+                        'onSubmit': onSubmit,
+                    }
+
+                    return render(self.request, "moderator/mod_coupons.html", context)
+                if current_page == 1:
+                    # this shouldnt happen but to make sure
+                    # get the right 20 coupons
+                    coupons = Coupon.objects.all().order_by('code')[:20]
+                    number_of_coupons = Coupon.objects.all().count()
+
+                    c_pages = 1
+
+                    if number_of_coupons > 20:
+                        # if there are more we divide by 20
+                        c_pages = number_of_coupons / 20
+                        # see if there is a decimal
+                        testO = int(c_pages)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testO != c_pages:
+                            c_pages = int(c_pages)
+                            c_pages += 1
+
+                    # create a list for a ul to work through
+
+                    more_coupons = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(c_pages):
+                        i += 1
+                        more_coupons.append({'number': i})
+
+                    # make an empty coupon for the new form
+                    coupon = Coupon()
+                    # search form
+                    form = searchCouponForm()
+                    onSubmit = get_message('warning', 7)
+
+                    context = {
+                        'coupons': coupons,
+                        'coupon': coupon,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'more_coupons': more_coupons,
+                        'max_pages': c_pages,
+                        'onSubmit': onSubmit,
+                    }
+
+                    return render(self.request, "moderator/mod_coupons.html", context)
+        elif 'page' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+                page = int(self.request.POST['page'])
+
+                # we need the max pages first
+
+                number_of_coupons = Coupon.objects.all().count()
+
+                c_pages = 1
+
+                if number_of_coupons > 20:
+                    # if there are more we divide by 20
+                    c_pages = number_of_coupons / 20
+                    # see if there is a decimal
+                    testO = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+
+                if page == 1:
+                    coupons = Coupon.objects.all().order_by('code')[
+                        :20]
+                    # create a list for a ul to work through
+
+                    more_coupons = []
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(c_pages):
+                        i += 1
+                        more_coupons.append({'number': i})
+
+                    # make an empty coupon for the new form
+                    coupon = Coupon()
+                    # search form
+                    form = searchCouponForm()
+                    onSubmit = get_message('warning', 7)
+
+                    context = {
+                        'coupons': coupons,
+                        'coupon': coupon,
+                        'form': form,
+                        'current_page': current_page,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'more_coupons': more_coupons,
+                        'max_pages': c_pages,
+                        'onSubmit': onSubmit,
+                    }
+
+                    return render(self.request, "moderator/mod_coupons.html", context)
+                elif page > c_pages:
+                    page = c_pages
+
+                # get the right 20 coupons
+                offset = page
+                coupons = Coupon.objects.all().order_by('code')[
+                    20:offset]
+
+                # create a list for a ul to work through
+
+                more_coupons = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(c_pages):
+                    i += 1
+                    more_coupons.append({'number': i})
+
+                # make an empty coupon for the new form
+                coupon = Coupon()
+                # search form
+                form = searchCouponForm()
+
+                current_page = page
+                onSubmit = get_message('warning', 7)
+
+                context = {
+                    'coupons': coupons,
+                    'coupon': coupon,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'more_coupons': more_coupons,
+                    'max_pages': c_pages,
+                    'onSubmit': onSubmit,
+                }
+
+                return render(self.request, "moderator/mod_coupons.html", context)
+
+        elif 'nextPage' in self.request.POST.keys():
+            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = int(self.request.POST['search_type'])
+                search_value = int(self.request.POST['search_value'])
+                current_page = int(self.request.POST['current_page'])
+
+                # first we need the max amount of pages
+
+                number_of_coupons = Coupon.objects.all().count()
+
+                c_pages = 1
+
+                if number_of_coupons > 20:
+                    # if there are more we divide by 20
+                    c_pages = number_of_coupons / 20
+                    # see if there is a decimal
+                    testO = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+
+                if current_page < c_pages:
+                    current_page += 1
+
+                offset = current_page
+                coupons = Coupon.objects.all().order_by('code')[
+                    20:offset]
+
+                # create a list for a ul to work through
+
+                more_coupons = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(c_pages):
+                    i += 1
+                    more_coupons.append({'number': i})
+
+                # make an empty coupon for the new form
+                coupon = Coupon()
+                # search form
+                form = searchCouponForm()
+                if search_type == "code":
+                    form.populate(code=search_value)
+                onSubmit = get_message('warning', 7)
+
+                context = {
+                    'coupons': coupons,
+                    'coupon': coupon,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'more_coupons': more_coupons,
+                    'max_pages': c_pages,
+                    'onSubmit': onSubmit,
+                }
+
+                return render(self.request, "moderator/mod_coupons.html", context)
+        elif 'search' in self.request.POST.keys():
+            # get the 20 first current coupons
+            if 'code' in self.request.POST.keys():
+                code = int(self.request.POST['code'])
+                coupons = Coupon.objects.filter(code=code)
+                C_pages = 1
+                more_coupons = [{'number': 1}]
+
+                # make an empty coupon for the new form
+                coupon = Coupon()
+                # search form
+                form = searchCouponForm()
+                form.populate(code)
+                current_page = 1
+                search_type = "code"
+                search_value = code
+                onSubmit = get_message('warning', 7)
+
+                context = {
+                    'coupons': coupons,
+                    'coupon': coupon,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'more_coupons': more_coupons,
+                    'max_pages': c_pages,
+                    'onSubmit': onSubmit,
+                }
+
+            return render(self.request, "moderator/mod_coupons.html", context)
+
+
+class SpecificCouponView(View):
+    def get(self, *args, **kwargs):
+        test = 1
+
+    def post(self, *args, **kwargs):
+        if 'see' in self.request.POST.keys():
+            # get the id
+            coupon_id = int(self.request.POST['see'])
+            # get freight form
+            form = couponForm()
+            form.populate(coupon_id)
+            context = {
+                'form': form,
+                'new': False,
+                'coupon': coupon_id,
+                'coupon_type': '',
+            }
+
+            return render(self.request, "moderator/mod_single_coupon.html", context)
+        elif 'new' in self.request.POST.keys():
+            # get freight form
+            form = couponForm()
+
+            context = {
+                'form': form,
+                'new': True,
+                'coupon': '',
+                'coupon_type': '',
+            }
+
+            return render(self.request, "moderator/mod_single_coupon.html", context)
+        elif 'saveOld' in self.request.POST.keys():
+            # get the id
+            coupon_id = int(self.request.POST['saveOld'])
+            # populate a form
+            form = couponForm(self.request.POST)
+            if form.is_valid():
+                # get the freight
+                coupon = Coupon.objects.get(id=coupon_id)
+                if coupon.code != form.cleaned_data.get('code'):
+                    today = datetime.now()
+                    toSlug = slugify(coupon.code)
+                    testSlug = True
+                    i = 1
+                    while(testSlug):
+                        try:
+                            someCoupons = Coupon.objects.get(slug=toSlug)
+                            toSlug = toSlug + str(i)
+                            i += 1
+                        except ObjectDoesNotExist:
+                            testSlug = False
+
+                    freight.slug = toSlug
+                coupon.code = form.cleaned_data.get('code')
+                coupon_type = int(self.request.POST['coupon_type'])
+                if coupon_type == 1:
+                    coupon.coupon_type = 'Percent'
+                elif coupon_type == 2:
+                    coupon.coupon_type = 'Amount'
+                coupon.amount = form.cleaned_data.get('amount')
+                coupon.save()
+                info_message = get_message('info', 79)
+                messages.info(self.request, info_message)
+                return redirect("moderator:coupons")
+            else:
+                coupon_type = int(self.request.POST['coupon_type'])
+                context = {
+                    'form': form,
+                    'new': False,
+                    'coupon': coupon_id,
+                    'coupon_type': coupon_type,
+                }
+                message = get_message('error', 129)
+                messages.warning(
+                    self.request, message)
+                return render(self.request, "moderator/mod_single_coupon.html", context)
+
+        elif 'saveNew' in self.request.POST.keys():
+            # populate a form
+            form = couponForm(self.request.POST)
+            if form.is_valid():
+                # get the freight
+                coupon = Coupon()
+                coupon.code = form.cleaned_data.get('code')
+                coupon_type = int(self.request.POST['coupon_type'])
+                if coupon_type == 1:
+                    coupon.coupon_type = 'Percent'
+                elif coupon_type == 2:
+                    coupon.coupon_type = 'Amount'
+                coupon.amount = form.cleaned_data.get('amount')
+                toSlug = slugify(coupon.code)
+                testSlug = True
+                i = 1
+                while(testSlug):
+                    try:
+                        someCoupons = Coupon.objects.get(slug=toSlug)
+                        toSlug = toSlug + str(i)
+                        i += 1
+                    except ObjectDoesNotExist:
+                        testSlug = False
+
+                coupon.slug = toSlug
+                coupon.save()
+                info_message = get_message('info', 80)
+                messages.info(self.request, info_message)
+                return redirect("moderator:coupons")
+            else:
+                coupon_type = int(self.request.POST['coupon_type'])
+                context = {
+                    'form': form,
+                    'new': True,
+                    'coupon': '',
+                    'coupon_type': coupon_type,
+                }
+                message = get_message('error', 130)
+                messages.warning(
+                    self.request, message)
+                return render(self.request, "moderator/mod_single_coupon.html", context)
+        else:
+            return redirect("moderator:coupons")

@@ -248,21 +248,23 @@ def calculate_freight(order, freight):
     return freight.amount
 
 
-def get_message(theType, theCode, language):
+def get_message(theType, theCode):
+    # get this from cookie later
+    language = 'Swe'
     if theType == "info":
         if language == "Swe":
             messageObject = InformationMessages.objects.get(code=theCode)
-            message = messageObject.Swedish
+            message = messageObject.swedish
+            return message
+    elif theType == "error":
+        if language == "Swe":
+            messageObject = ErrorMessages.objects.get(code=theCode)
+            message = messageObject.swedish
             return message
     elif theType == "warning":
         if language == "Swe":
-            messageObject = ErrorMessages.objects.get(code=theCode)
-            message = messageObject.Swedish
-            return message
-    elif theType == "onSubmit":
-        if language == "Swe":
             messageObject = WarningMessages.objects.get(code=theCode)
-            message = messageObject.Swedish
+            message = messageObject.swedish
             return message
     else:
         return "There was an error retrieving this message. Contact IT support imidiately."

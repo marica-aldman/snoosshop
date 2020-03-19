@@ -556,3 +556,12 @@ class CookieSettingsForm(forms.ModelForm):
         if cookie_settings.addapted_adds:
             self.fields['addapted_adds'].widget.attrs.update(
                 {'checked': ""})
+
+
+class changePasswordForm(forms.Form):
+    old_password = forms.CharField(
+        max_length=200, required=True, label="", widget=forms.PasswordInput)
+    new_password = forms.CharField(
+        max_length=200, required=True, label="", widget=forms.PasswordInput)
+    new_password_again = forms.CharField(
+        max_length=200, required=True, label="", widget=forms.PasswordInput)

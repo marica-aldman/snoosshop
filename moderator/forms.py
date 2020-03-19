@@ -51,6 +51,14 @@ class searchCategoryForm(forms.Form):
             {'value': category_id})
 
 
+class searchCouponForm(forms.Form):
+    code = forms.CharField(required=False, label="")
+
+    def populate(self, code, *args, **kwargs):
+        self.fields['code'].widget.attrs.update(
+            {'value': code})
+
+
 class searchFreightForm(forms.Form):
     freight_id = forms.IntegerField(required=False, label="")
 
@@ -79,6 +87,28 @@ class freightForm(forms.ModelForm):
             {'value': freight.title})
         self.fields['amount'].widget.attrs.update(
             {'value': freight.amount})
+
+
+class couponForm(forms.ModelForm):
+    # sort this meta class out
+
+    class Meta:
+        model = Coupon
+        fields = ['code', 'amount']
+
+    def __init__(self, *args, **kwargs):
+        super(couponForm, self).__init__(*args, **kwargs)
+        self.fields['code'].label = ""
+        self.fields['amount'].label = ""
+        self.fields['code'].required = True
+        self.fields['amount'].required = True
+
+    def populate(self, coupon_id, *args, **kwargs):
+        coupon = Coupon.objects.get(id=coupon_id)
+        self.fields['code'].widget.attrs.update(
+            {'value': coupon.code})
+        self.fields['amount'].widget.attrs.update(
+            {'value': coupon.amount})
 
 
 class editOrCreateProduct(forms.ModelForm):

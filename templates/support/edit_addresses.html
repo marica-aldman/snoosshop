@@ -79,7 +79,7 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the address? This action can not be undone.');">
+                        <form method="POST" action="." onSubmit="return confirm('{{onsubmit}}');">
                             {% csrf_token %}
                             <input type="hidden" name="delete" value='yes'>
                             <input type="hidden" name="id" value={{address.id}}>
