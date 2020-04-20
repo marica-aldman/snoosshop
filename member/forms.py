@@ -62,7 +62,7 @@ class EditSubscriptionForm(forms.Form):
         # add a hidden field with the json for use with JS
 
         self.fields['list_of_products'] = forms.CharField(
-            widget=forms.HiddenInput(), initial='products_html')
+            widget=forms.HiddenInput(), initial=products_html)
 
         # create freight option
         freights = Freight.objects.all()

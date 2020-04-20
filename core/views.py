@@ -487,6 +487,13 @@ def get_coupon(request, code):
 
 
 class AddCouponView(View):
+    def get(self, *args, **kwargs):
+        # reroute
+        message = get_message('error', 136)
+        messages.warning(
+            self.request, message)
+        return redirect("moderator:coupons")
+
     def post(self, *args, **kwargs):
         form = CouponForm(self.request.POST or None)
         if form.is_valid():
@@ -552,3 +559,13 @@ class CategoryView(View):
         except ObjectDoesNotExist:
             message.info(self.request, "Something went wrong, contact support")
             return redirect("core:home")
+
+# FAQ
+
+
+class FAQView(View):
+    def get(self, *args, **kwargs):
+        test = 1
+
+    def post(self, *args, **kwargs):
+        test = 1

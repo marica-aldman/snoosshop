@@ -1859,6 +1859,13 @@ class OrderView(View):
 
 
 class OrderItemView(View):
+    def get(self, *args, **kwargs):
+        # reroute
+        message = get_message('error', 10)
+        messages.warning(
+            self.request, message)
+        return redirect("support:orders")
+
     def post(self, *args, **kwargs):
         if 'handle' in self.request.POST.keys():
             # view item

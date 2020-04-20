@@ -6,6 +6,14 @@
 <main>
     <div class="container">
     <!--profile-->
+        <div class="w-100">
+            <form method="POST" action="{% url 'member:changePassword' %}">
+                {% csrf_token %}
+                <button class="btn btn-primary float-right" name="change" value="{{user.id}}">
+                    Ändra lösenord
+                </button>
+            </form>
+        </div>
         <div class="border rounded mb-3 p-2">
             <h3>
                 Min information

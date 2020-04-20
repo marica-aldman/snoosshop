@@ -21,7 +21,7 @@ from .views import (
     SpecificSubscription,
 )
 
-from member.views import CookieSettingsView
+from member.views import CookieSettingsView, changePassword
 
 app_name = 'support'
 

@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'member',
     'moderator',
     'support',
+    'recovery',
     'core'
 ]
 
@@ -72,13 +73,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_root')
 
 # Auth
-
+ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = False
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend'
 )
 SITE_ID = 1
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/member/setup/'
 
 # CRISPY FORMS
 

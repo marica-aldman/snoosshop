@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail, BadHeaderError
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
@@ -21,17 +21,35 @@ from core.info_error_msg import *
 
 class Setup(View):
     def get(self, *args, **kwargs):
-        form_user = UserInformationForm()
-        form_company = CompanyInfoForm()
-        form_address = SetupAddressForm()
+        theUser = self.request.user
+        try:
+            info = UserInfo.objects.get(user=theUser)
+            group1 = Group.objects.get(name="client")
+            group2 = Group.objects.get(name="moderator")
+            group3 = Group.objects.get(name="support")
+            groups = theUser.groups.all()
+            if groups == group1:
+                return redirect("member:my_overview")
+            elif groups == group2:
+                return redirect("moderator:overview")
+            elif groups == group3:
+                return redirect("support:overview")
+            else:
+                message = get_message('error', 133)
+                return redirect("core:home")
+        except ObjectDoesNotExist:
 
-        context = {
-            'userForm': form_user,
-            'companyForm': form_company,
-            'addressForm': form_address,
-        }
+            form_user = UserInformationForm()
+            form_company = CompanyInfoForm()
+            form_address = SetupAddressForm()
 
-        return render(self.request, "member/setup.html", context)
+            context = {
+                'userForm': form_user,
+                'companyForm': form_company,
+                'addressForm': form_address,
+            }
+
+            return render(self.request, "member/setup.html", context)
 
     def post(self, *args, **kwargs):
         try:
@@ -666,17 +684,41 @@ class changePassword(View):
             if form.is_valid():
                 old_password = form.cleaned_data.get('old_password')
                 new_password = form.cleaned_data.get('new_password')
-                user = authenticate(
+                a_user = authenticate(
                     username=theUser.username, password=old_password)
-                if user is not None:
+                if a_user is not None:
                     theUser.set_password(new_password)
+                    update_session_auth_hash(self.request, theUser)
                     theUser.save()
-                    login(self.request, theUser)
-                    print(this)
-                    message = get_message('info', 81)
-                    messages.info(
-                        self.request, message)
-                    return redirect("member:my_profile")
+                    groups = theUser.groups.all()
+                    group = "none"
+                    for g in groups:
+                        group = g
+                    group1 = Group.objects.get(name="client")
+                    group2 = Group.objects.get(name="moderator")
+                    group3 = Group.objects.get(name="support")
+                    if group == group1:
+                        message = get_message('info', 81)
+                        messages.info(
+                            self.request, 83)
+                        print("herec")
+                        return redirect("member:my_profile")
+                    elif group == group2:
+                        message = get_message('info', 84)
+                        messages.info(
+                            self.request, message)
+                        print("herem")
+                        return redirect("moderator:my_profile")
+                    elif group == group3:
+                        message = get_message('error', 134)
+                        messages.info(
+                            self.request, message)
+                        print("heres")
+                        return redirect("support:my_profile")
+                    else:
+                        # we have a user without a group despite being able to change password. Place it in client for now and notify IT
+                        print("herer")
+                        return redirect("member:my_profile")
                 else:
 
                     context = {
@@ -1801,12 +1843,42 @@ class GenericSupportFormView(View):
 
 
 class CancelOrder(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        # reroute
+        message = get_message('error', 133)
+        messages.warning(
+            self.request, message)
+        return redirect("support:orders")
+
+    def post(self, *args, **kwargs):
+        try:
+            test = "test"
+        except ObjectDoesNotExist:
+            test = "test"
 
 
 class ReturnOrder(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        # reroute
+        message = get_message('error', 134)
+        messages.warning(
+            self.request, message)
+        return redirect("support:orders")
+
+    def post(self, *args, **kwargs):
+        try:
+            test = "test"
+        except ObjectDoesNotExist:
+            test = "test"
 
 
 class ReturnItem(View):
-    test = "test"
+    def get(self, *args, **kwargs):
+        # reroute
+        message = get_message('error', 135)
+        messages.warning(
+            self.request, message)
+        return redirect("support:orders")
+
+    def post(self, *args, **kwargs):
+        test = "test"

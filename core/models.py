@@ -140,7 +140,6 @@ class Freight(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=False)
     amount = models.FloatField(blank=True, null=True)
-    test = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -500,7 +499,7 @@ class Cookies(models.Model):
 
 class InformationMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
-    info_type = models.CharField(max_length=20, null=True)
+    view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
     swedish = models.TextField(null=True)
     # additional languages can be added here
@@ -511,7 +510,7 @@ class InformationMessages(models.Model):
 
 class ErrorMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
-    info_type = models.CharField(max_length=20, null=True)
+    view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
     swedish = models.TextField(null=True)
     # additional languages can be added here
@@ -522,7 +521,7 @@ class ErrorMessages(models.Model):
 
 class WarningMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
-    info_type = models.CharField(max_length=20, null=True)
+    view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
     swedish = models.TextField(null=True)
     # additional languages can be added here
@@ -533,13 +532,23 @@ class WarningMessages(models.Model):
 
 class Text(models.Model):
     code = models.CharField(max_length=1024, null=True)
-    info_type = models.CharField(max_length=20, null=True)
+    view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
     swedish = models.TextField(null=True)
     # additional languages can be added here
 
     def __str__(self):
         return self.code
+
+
+class FAQ(models.Model):
+    description = models.TextField(null=True)
+    swedish_subject = models.TextField(null=True)
+    swedish_content = models.TextField(null=True)
+    # additional languages can be added here
+
+    def __str__(self):
+        return self.description
 
 
 class PaymentType(models.Model):

@@ -2405,7 +2405,11 @@ class FreightView(View):
 
 class SpecificFreightView(View):
     def get(self, *args, **kwargs):
-        test = 1
+        # reroute
+        message = get_message('error', 8)
+        messages.warning(
+            self.request, message)
+        return redirect("moderator:freights")
 
     def post(self, *args, **kwargs):
         if 'see' in self.request.POST.keys():
@@ -2867,7 +2871,11 @@ class CouponsView(View):
 
 class SpecificCouponView(View):
     def get(self, *args, **kwargs):
-        test = 1
+        # reroute
+        message = get_message('error', 9)
+        messages.warning(
+            self.request, message)
+        return redirect("moderator:coupons")
 
     def post(self, *args, **kwargs):
         if 'see' in self.request.POST.keys():

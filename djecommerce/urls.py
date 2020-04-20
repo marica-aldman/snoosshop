@@ -9,6 +9,7 @@ urlpatterns = [
     path('moderator/', include('moderator.urls')),
     path('support/', include('support.urls')),
     path('member/', include('member.urls')),
+    path('recovery/', include('recovery.urls')),
     path('', include('core.urls', namespace='core'))
 ]
 

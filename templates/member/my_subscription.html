@@ -64,6 +64,9 @@
                                 <td>
                                     {{ product_field }}
                                 </td>
+                                <td>
+                                    &nbsp;
+                                </td>
                             </tr>
                             <tr>
                                 <td class="w-25">
@@ -72,12 +75,15 @@
                                 <td>
                                     {{ amount_field }}
                                 </td>
+                                <td>
+                                    &nbsp;
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                         {% endfor %}
                     {% endfor %}
-                                    <button type='submit' name="add_item" class='btn btn-primary'>Lägg till vara</button>
+                    <button type='submit' name="add_item" class='btn btn-primary' onclick="event.preventDefault(); add_product();" id="add">Lägg till vara</button>
                 </div>
                 {{form.u_id}}
                 <button type='submit' class='btn btn-primary' name="saveSubscription" value="True">Spara och Aktivera</button>
