@@ -544,8 +544,8 @@ class RequestRefundView(View):
                 messages.info(self.request, "This order does not exist.")
                 return redirect("core:request-refund")
 
-# Category views
 
+# Category views
 
 class CategoryView(View):
     def get(self, slug, *args, **kwargs):

@@ -79,7 +79,8 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend'
 )
 SITE_ID = 1
-LOGIN_REDIRECT_URL = '/member/setup/'
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = False
 
 # CRISPY FORMS
 
