@@ -614,7 +614,7 @@ class FAQView(View):
         if "faq_search" in self.request.POST.keys():
             form = SearchFAQForm(self.request.POST)
             if form.is_valid():
-
+                test = " test"
             else:
                 # add error message here
                 try:
@@ -665,7 +665,7 @@ class FAQView(View):
 
         else:
 
-           try:
+            try:
                 # need to add language tests here at a later date
                 theLanguage = LanguageChoices.objects.get(language_short="swe")
 
