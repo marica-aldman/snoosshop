@@ -32,8 +32,8 @@ urlpatterns = [
     path('payment/<payment_option>/', PaymentView.as_view(), name='payment'),
     path('request-refund/', RequestRefundView.as_view(), name='request-refund'),
     path('category/<slug>', CategoryView.as_view(), name='category'),
-    path('FAQ/', FAQView.as_view(), name='faq'),
-    path('omoss', om_oss_view, name='om-oss'),
-    path('team', teamet_view, name='teamet'),
-    path('vision', vision_view, name='vision'),
+    path('faq/', FAQView.as_view(), name='faq'),
+    path('omoss', om_oss_view.as_view(), name='om-oss'),
+    path('team', teamet_view.as_view(), name='teamet'),
+    path('vision', vision_view.as_view(), name='vision'),
 ]

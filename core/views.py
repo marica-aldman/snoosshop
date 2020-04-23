@@ -8,8 +8,8 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
-from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
-from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile, Category
+from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm, SearchFAQForm
+from .models import *
 from core.functions import *
 
 import stripe
@@ -564,6 +564,175 @@ class CategoryView(View):
 
 
 class FAQView(View):
+    def get(self, *args, **kwargs):
+
+        try:
+            # need to add language tests here at a later date
+            theLanguage = LanguageChoices.objects.get(language_short="swe")
+
+            try:
+                faqs = FAQ.objects.filter(language=theLanguage)
+            except ObjectDoesNotExist:
+                message = get_message('error', 135)
+                faqs = [
+                    {
+                        "question": "Ett fel har uppstått:",
+                        "answer": message,
+                    }
+                ]
+
+            try:
+                searchForm = SearchFAQForm()
+                searchForm.language(theLanguage)
+                aButtonType = ButtonType.objects.get(buttonType="search")
+                searchButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=aButtonType)
+            except ObjectDoesNotExist:
+                message = get_message('error', 135)
+                # flag it support
+                searchForm = SearchFAQForm()
+                searchButton = {"buttonText": "Search"}
+
+        except ObjectDoesNotExist:
+            faqs = [
+                {
+                    "question": "Ett fel har uppstått:",
+                    "answer": message,
+                }
+            ]
+            searchForm = SearchFAQForm()
+            searchButton = {"buttonText": "Search"}
+
+        context = {
+            'faqs': faqs,
+            'searchForm': searchForm,
+            "searchButton": searchButton,
+        }
+        return render(self.request, "faq.html", context)
+
+    def post(self, *args, **kwargs):
+        if "faq_search" in self.request.POST.keys():
+            form = SearchFAQForm(self.request.POST)
+            if form.is_valid():
+
+            else:
+                # add error message here
+                try:
+                    # need to add language tests here at a later date
+                    theLanguage = LanguageChoices.objects.get(
+                        language_short="swe")
+
+                    try:
+                        faqs = FAQ.objects.filter(language=theLanguage)
+                    except ObjectDoesNotExist:
+                        message = get_message('error', 135)
+                        faqs = [
+                            {
+                                "question": "Ett fel har uppstått:",
+                                "answer": message,
+                            }
+                        ]
+
+                    try:
+                        searchForm = SearchFAQForm()
+                        searchForm.language(theLanguage)
+                        aButtonType = ButtonType.objects.get(
+                            buttonType="search")
+                        searchButton = ButtonText.objects.filter(
+                            language=theLanguage, theButtonType=aButtonType)
+                    except ObjectDoesNotExist:
+                        message = get_message('error', 135)
+                        # flag it support
+                        searchForm = SearchFAQForm()
+                        searchButton = {"buttonText": "Search"}
+
+                except ObjectDoesNotExist:
+                    faqs = [
+                        {
+                            "question": "Ett fel har uppstått:",
+                            "answer": message,
+                        }
+                    ]
+                    searchForm = SearchFAQForm()
+                    searchButton = {"buttonText": "Search"}
+
+                context = {
+                    'faqs': faqs,
+                    'searchForm': searchForm,
+                    "searchButton": searchButton,
+                }
+                return render(self.request, "faq.html", context)
+
+        else:
+
+           try:
+                # need to add language tests here at a later date
+                theLanguage = LanguageChoices.objects.get(language_short="swe")
+
+                try:
+                    faqs = FAQ.objects.filter(language=theLanguage)
+                except ObjectDoesNotExist:
+                    message = get_message('error', 135)
+                    faqs = [
+                        {
+                            "question": "Ett fel har uppstått:",
+                            "answer": message,
+                        }
+                    ]
+
+                try:
+                    searchForm = SearchFAQForm()
+                    searchForm.language(theLanguage)
+                    aButtonType = ButtonType.objects.get(buttonType="search")
+                    searchButton = ButtonText.objects.filter(
+                        language=theLanguage, theButtonType=aButtonType)
+                except ObjectDoesNotExist:
+                    message = get_message('error', 135)
+                    # flag it support
+                    searchForm = SearchFAQForm()
+                    searchButton = {"buttonText": "Search"}
+
+            except ObjectDoesNotExist:
+                faqs = [
+                    {
+                        "question": "Ett fel har uppstått:",
+                        "answer": message,
+                    }
+                ]
+                searchForm = SearchFAQForm()
+                searchButton = {"buttonText": "Search"}
+
+            context = {
+                'faqs': faqs,
+                'searchForm': searchForm,
+                "searchButton": searchButton,
+            }
+            return render(self.request, "faq.html", context)
+
+# om_oss_view
+
+
+class om_oss_view(View):
+    def get(self, *args, **kwargs):
+        test = 1
+
+    def post(self, *args, **kwargs):
+        test = 1
+
+# teamet_view
+
+
+class teamet_view(View):
+    def get(self, *args, **kwargs):
+        test = 1
+
+    def post(self, *args, **kwargs):
+        test = 1
+
+# vision_view
+
+
+class vision_view(View):
     def get(self, *args, **kwargs):
         test = 1
 

@@ -37,6 +37,41 @@ INTERVALL_CHOICES = (
     ('200', 'En gång om året'),
 )
 
+BUTTON_TYPES = (
+    ('001', 'Search'),
+    ('002', 'Save'),
+    ('003', 'Login'),
+    ('004', 'Logout'),
+    ('005', 'Support'),
+    ('006', 'Send'),
+    ('007', 'Support'),
+    ('008', 'Add to cart'),
+    ('009', 'Cancel'),
+    ('010', 'deactvate'),
+    ('011', 'remove from cart'),
+    ('012', 'continue shopping'),
+    ('013', 'proceed to checkout'),
+    ('014', 'redeem'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+    ('015', 'continue to checkout'),
+)
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -497,11 +532,21 @@ class Cookies(models.Model):
         })
 
 
+class LanguageChoices(models.Model):
+    language = models.CharField(max_length=150)
+    language_short = models.CharField(max_length=3)
+
+    def __str__(self):
+        return self.language
+
+
 class InformationMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
-    swedish = models.TextField(null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    text = models.TextField(null=True)
     # additional languages can be added here
 
     def __str__(self):
@@ -512,7 +557,9 @@ class ErrorMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
-    swedish = models.TextField(null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    text = models.TextField(null=True)
     # additional languages can be added here
 
     def __str__(self):
@@ -523,28 +570,69 @@ class WarningMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
-    swedish = models.TextField(null=True)
-    # additional languages can be added here
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    text = models.TextField(null=True)
 
     def __str__(self):
         return self.code
 
 
-class Text(models.Model):
+class TextField(models.Model):
     code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
     description = models.TextField(null=True)
-    swedish = models.TextField(null=True)
-    # additional languages can be added here
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    text = models.TextField(null=True)
 
     def __str__(self):
         return self.code
+
+
+class ButtonType(models.Model):
+    buttonType = models.CharField(max_length=250)
+
+    def __str__(self):
+        return self.buttonType
+
+
+class FormFields(models.Model):
+    formFieldType = models.CharField(max_length=250)
+
+    def __str__(self):
+        return self.formFieldType
+
+
+class ButtonText(models.Model):
+    theButtonType = models.ForeignKey(
+        ButtonType, on_delete=models.SET_NULL, blank=True, null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    buttonText = models.TextField(null=True)
+
+    def __str__(self):
+        return self.buttonText
+
+
+class FormText(models.Model):
+    theformFieldType = models.ForeignKey(
+        FormFields, on_delete=models.SET_NULL, blank=True, null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    formTextLabel = models.TextField(null=True)
+    formTextPlaceholder = models.TextField(null=True)
+
+    def __str__(self):
+        return self.formTextLabel
 
 
 class FAQ(models.Model):
     description = models.TextField(null=True)
-    swedish_subject = models.TextField(null=True)
-    swedish_content = models.TextField(null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    subject = models.TextField(null=True)
+    content = models.TextField(null=True)
     # additional languages can be added here
 
     def __str__(self):
@@ -553,7 +641,9 @@ class FAQ(models.Model):
 
 class PaymentType(models.Model):
     code = models.CharField(max_length=3, blank=True, null=True)
-    swedish = models.CharField(max_length=20, blank=True, null=True)
+    language = models.ForeignKey(
+        LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
+    text = models.CharField(max_length=20, blank=True, null=True)
     # additional languages can be added here
 
     def __str__(self):

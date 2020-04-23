@@ -815,4 +815,10 @@ errorFile = [
         "description": "Add Coupon View access",
         "swedish": "Vi kunde inte ladda sidan. Om problemet fortgår kontakta supporten.",
     },
+    {
+        "code": "137",
+        "view_section": "Core",
+        "description": "Faqs missing from database",
+        "swedish": "Det har inträffat ett fel i samband med hämtningen av informationen från databasen. Var god kontakta supporten för hjälp",
+    },
 ]

@@ -1,6 +1,7 @@
 from django import forms
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
+from .models import FormFields, FormText
 
 
 PAYMENT_CHOICES = (
@@ -59,3 +60,19 @@ class PaymentForm(forms.Form):
     stripeToken = forms.CharField(required=False)
     save = forms.BooleanField(required=False)
     use_default = forms.BooleanField(required=False)
+
+
+class SearchFAQForm(forms.Form):
+    searchTerm = forms.CharField(required=True)
+
+    def language(self, theLanguage, *args, **kwargs):
+
+        theFormField = FormFields.objects.get(formFieldType="search")
+        searchField = FormText.objects.filter(
+            language=theLanguage, theformFieldType=theFormField)
+        for field in searchField:
+            self.fields['searchTerm'].label = field.formTextLabel
+            self.fields['searchTerm'].widget.attrs.update(
+                {'placeholder': field.formTextPlaceholder})
+            self.fields['searchTerm'].widget.attrs.update(
+                {'class': 'p-2'})

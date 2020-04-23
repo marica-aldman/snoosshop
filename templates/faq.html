@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<main class="container">
+    <div class="border rounded mb-3 d-flex justify-content-center">
+        <form action="." method="POST" class="m-4">
+            {% csrf_token %}
+            {{searchForm.searchTerm}}
+            {% for button in searchButton %}
+                <button type='submit' class='btn btn-primary'>{{button.buttonText}}</button>
+            {% endfor %}
+        </form>
+    </div>
+    <main>
+        {% for faq in faqs %}
+        <div class="border rounded mb-3">
+            <div class="ml-2 mb-2" style="font-size: 1.2rem">
+                {{faq.subject}}
+            </div>
+            <div class="ml-2">
+                &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
+            </div>
+        </div>
+        {% endfor%}
+    </main>
+</main>
+
+{% endblock content %}
