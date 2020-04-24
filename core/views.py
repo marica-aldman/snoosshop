@@ -8,6 +8,8 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.db.models import Q
+from itertools import combinations
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm, SearchFAQForm
 from .models import *
 from core.functions import *
@@ -77,7 +79,6 @@ class CheckoutView(View):
                 use_default_shipping = form.cleaned_data.get(
                     'use_default_shipping')
                 if use_default_shipping:
-                    print("Using the defualt shipping address")
                     address_qs = Address.objects.filter(
                         user=self.request.user,
                         address_type='S',
@@ -92,7 +93,6 @@ class CheckoutView(View):
                             self.request, "No default shipping address available")
                         return redirect('core:checkout')
                 else:
-                    print("User is entering a new shipping address")
                     shipping_address1 = form.cleaned_data.get(
                         'shipping_address')
                     shipping_address2 = form.cleaned_data.get(
@@ -140,7 +140,6 @@ class CheckoutView(View):
                     order.save()
 
                 elif use_default_billing:
-                    print("Using the defualt billing address")
                     address_qs = Address.objects.filter(
                         user=self.request.user,
                         address_type='B',
@@ -155,7 +154,6 @@ class CheckoutView(View):
                             self.request, "No default billing address available")
                         return redirect('core:checkout')
                 else:
-                    print("User is entering a new billing address")
                     billing_address1 = form.cleaned_data.get(
                         'billing_address')
                     billing_address2 = form.cleaned_data.get(
@@ -321,7 +319,6 @@ class PaymentView(View):
 
             except stripe.error.InvalidRequestError as e:
                 # Invalid parameters were supplied to Stripe's API
-                print(e)
                 messages.warning(self.request, "Invalid parameters")
                 return redirect("/")
 
@@ -550,7 +547,6 @@ class RequestRefundView(View):
 class CategoryView(View):
     def get(self, slug, *args, **kwargs):
         try:
-            print(slug)
             categoryquery = Category.objects.filter(slug="TS")
             context = {
                 'object_list': categoryquery
@@ -602,19 +598,82 @@ class FAQView(View):
             ]
             searchForm = SearchFAQForm()
             searchButton = {"buttonText": "Search"}
+        comment = ""
 
         context = {
+            'search': False,
             'faqs': faqs,
+            "comment": comment,
             'searchForm': searchForm,
             "searchButton": searchButton,
         }
         return render(self.request, "faq.html", context)
 
     def post(self, *args, **kwargs):
-        if "faq_search" in self.request.POST.keys():
+        if "searchTerm" in self.request.POST.keys():
             form = SearchFAQForm(self.request.POST)
             if form.is_valid():
-                test = " test"
+                # need to add language tests here at a later date
+                theLanguage = LanguageChoices.objects.get(
+                    language_short="swe")
+                search_terms = form.cleaned_data.get('searchTerm')
+                search_term_split = search_terms.split()
+                len_search_term = len(search_term_split)
+
+                # make all the combinations of the search
+
+                a = len_search_term
+                searchTermList = []
+                while a > 0:
+                    searchCombinations = combinations(search_term_split, a)
+                    for combination in searchCombinations:
+                        term = ""
+                        for word in combination:
+                            if term == "":
+                                term = word
+                            else:
+                                term = term + " " + word
+                        searchTermList.append(term)
+                    a -= 1
+                print(searchTermList)
+                search = []
+                comment = ""
+                for term in searchTermList:
+                    try:
+                        faqs = FAQ.objects.filter(subject__contains=term)
+                        search.append(faqs)
+                    except ObjectDoesNotExist:
+                        # this is only because we want the test without an error thrown. This comment wont be used
+                        comment = term + " doesn't exist in subject."
+                    try:
+                        faqs = FAQ.objects.filter(content__contains=term)
+                        search.append(faqs)
+                    except ObjectDoesNotExist:
+                        # this is only because we want the test without an error thrown. This comment wont be used
+                        comment = term + " doesn't exist in content."
+
+                len_s = len(search)
+                if len_s > 0:
+                    comment = ""
+                else:
+                    comment = get_message("info", code)
+
+                try:
+                    aButtonType = ButtonType.objects.get(
+                        buttonType="search")
+                    searchButton = ButtonText.objects.filter(
+                        language=theLanguage, theButtonType=aButtonType)
+                except ObjectDoesNotExist:
+                    searchButton = {"buttonText": "Search"}
+
+                context = {
+                    'search': True,
+                    'faqs': search,
+                    "comment": comment,
+                    'searchForm': form,
+                    "searchButton": searchButton,
+                }
+                return render(self.request, "faq.html", context)
             else:
                 # add error message here
                 try:
@@ -655,9 +714,12 @@ class FAQView(View):
                     ]
                     searchForm = SearchFAQForm()
                     searchButton = {"buttonText": "Search"}
+                    comment = ""
 
                 context = {
+                    'search': False,
                     'faqs': faqs,
+                    "comment": comment,
                     'searchForm': searchForm,
                     "searchButton": searchButton,
                 }
@@ -701,9 +763,12 @@ class FAQView(View):
                 ]
                 searchForm = SearchFAQForm()
                 searchButton = {"buttonText": "Search"}
+                comment = ""
 
             context = {
+                'search': False,
                 'faqs': faqs,
+                "comment": comment,
                 'searchForm': searchForm,
                 "searchButton": searchButton,
             }
