@@ -152,7 +152,6 @@ class editProductImage(forms.ModelForm):
 
 
 class editOrCreateCategory(forms.ModelForm):
-    # sort this meta class out
 
     class Meta:
         model = Category
@@ -171,3 +170,109 @@ class editOrCreateCategory(forms.ModelForm):
         self.fields['discount_price'].widget.attrs.update(
             {'value': category.discount_price})
         self.fields['description'].initial = category.description
+
+
+class SearchFAQForm(forms.Form):
+    searchID = forms.IntegerField()
+    searchTerm = forms.CharField(required=False)
+
+    def language(self, theLanguage, *args, **kwargs):
+
+        theFormField1 = FormFields.objects.get(formFieldType="FAQid")
+        searchField1 = FormText.objects.filter(
+            language=theLanguage, theformFieldType=theFormField1)
+        for field in searchField1:
+            self.fields['searchID'].label = field.formTextLabel
+            self.fields['searchID'].widget.attrs.update(
+                {'placeholder': field.formTextPlaceholder})
+            self.fields['searchID'].widget.attrs.update(
+                {'class': 'p-2'})
+
+        theFormField2 = FormFields.objects.get(formFieldType="search")
+        searchField2 = FormText.objects.filter(
+            language=theLanguage, theformFieldType=theFormField2)
+        for field in searchField2:
+            self.fields['searchTerm'].label = field.formTextLabel
+            self.fields['searchTerm'].widget.attrs.update(
+                {'placeholder': field.formTextPlaceholder})
+            self.fields['searchTerm'].widget.attrs.update(
+                {'class': 'p-2'})
+
+        # we need to be able to sort by language, so make a choice field with all languages
+
+        languages = LanguageChoices.objects.all()
+        lang_list = [("---", "---")]
+        for lang in languages:
+            lang_list.append((lang.language_short, lang.language))
+        lang_tuple = tuple(lang_list)
+
+        theFormField3 = FormFields.objects.get(formFieldType="LanguageChoice")
+        searchField3 = FormText.objects.filter(
+            language=theLanguage, theformFieldType=theFormField3)
+        for field in searchField3:
+
+            self.fields['languages'] = forms.ChoiceField(
+                choices=lang_tuple, required=False)
+            self.fields['languages'].label = field.formTextLabel
+            self.fields['languages'].widget.attrs.update(
+                {'class': 'p-2'})
+
+
+class NewFAQForm(forms.ModelForm):
+
+    class Meta:
+        model = FAQ
+        fields = ['description']
+
+    def __init__(self, *args, **kwargs):
+        super(NewFAQForm, self).__init__(*args, **kwargs)
+        self.fields['description'].label = "Description"
+
+    def language(self, aLanguage, *args, **kwargs):
+
+        theFormField1 = FormFields.objects.get(
+            formFieldType="NewFAQDescription")
+        searchField1 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField1)
+        for field in searchField1:
+            self.fields['description'].label = field.formTextLabel
+            self.fields['description'].widget.attrs.update(
+                {'placeholder': field.formTextPlaceholder})
+            self.fields['description'].widget.attrs.update(
+                {'class': 'p-2'})
+
+
+class NewFAQPerLanguage(forms.ModelForm):
+
+    class Meta:
+        model = FAQ
+        fields = ['subject', 'content']
+
+    def __init__(self, *args, **kwargs):
+        super(NewFAQPerLanguage, self).__init__(*args, **kwargs)
+        self.fields['subject'].label = "Question:"
+        self.fields['content'].label = "Answer:"
+
+    def language(self, aLanguage, *args, **kwargs):
+        # this is the display language not the language being recorded
+        theFormField1 = FormFields.objects.get(
+            formFieldType="NewFAQSubject")
+        searchField1 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField1)
+        for field in searchField1:
+            self.fields['subject'].label = field.formTextLabel
+            self.fields['subject'].widget.attrs.update(
+                {'placeholder': field.formTextPlaceholder})
+            self.fields['subject'].widget.attrs.update(
+                {'class': 'p-2'})
+
+        theFormField2 = FormFields.objects.get(
+            formFieldType="NewFAQContent")
+        searchField2 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField2)
+        for afield in searchField2:
+            self.fields['content'].label = afield.formTextLabel
+            self.fields['content'].widget.attrs.update(
+                {'placeholder': afield.formTextPlaceholder})
+            self.fields['content'].widget.attrs.update(
+                {'class': 'p-2'})

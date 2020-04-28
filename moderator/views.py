@@ -2993,3 +2993,172 @@ class SpecificCouponView(View):
                 return render(self.request, "moderator/mod_single_coupon.html", context)
         else:
             return redirect("moderator:coupons")
+
+
+class FAQsView(View):
+    def get(self, *args, **kwargs):
+        # establish language first, this should later have a check
+        theLang = "swe"
+        comment = []
+        try:
+            theLanguage = LanguageChoices.objects.get(
+                language_short=theLang)
+            try:
+                searchForm = SearchFAQForm()
+                searchForm.language(theLanguage)
+            except ObjectDoesNotExist:
+                searchForm = SearchFAQForm()
+            try:
+                faqs = FAQ.objects.all()
+            except ObjectDoesNotExist:
+                comment = "No FAQs found"
+            try:
+                aButtonType = ButtonType.objects.get(buttonType="search")
+                searchButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=aButtonType)
+            except ObjectDoesNotExist:
+                searchButton = {"buttonText": "Search"}
+                comment.append("No search Button found")
+            try:
+                bButtonType = ButtonType.objects.get(buttonType="add new")
+                addButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=bButtonType)
+            except ObjectDoesNotExist:
+                addButton = {"buttonText": "Add"}
+                comment.append("No add Button found")
+
+            # set the hidden value for wether or not we have done a search
+
+            current_page = 1
+            search_type = "None"
+            search_value = "None"
+
+            more_faqs = []
+            c_faqs = len(faqs)
+            d_faqs = 1
+            if c_faqs > 10:
+                # if there are more we divide by ten
+                d_faqs = c_faqs/10
+                # see if there is a decimal
+                testF = int(d_faqs)
+                # if there isn't an even number of ten make an extra page for the last group
+                if testF != d_faqs:
+                    d_faqs = int(d_faqs)
+                    d_faqs += 1
+
+            i = 0
+            # populate the list with the amount of pages there are
+            for i in range(d_faqs):
+                i += 1
+                more_faqs.append({'number': i})
+
+            # for the new button
+            empty_faq = FAQ()
+
+            context = {
+                'searchform': searchForm,
+                'search': False,
+                'FAQS': faqs,
+                'searchButton': searchButton,
+                'addButton': addButton,
+                'comment': comment,
+                'current_page': current_page,
+                'more_faqs': more_faqs,
+                'max': d_faqs,
+                'empty_faq': empty_faq,
+            }
+
+            return render(self.request, "moderator/mod_faqs.html", context)
+        except ObjectDoesNotExist:
+            # we dont either dont have a chosen language or the language chosen doesnt exist, this is bad. You cant get error messages correctly here. Send to settings.
+            message = "We can not find the language object, please contact IT support imidiately. This is a serious problem."
+            messages.warning(
+                self.request, message)
+            return redirect("moderator:my_profile")
+
+    def post(self, *args, **kwargs):
+        if "search" in self.request.POST.keys():
+            form = SearchFAQForm(self.request.POST)
+            if form.is_valid():
+                test = "test"
+            else:
+                test = "test"
+
+
+class SpecificFAQView(View):
+    def get(self, *args, **kwargs):
+        # this shouldnt happen, send back to FAQS
+        return redirect("moderator:faqs")
+
+    def post(self, *args, **kwargs):
+        if 'lookAtFAQ' in self.request.POST.keys():
+            faqID = int(self.request.POST['lookAtFAQ'])
+        else:
+            return redirect("moderator:faqs")
+
+
+class NewSpecificFAQView(View):
+    def get(self, *args, **kwargs):
+        # this shouldnt happen, send back to FAQS
+        return redirect("moderator:faqs")
+
+    def post(self, *args, **kwargs):
+        if 'createFAQ' in self.request.POST.keys():
+            # establish language first, this should later have a check
+            theLang = "swe"
+            comment = []
+            try:
+                theLanguage = LanguageChoices.objects.get(
+                    language_short=theLang)
+                try:
+                    textType = TextTypeChoices.objects.get(textType="title")
+                    title = TextField.objects.filter(
+                        language=theLanguage, textType=textType, description="NewFAQ")
+                except ObjectDoesNotExist:
+                    title = {"text": "Title"}
+                    comment.append("No title found")
+
+                try:
+                    form = NewFAQForm()
+                    form.language(aLanguage=theLanguage)
+                except ObjectDoesNotExist:
+                    form = NewFAQForm()
+                    comment.append("Form issue")
+
+                try:
+                    theLanguages = LanguageChoices.objects.all()
+                except ObjectDoesNotExist:
+                    comment.append("No language found")
+
+                languageFormList = []
+                for language in theLanguages:
+                    try:
+                        newForm = NewFAQPerLanguage()
+                        newForm.language(aLanguage=theLanguage)
+                    except ObjectDoesNotExist:
+                        form = NewFAQPerLanguage()
+                        comment.append("Language specific Form issue")
+                    languageFormList.append(
+                        {'language': language, 'form': newForm})
+
+                try:
+                    aButtonType = ButtonType.objects.get(buttonType="save")
+                    saveButton = ButtonText.objects.filter(
+                        language=theLanguage, theButtonType=aButtonType)
+                except ObjectDoesNotExist:
+                    searchButton = {"buttonText": "Save"}
+                    comment.append("No save Button found")
+
+                context = {
+                    'theTitle': title,
+                    'form': form,
+                    'formList': languageFormList,
+                    'saveButton': saveButton,
+                    'comment': comment,
+                }
+
+                return render(self.request, "moderator/mod_faq_new.html", context)
+            except ObjectDoesNotExist:
+                return redirect("moderator:faqs")
+        else:
+            return redirect("moderator:faqs")

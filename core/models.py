@@ -540,6 +540,13 @@ class LanguageChoices(models.Model):
         return self.language
 
 
+class TextTypeChoices(models.Model):
+    textType = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.textType
+
+
 class InformationMessages(models.Model):
     code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
@@ -579,15 +586,16 @@ class WarningMessages(models.Model):
 
 
 class TextField(models.Model):
-    code = models.CharField(max_length=1024, null=True)
     view_section = models.CharField(max_length=20, null=True)
-    description = models.TextField(null=True)
+    description = models.CharField(max_length=200)
+    textType = models.ForeignKey(
+        TextTypeChoices, on_delete=models.SET_NULL, blank=True, null=True)
     language = models.ForeignKey(
         LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
     text = models.TextField(null=True)
 
     def __str__(self):
-        return self.code
+        return self.description
 
 
 class ButtonType(models.Model):
@@ -628,7 +636,7 @@ class FormText(models.Model):
 
 
 class FAQ(models.Model):
-    description = models.TextField(null=True)
+    description = models.CharField(max_length=200, null=True)
     language = models.ForeignKey(
         LanguageChoices, on_delete=models.SET_NULL, blank=True, null=True)
     subject = models.TextField(null=True)
@@ -637,6 +645,14 @@ class FAQ(models.Model):
 
     def __str__(self):
         return self.description
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:faq", kwargs={
+            'slug': self.id
+        })
+
+    def get_absolute_url_moderator_new(self):
+        return reverse("moderator:new_faq")
 
 
 class PaymentType(models.Model):

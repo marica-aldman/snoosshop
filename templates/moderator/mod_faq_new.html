@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="border border-dark mb-3 p-2">
+        {% for title in theTitle %}
+            <h3>{{title.text}}</h3>
+        {% endfor %}
+        <form method="POST">
+            {% csrf_token %}
+            <table class="table-striped table-hover w-100  mb-2 table-bordered">
+                <tbody>
+                    <tr>
+                        <td>
+                            <table class="table-striped table-hover w-100  mb-2 table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            {{form.description.label}}
+                                        </td>
+                                        <td>
+                                            {{ form.description }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% for languageAndForm in formList %}
+                    <tr>
+                        <td>
+                            {{languageAndForm.language.language}}
+                        </td>
+                    </tr>
+                
+                    <tr>
+                        <td>
+                            {{languageAndForm.form.subject.label}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ languageAndForm.form.subject }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{languageAndForm.form.content.label}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ languageAndForm.form.content }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% for button in saveButton %}
+            <button type='submit' class='btn btn-primary' id="save" name="save">{{button.buttonText}}</button>
+        {% endfor %}
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}

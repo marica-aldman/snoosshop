@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST" class="w-100">
+            {% csrf_token %}
+            <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+            <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+            <input type="hidden" name="search" value="{{search_type}}">
+            <div class="d-flex justify-content-around">
+                <div>
+                    {{searchform.searchID.label}} {{searchform.searchID}}
+                </div>
+                <div>
+                    {{searchform.languages.label}} {{searchform.languages}}
+                </div>
+                <div>
+                    {{searchform.searchTerm.label}} {{searchform.searchTerm}}
+                </div>
+                <div>
+                {% for button in searchButton %}
+                    <button type='submit' class='btn btn-primary'>{{button.buttonText}}</button>
+                {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- results or all orders -->
+    <div class="row border border-dark mb-3 p-2">
+        <h3>Vanliga frågor</h3>
+        <table class="table-striped table-hover w-100  mb-2">
+            <thead class="mdb-color lighten-5">
+                <tr style="text-align: center;">
+                    <th>
+                        FAQ ID
+                    </th>
+                    <th>
+                        Språk
+                    </th>
+                    <th>
+                        Fråga
+                    </th>
+                    <th>
+                        Titta på
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+        {% for faq in FAQS %}
+                <tr style="text-align: center;">
+                    <td>
+                        {{ faq.id }}
+                    </td>
+                    <td>
+                        {{ faq.language }}
+                    </td>
+                    <td>
+                        {{ faq.description }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ faq.get_absolute_url_moderator }}">
+                            {% csrf_token %}
+                            <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary'>
+                                Se FAQ
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="d-flex w-100 justify-content-around">
+        <ul class="pagination">
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
+                        <
+                    </button>
+                </form>
+            </li>
+            {% for faq in more_faqs %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <button type="submit" value="{{ faq.number }}" name="page" {% if current_page == faq.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{faq.number}}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+            <li class="page-item">
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
+                        >
+                    </button>
+                </form>
+            </li>
+        </ul>
+
+    </div>
+    <div class="row border border-dark mb-3 p-2">
+        <form method="POST" action="{{ empty_faq.get_absolute_url_moderator_new }}"  class="w-100">
+            {% csrf_token %}
+            <div class="d-flex justify-content-around">
+                <div>
+                {% for button in addButton %}
+                    <button type='submit' class='btn btn-primary' name="createFAQ" value="True">{{button.buttonText}}</button>
+                {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}

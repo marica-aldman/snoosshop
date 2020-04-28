@@ -15,6 +15,9 @@ from .views import (
     SpecificFreightView,
     CouponsView,
     SpecificCouponView,
+    FAQsView,
+    SpecificFAQView,
+    NewSpecificFAQView,
 )
 
 from member.views import CookieSettingsView, changePassword
@@ -38,6 +41,11 @@ urlpatterns = [
     path('freights/', FreightView.as_view(), name='freights'),
     path('freight/<slug>',
          SpecificFreightView.as_view(), name='freight'),
+    path('faqs/', FAQsView.as_view(), name='faqs'),
+    path('faq/<slug>',
+         SpecificFAQView.as_view(), name='faq'),
+    path('new_faq/',
+         NewSpecificFAQView.as_view(), name='new_faq'),
     path('coupons/', CouponsView.as_view(), name='coupons'),
     path('coupon/<slug>',
          SpecificCouponView.as_view(), name='coupon'),
