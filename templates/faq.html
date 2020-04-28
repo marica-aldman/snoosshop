@@ -15,8 +15,7 @@
     </div>
     <main>
     {% if search %}
-        {% for entry in faqs %}
-            {% for faq in entry %}
+        {% for faq in faqs %}
         <div class="border rounded mb-3">
             <div class="ml-2 mb-2" style="font-size: 1.2rem">
                 {{faq.subject}}
@@ -25,7 +24,6 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
             </div>
         </div>
-            {% endfor %}
         {% endfor %}
     {% else %}
         {% for faq in faqs %}

@@ -635,7 +635,6 @@ class FAQView(View):
                                 term = term + " " + word
                         searchTermList.append(term)
                     a -= 1
-                print(searchTermList)
                 search = []
                 comment = ""
                 for term in searchTermList:
@@ -652,9 +651,23 @@ class FAQView(View):
                         # this is only because we want the test without an error thrown. This comment wont be used
                         comment = term + " doesn't exist in content."
 
+                search_no_duplicates = []
                 len_s = len(search)
                 if len_s > 0:
                     comment = ""
+                    for query in search:
+                        for entry in query:
+                            i = 0
+                            if len(search_no_duplicates) == 0:
+                                search_no_duplicates.append(entry)
+                            same = False
+                            while i < len(search_no_duplicates):
+                                if search_no_duplicates[i].id == entry.id:
+                                    i = len(search_no_duplicates)
+                                    same = True
+                                i += 1
+                            if not same:
+                                search_no_duplicates.append(entry)
                 else:
                     comment = get_message("info", code)
 
@@ -668,7 +681,7 @@ class FAQView(View):
 
                 context = {
                     'search': True,
-                    'faqs': search,
+                    'faqs': search_no_duplicates,
                     "comment": comment,
                     'searchForm': form,
                     "searchButton": searchButton,
