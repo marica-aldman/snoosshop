@@ -17,6 +17,7 @@ from .views import (
     SpecificCouponView,
     FAQsView,
     SpecificFAQView,
+    DeleteSpecificFAQView,
     NewSpecificFAQView,
 )
 
@@ -44,6 +45,8 @@ urlpatterns = [
     path('faqs/', FAQsView.as_view(), name='faqs'),
     path('faq/<slug>',
          SpecificFAQView.as_view(), name='faq'),
+    path('delete/',
+         DeleteSpecificFAQView.as_view(), name='delete'),
     path('new_faq/',
          NewSpecificFAQView.as_view(), name='new_faq'),
     path('coupons/', CouponsView.as_view(), name='coupons'),

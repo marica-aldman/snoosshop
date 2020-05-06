@@ -242,37 +242,156 @@ class NewFAQForm(forms.ModelForm):
                 {'class': 'p-2'})
 
 
-class NewFAQPerLanguage(forms.ModelForm):
+class UpdateFAQ(forms.ModelForm):
 
     class Meta:
         model = FAQ
-        fields = ['subject', 'content']
+        fields = ['description', 'subject', 'content']
 
-    def __init__(self, *args, **kwargs):
-        super(NewFAQPerLanguage, self).__init__(*args, **kwargs)
-        self.fields['subject'].label = "Question:"
-        self.fields['content'].label = "Answer:"
+    def _init_(self, *args, **kwargs):
+        super(UpdateFAQ, self).__init__(*args, **kwargs)
+        # OBS aLanguage is the users language settings and separate from the text addition
+        self.fields['subject'].label = ""
+        self.fields['subject'].widget.attrs.update(
+            {'class': 'p-2'})
+        self.fields['content'].label = ""
+        self.fields['content'].widget.attrs.update(
+            {'class': 'p-2'})
 
-    def language(self, aLanguage, *args, **kwargs):
-        # this is the display language not the language being recorded
+    def language(self, aLanguage, faq, *arg):
+        # correct description label and add fields for subject and content labels so we can get the right language)
+        self.fields['check'] = forms.IntegerField(widget=forms.HiddenInput())
+        self.fields['check'].initial = faq.id
+        theFormField0 = FormFields.objects.get(
+            formFieldType="NewFAQDescription")
+        searchField0 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField0)
+        for field in searchField0:
+            self.fields['description'].label = field.formTextLabel
         theFormField1 = FormFields.objects.get(
             formFieldType="NewFAQSubject")
         searchField1 = FormText.objects.filter(
             language=aLanguage, theformFieldType=theFormField1)
         for field in searchField1:
-            self.fields['subject'].label = field.formTextLabel
-            self.fields['subject'].widget.attrs.update(
-                {'placeholder': field.formTextPlaceholder})
-            self.fields['subject'].widget.attrs.update(
-                {'class': 'p-2'})
-
+            fieldSubjectTitle = "LanguageSubjectTitle"
+            self.fields[fieldSubjectTitle] = forms.CharField(
+                required=False)
+            self.fields[fieldSubjectTitle].label = field.formTextLabel
+            self.fields[fieldSubjectTitle].widget.attrs.update(
+                {'style': 'display: none;'})
         theFormField2 = FormFields.objects.get(
             formFieldType="NewFAQContent")
         searchField2 = FormText.objects.filter(
             language=aLanguage, theformFieldType=theFormField2)
         for afield in searchField2:
-            self.fields['content'].label = afield.formTextLabel
-            self.fields['content'].widget.attrs.update(
-                {'placeholder': afield.formTextPlaceholder})
-            self.fields['content'].widget.attrs.update(
+            fieldContentTitle = "LanguageContentTitle"
+            self.fields[fieldContentTitle] = forms.CharField(
+                required=False)
+            self.fields[fieldContentTitle].label = afield.formTextLabel
+            self.fields[fieldContentTitle].widget.attrs.update(
+                {'style': 'display: none;'})
+
+        self.fields['subject'].initial = faq.subject
+        self.fields['content'].initial = faq.content
+        self.fields['description'].widget.attrs.update(
+            {'value': faq.description})
+        self.fields['description'].widget.attrs.update(
+            {'class': 'p-2', "readonly": 'readonly'})
+
+    def updateFromPost(self, aLanguage, faq, *arg):
+        # correct description label and add fields for subject and content labels so we can get the right language)
+        theFormField0 = FormFields.objects.get(
+            formFieldType="NewFAQDescription")
+        searchField0 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField0)
+        for field in searchField0:
+            self.fields['description'].label = field.formTextLabel
+        theFormField1 = FormFields.objects.get(
+            formFieldType="NewFAQSubject")
+        searchField1 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField1)
+        for field in searchField1:
+            fieldSubjectTitle = "LanguageSubjectTitle"
+            self.fields[fieldSubjectTitle] = forms.CharField(
+                required=False)
+            self.fields[fieldSubjectTitle].label = field.formTextLabel
+            self.fields[fieldSubjectTitle].widget.attrs.update(
+                {'style': 'display: none;'})
+        theFormField2 = FormFields.objects.get(
+            formFieldType="NewFAQContent")
+        searchField2 = FormText.objects.filter(
+            language=aLanguage, theformFieldType=theFormField2)
+        for afield in searchField2:
+            fieldContentTitle = "LanguageContentTitle"
+            self.fields[fieldContentTitle] = forms.CharField(
+                required=False)
+            self.fields[fieldContentTitle].label = afield.formTextLabel
+            self.fields[fieldContentTitle].widget.attrs.update(
+                {'style': 'display: none;'})
+
+        self.fields['description'].widget.attrs.update(
+            {'class': 'p-2', "readonly": 'readonly'})
+
+
+class NewFAQPerLanguage(forms.Form):
+
+    def language(self, aLanguage, *args, **kwargs):
+        # OBS aLanguage is the users language settings and separate from the text addition
+        theLanguages = LanguageChoices.objects.all()
+        for Language in theLanguages:
+            labelTitle = Language.language
+            self.fields[labelTitle] = forms.CharField(required=False)
+            self.fields[labelTitle].value = Language.id
+            self.fields[labelTitle].widget.attrs.update(
+                {'style': 'display: none;'})
+            theFormField1 = FormFields.objects.get(
+                formFieldType="NewFAQSubject")
+            searchField1 = FormText.objects.filter(
+                language=aLanguage, theformFieldType=theFormField1)
+            for field in searchField1:
+                fieldSubjectTitle = Language.language + "SubjectTitle"
+                self.fields[fieldSubjectTitle] = forms.CharField(
+                    required=False)
+                self.fields[fieldSubjectTitle].label = field.formTextLabel
+                self.fields[fieldSubjectTitle].widget.attrs.update(
+                    {'style': 'display: none;'})
+            labelSubject = Language.language + "subject"
+            self.fields[labelSubject] = forms.CharField(
+                widget=forms.Textarea)
+            self.fields[labelSubject].label = ""
+            self.fields[labelSubject].widget.attrs.update(
                 {'class': 'p-2'})
+            theFormField2 = FormFields.objects.get(
+                formFieldType="NewFAQContent")
+            searchField2 = FormText.objects.filter(
+                language=aLanguage, theformFieldType=theFormField2)
+            for afield in searchField2:
+                fieldContentTitle = Language.language + "ContentTitle"
+                self.fields[fieldContentTitle] = forms.CharField(
+                    required=False)
+                self.fields[fieldContentTitle].label = field.formTextLabel
+                self.fields[fieldContentTitle].widget.attrs.update(
+                    {'style': 'display: none;'})
+            labelContent = Language.language + "content"
+            self.fields[labelContent] = forms.CharField(
+                widget=forms.Textarea)
+            self.fields[labelContent].label = ""
+            self.fields[labelContent].widget.attrs.update(
+                {'class': 'p-2'})
+
+    def saveForm(self, post, description, *args, **kwargs):
+        theLanguages = LanguageChoices.objects.all()
+        for Language in theLanguages:
+            # make an faq per language
+            # language fields
+            labelSubject = Language.language + "subject"
+            labelContent = Language.language + "content"
+            # new FAQ
+            faq = FAQ()
+            # populate faq
+            faq.description = description
+            faq.language = Language
+            faq.subject = str(post.get(labelSubject))
+            faq.content = str(post.get(labelContent))
+            # save faq
+            faq.save()

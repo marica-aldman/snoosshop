@@ -6,47 +6,45 @@
 <div class="container mt-3">
 
     <div class="border border-dark mb-3 p-2">
-        <h3>FAQ</h3>
+        <h3>{{Title}}</h3>
         <form method="POST">
             {% csrf_token %}
-            <input type="hidden" name="old" value="{{ old }}">
             <table class="table-striped table-hover w-100  mb-2 table-bordered">
                 <tbody>
                     <tr>
                         <td>
                             {{form.description.label}}
+                            {{form.check}}
                         </td>
+                    </tr>
+                    <tr>
                         <td>
                             {{ form.description }}
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            {{form.language.label}}
-                        </td>
-                        <td>
-                            {{ form.language }}
+                            {{form.LanguageSubjectTitle.label}}
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            {{form.subject.label}}
-                        </td>
                         <td>
                             {{ form.subject }}
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            {{form.content.label}}
+                            {{form.LanguageContentTitle.label}}
                         </td>
+                    </tr>
+                    <tr>
                         <td>
                             {{ form.content }}
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <button type='submit' class='btn btn-primary' name="saveCategory" value="True">Spara</button>
+            <button type='submit' class='btn btn-primary' name="saveFAQ" value="True">Spara</button>
         </form>
     </div>
 </div>

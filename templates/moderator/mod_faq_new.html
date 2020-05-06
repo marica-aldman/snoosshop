@@ -9,7 +9,7 @@
         {% for title in theTitle %}
             <h3>{{title.text}}</h3>
         {% endfor %}
-        <form method="POST">
+        <form method="POST" action=".">
             {% csrf_token %}
             <table class="table-striped table-hover w-100  mb-2 table-bordered">
                 <tbody>
@@ -29,38 +29,15 @@
                             </table>
                         </td>
                     </tr>
-                {% for languageAndForm in formList %}
                     <tr>
                         <td>
-                            {{languageAndForm.language.language}}
+                            {{ formList.as_p}}
                         </td>
-                    </tr>
-                
                     <tr>
-                        <td>
-                            {{languageAndForm.form.subject.label}}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            {{ languageAndForm.form.subject }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            {{languageAndForm.form.content.label}}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            {{ languageAndForm.form.content }}
-                        </td>
-                    </tr>
-                {% endfor %}
                 </tbody>
             </table>
         {% for button in saveButton %}
-            <button type='submit' class='btn btn-primary' id="save" name="save">{{button.buttonText}}</button>
+            <button type='submit' class='btn btn-primary' id="save" name="saveFAQ">{{button.buttonText}}</button>
         {% endfor %}
         </form>
     </div>

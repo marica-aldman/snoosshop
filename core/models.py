@@ -651,6 +651,9 @@ class FAQ(models.Model):
             'slug': self.id
         })
 
+    def get_absolute_url_moderator_delete(self):
+        return reverse("moderator:delete")
+
     def get_absolute_url_moderator_new(self):
         return reverse("moderator:new_faq")
 

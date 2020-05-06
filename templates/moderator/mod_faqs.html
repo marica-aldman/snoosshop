@@ -41,7 +41,7 @@
                         Språk
                     </th>
                     <th>
-                        Fråga
+                        Beskrivning
                     </th>
                     <th>
                         Titta på
@@ -119,6 +119,17 @@
                 <div>
                 {% for button in addButton %}
                     <button type='submit' class='btn btn-primary' name="createFAQ" value="True">{{button.buttonText}}</button>
+                {% endfor %}
+                </div>
+            </div>
+        </form>
+        
+        <form method="POST" action="{{ empty_faq.get_absolute_url_moderator_delete }}"  class="w-100">
+            {% csrf_token %}
+            <div class="d-flex justify-content-around">
+                <div>
+                {% for button in deleteButton %}
+                    <button type='submit' class='btn btn-primary' name="deleteFAQ" value="True">{{button.buttonText}}</button>
                 {% endfor %}
                 </div>
             </div>

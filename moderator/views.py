@@ -3026,6 +3026,13 @@ class FAQsView(View):
             except ObjectDoesNotExist:
                 addButton = {"buttonText": "Add"}
                 comment.append("No add Button found")
+            try:
+                cButtonType = ButtonType.objects.get(buttonType="delete")
+                deleteButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=bButtonType)
+            except ObjectDoesNotExist:
+                deleteButton = {"buttonText": "Delete"}
+                comment.append("No add Button found")
 
             # set the hidden value for wether or not we have done a search
 
@@ -3061,6 +3068,7 @@ class FAQsView(View):
                 'FAQS': faqs,
                 'searchButton': searchButton,
                 'addButton': addButton,
+                'deleteButton': deleteButton,
                 'comment': comment,
                 'current_page': current_page,
                 'more_faqs': more_faqs,
@@ -3092,9 +3100,72 @@ class SpecificFAQView(View):
 
     def post(self, *args, **kwargs):
         if 'lookAtFAQ' in self.request.POST.keys():
-            faqID = int(self.request.POST['lookAtFAQ'])
+            # establish the users language first, this should later have a check
+            theLang = "Svenska"
+            comment = []
+            try:
+                theLanguage = LanguageChoices.objects.get(
+                    language=theLang)
+                try:
+                    faqID = int(self.request.POST['lookAtFAQ'])
+                    faq = FAQ.objects.select_related("language").get(id=faqID)
+                    form = UpdateFAQ()
+                    form.language(theLanguage, faq)
+                    try:
+                        aButtonType = ButtonType.objects.get(buttonType="save")
+                        saveButton = ButtonText.objects.filter(
+                            language=theLanguage, theButtonType=aButtonType)
+                    except ObjectDoesNotExist:
+                        searchButton = {"buttonText": "Save"}
+                        comment.append("No save Button found")
+
+                    context = {
+                        'Title': faq.language.language,
+                        'form': form,
+                        'saveButton': saveButton,
+                        'comment': comment,
+                    }
+
+                    return render(self.request, "moderator/mod_faq_update.html", context)
+                except ObjectDoesNotExist:
+                    print("no faq")
+                    return redirect("moderator:faqs")
+            except ObjectDoesNotExist:
+                print("no language")
+                return redirect("moderator:faqs")
+        elif 'saveFAQ' in self.request.POST.keys():
+            # establish the users language first, this should later have a check
+            theLang = "Svenska"
+            comment = []
+            try:
+                theLanguage = LanguageChoices.objects.get(
+                    language=theLang)
+            except ObjectDoesNotExist:
+                print("no language")
+                return redirect("moderator:faqs")
+
+            form = UpdateFAQ(self.request.POST)
+            if form.is_valid():
+                print("valid")
+                faqID = int(self.request.POST['check'])
+                faq = FAQ.objects.get(id=faqID)
+                faq.subject = form.cleaned_data.get('subject')
+                faq.content = form.cleaned_data.get('content')
+                faq.save()
+
+                return redirect("moderator:faqs")
         else:
+            print("no lookat or save")
             return redirect("moderator:faqs")
+
+
+class DeleteSpecificFAQView(View):
+
+    def get(self, *args, **kwargs):
+        return redirect("core:home")
+
+    def post(self, *args, **kwargs):
+        return redirect("moderator:categories")
 
 
 class NewSpecificFAQView(View):
@@ -3104,12 +3175,12 @@ class NewSpecificFAQView(View):
 
     def post(self, *args, **kwargs):
         if 'createFAQ' in self.request.POST.keys():
-            # establish language first, this should later have a check
-            theLang = "swe"
+            # establish the users language first, this should later have a check
+            theLang = "Svenska"
             comment = []
             try:
                 theLanguage = LanguageChoices.objects.get(
-                    language_short=theLang)
+                    language=theLang)
                 try:
                     textType = TextTypeChoices.objects.get(textType="title")
                     title = TextField.objects.filter(
@@ -3126,20 +3197,11 @@ class NewSpecificFAQView(View):
                     comment.append("Form issue")
 
                 try:
-                    theLanguages = LanguageChoices.objects.all()
+                    newForm = NewFAQPerLanguage()
+                    newForm.language(aLanguage=theLanguage)
                 except ObjectDoesNotExist:
-                    comment.append("No language found")
-
-                languageFormList = []
-                for language in theLanguages:
-                    try:
-                        newForm = NewFAQPerLanguage()
-                        newForm.language(aLanguage=theLanguage)
-                    except ObjectDoesNotExist:
-                        form = NewFAQPerLanguage()
-                        comment.append("Language specific Form issue")
-                    languageFormList.append(
-                        {'language': language, 'form': newForm})
+                    form = NewFAQPerLanguage()
+                    comment.append("Language specific Form issue")
 
                 try:
                     aButtonType = ButtonType.objects.get(buttonType="save")
@@ -3152,12 +3214,32 @@ class NewSpecificFAQView(View):
                 context = {
                     'theTitle': title,
                     'form': form,
-                    'formList': languageFormList,
+                    'formList': newForm,
                     'saveButton': saveButton,
                     'comment': comment,
                 }
 
                 return render(self.request, "moderator/mod_faq_new.html", context)
+            except ObjectDoesNotExist:
+                return redirect("moderator:faqs")
+        elif 'saveFAQ' in self.request.POST.keys():
+            # establish the users language first, this should later have a check
+            theLang = "Svenska"
+            comment = []
+            try:
+                theLanguage = LanguageChoices.objects.get(
+                    language=theLang)
+                form1 = NewFAQForm(self.request.POST)
+                if form1.is_valid():
+                    description = form1.cleaned_data.get('description')
+                    form2 = NewFAQPerLanguage()
+                    form2.language(theLanguage)
+                    post = self.request.POST
+                    form2.saveForm(post, description)
+                    #info_message = get_message('info', code)
+                    messages.info(self.request, "FAQs saved")
+                    return redirect("moderator:faqs")
+
             except ObjectDoesNotExist:
                 return redirect("moderator:faqs")
         else:
