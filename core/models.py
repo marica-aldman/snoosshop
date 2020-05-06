@@ -587,6 +587,7 @@ class WarningMessages(models.Model):
 
 class TextField(models.Model):
     view_section = models.CharField(max_length=20, null=True)
+    short_hand = models.CharField(max_length=20, default="fixthis")
     description = models.CharField(max_length=200)
     textType = models.ForeignKey(
         TextTypeChoices, on_delete=models.SET_NULL, blank=True, null=True)

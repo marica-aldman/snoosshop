@@ -3029,7 +3029,7 @@ class FAQsView(View):
             try:
                 cButtonType = ButtonType.objects.get(buttonType="delete")
                 deleteButton = ButtonText.objects.filter(
-                    language=theLanguage, theButtonType=bButtonType)
+                    language=theLanguage, theButtonType=cButtonType)
             except ObjectDoesNotExist:
                 deleteButton = {"buttonText": "Delete"}
                 comment.append("No add Button found")
@@ -3162,10 +3162,132 @@ class SpecificFAQView(View):
 class DeleteSpecificFAQView(View):
 
     def get(self, *args, **kwargs):
-        return redirect("core:home")
+        return redirect("moderator:faqs")
 
     def post(self, *args, **kwargs):
-        return redirect("moderator:categories")
+        if 'deleteFAQ' in self.request.POST.keys():
+            # establish the users language first, this should later have a check
+            theLang = "Svenska"
+            comment = []
+            try:
+                theLanguage = LanguageChoices.objects.get(
+                    language=theLang)
+            except ObjectDoesNotExist:
+                return redirect("moderator:faqs")
+
+            # text fields
+            title = ""
+            description = ""
+            language = ""
+            subject = ""
+            content = ""
+            try:
+                textType = TextTypeChoices.objects.get(textType="title")
+                atitle = TextField.objects.filter(
+                    language=theLanguage, textType=textType, short_hand="deleteFAQ")
+            except ObjectDoesNotExist:
+                atitle = {"text": "Title"}
+                comment.append("No title-textfield found")
+            for t in atitle:
+                title = t.text
+
+            try:
+                textType = TextTypeChoices.objects.get(textType="label")
+                adescription = TextField.objects.filter(
+                    language=theLanguage, textType=textType, short_hand="descriptionFAQ")
+            except ObjectDoesNotExist:
+                adescription = "Description"
+                comment.append("No description-label found")
+            for d in adescription:
+                description = d.text
+
+            try:
+                textType = TextTypeChoices.objects.get(textType="label")
+                alanguage = TextField.objects.filter(
+                    language=theLanguage, textType=textType, short_hand="languageFAQ")
+            except ObjectDoesNotExist:
+                alanguage = "Language"
+                comment.append("No Language-label found")
+            for l in alanguage:
+                language = l.text
+
+            try:
+                textType = TextTypeChoices.objects.get(textType="label")
+                asubject = TextField.objects.filter(
+                    language=theLanguage, textType=textType, short_hand="subjectFAQ")
+            except ObjectDoesNotExist:
+                asubject = "Subject"
+                comment.append("No subject-label found")
+            for s in asubject:
+                subject = s.text
+
+            try:
+                textType = TextTypeChoices.objects.get(textType="label")
+                acontent = TextField.objects.filter(
+                    language=theLanguage, textType=textType, short_hand="contentFAQ")
+                print(acontent)
+            except ObjectDoesNotExist:
+                acontent = "Content"
+                comment.append("No content-label found")
+            for c in acontent:
+                content = c.text
+
+            faqID = int(self.request.POST['deleteFAQ'])
+            findTheDiscription = FAQ.objects.get(id=faqID)
+            theDescription = findTheDiscription.description
+            allFAQsWithDis = FAQ.objects.select_related(
+                'language').filter(description=theDescription)
+
+            try:
+                aButtonType = ButtonType.objects.get(buttonType="delete")
+                deleteButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=aButtonType)
+            except ObjectDoesNotExist:
+                deleteButton = {"buttonText": "delete"}
+                comment.append("No save Button found")
+            try:
+                bButtonType = ButtonType.objects.get(buttonType="cancel")
+                cancelButton = ButtonText.objects.filter(
+                    language=theLanguage, theButtonType=bButtonType)
+            except ObjectDoesNotExist:
+                cancelButton = {"buttonText": "cancel"}
+                comment.append("No save Button found")
+
+            if len(comment) > 0:
+                print(comment)
+
+            context = {
+                'theTitle': title,
+                'description': description,
+                'language': language,
+                'subject': subject,
+                'content': content,
+                'faqs': allFAQsWithDis,
+                'theDescription': theDescription,
+                'deleteButton': deleteButton,
+                'cancelButton': cancelButton,
+            }
+
+            return render(self.request, "moderator/mod_faq_delete.html", context)
+
+        elif 'delete' in self.request.POST.keys():
+            theDescription = str(self.request.POST['desc'])
+
+            try:
+                faqs = FAQ.objects.filter(description=theDescription)
+            except:
+                return redirect("moderator:faqs")
+
+            for faq in faqs:
+                faq.delete()
+            #info_message = get_message('info', code)
+            messages.info(self.request, "FAQs deleted")
+            return redirect("moderator:faqs")
+
+        elif 'cancel' in self.request.POST.keys():
+            return redirect("moderator:faqs")
+        else:
+            return redirect("moderator:faqs")
 
 
 class NewSpecificFAQView(View):
@@ -3184,7 +3306,7 @@ class NewSpecificFAQView(View):
                 try:
                     textType = TextTypeChoices.objects.get(textType="title")
                     title = TextField.objects.filter(
-                        language=theLanguage, textType=textType, description="NewFAQ")
+                        language=theLanguage, textType=textType, short_hand="NewFAQ")
                 except ObjectDoesNotExist:
                     title = {"text": "Title"}
                     comment.append("No title found")

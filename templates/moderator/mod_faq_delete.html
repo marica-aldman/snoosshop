@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-3">
+
+    <div class="border border-dark mb-3 p-2">
+        <h3>{{theTitle}}</h3>
+        <table class="table-striped table-hover w-100  mb-2 table-bordered">
+            <tbody>
+            {% for faq in faqs %}
+                <tr>
+                    <td>
+                        {{description}}
+                    </td>
+                    <td>
+                        {{faq.description}}
+                    </td>
+                <tr>
+                <tr>
+                    <td>
+                        {{language}}
+                    </td>
+                    <td>
+                        {{faq.language}}
+                    </td>
+                <tr>
+                <tr>
+                    <td>
+                        {{subject}}
+                    </td>
+                    <td>
+                        {{faq.subject}}
+                    </td>
+                <tr>
+                <tr>
+                    <td>
+                        {{content}}
+                    </td>
+                    <td>
+                        {{faq.content}}
+                    </td>
+                <tr>
+                <tr>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <td>&nbsp;
+                    </td>
+                <tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <form method="POST" action=".">
+            {% csrf_token %}
+            <input type="hidden" id="desc" name="desc" value="{{theDescription}}">
+            {% for button in deleteButton %}
+                <button type='submit' class='btn btn-primary' id="delete" name="delete">{{button.buttonText}}</button>
+            {% endfor %}
+            {% for button in cancelButton %}
+                <button type='submit' class='btn btn-primary' id="cancel" name="cancel">{{button.buttonText}}</button>
+            {% endfor %}
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}
