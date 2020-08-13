@@ -6,6 +6,18 @@ import random
 import string
 
 
+def which_page(self):
+    path = self.request.get_full_path()
+    split_path = path.split("/")
+    page = split_path[-1]
+    print(page)
+    if page == "":
+        page = split_path[-2]
+    page_number = page.split("=")
+
+    return page
+
+
 def where_am_i(self):
     path = self.request.get_full_path()
     split_path = path.split("/")
@@ -250,21 +262,19 @@ def calculate_freight(order, freight):
 
 def get_message(theType, theCode):
     # get this from cookie later
-    language = 'Swe'
+    language = 'swe'
+    languageObject = LanguageChoices.objects.get(language_short=language)
     if theType == "info":
-        if language == "Swe":
-            messageObject = InformationMessages.objects.get(code=theCode)
-            message = messageObject.swedish
-            return message
+        messageObject = InformationMessages.objects.get(
+            code=theCode, language=languageObject)
+        return messageObject.text
     elif theType == "error":
-        if language == "Swe":
-            messageObject = ErrorMessages.objects.get(code=theCode)
-            message = messageObject.swedish
-            return message
+        messageObject = ErrorMessages.objects.get(
+            code=theCode, language=languageObject)
+        return messageObject.text
     elif theType == "warning":
-        if language == "Swe":
-            messageObject = WarningMessages.objects.get(code=theCode)
-            message = messageObject.swedish
-            return message
+        messageObject = WarningMessages.objects.get(
+            code=theCode, language=languageObject)
+        return messageObject.text
     else:
         return "There was an error retrieving this message. Contact IT support imidiately."

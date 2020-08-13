@@ -356,10 +356,51 @@ class HomeView(ListView):
     template_name = "home.html"
 
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
         categories = Category.objects.all()
         context['category_choices'] = categories
         return context
+
+
+class NewHomeView(View):
+    def get(self, *args, **kwargs):
+        theUser = self.request.user
+
+        if(theUser.is_authenticated):
+            group1 = Group.objects.get(name="client")
+            group2 = Group.objects.get(name="moderator")
+            group3 = Group.objects.get(name="support")
+            groups = theUser.groups.all()
+            has_no_group = groups != group1 or groups != group2 or groups != group3
+            if has_no_group:
+                return redirect("member:setup")
+
+        categories = Category.objects.all()
+
+        products = Item.objects.all()[:20]
+        number_products = Item.objects.all().count()
+        print(type(number_products))
+        if(number_products >= 1):
+            page = which_page(self)
+            pagination = {}
+            is_paginated = False
+
+        else:
+            is_paginated = False
+            pagination = {}
+
+        context = {
+            "category_choices": categories,
+            "object_list": products,
+            "is_paginated": is_paginated,
+            "page_obj": pagination
+        }
+
+        return render(self.request, 'home.html', context)
+
+    def post(self, *args, **kwargs):
+        return redirect("core:home")
 
 
 class OrderSummaryView(LoginRequiredMixin, View):

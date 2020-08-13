@@ -22,34 +22,20 @@ from core.info_error_msg import *
 class Setup(View):
     def get(self, *args, **kwargs):
         theUser = self.request.user
-        try:
-            info = UserInfo.objects.get(user=theUser)
-            group1 = Group.objects.get(name="client")
-            group2 = Group.objects.get(name="moderator")
-            group3 = Group.objects.get(name="support")
-            groups = theUser.groups.all()
-            if groups == group1:
-                return redirect("member:my_overview")
-            elif groups == group2:
-                return redirect("moderator:overview")
-            elif groups == group3:
-                return redirect("support:overview")
-            else:
-                message = get_message('error', 133)
-                return redirect("core:home")
-        except ObjectDoesNotExist:
+        group = Group.objects.get(name="client")
+        group.user_set.add(theUser)
 
-            form_user = UserInformationForm()
-            form_company = CompanyInfoForm()
-            form_address = SetupAddressForm()
+        form_user = UserInformationForm()
+        form_company = CompanyInfoForm()
+        form_address = SetupAddressForm()
 
-            context = {
-                'userForm': form_user,
-                'companyForm': form_company,
-                'addressForm': form_address,
-            }
+        context = {
+            'userForm': form_user,
+            'companyForm': form_company,
+            'addressForm': form_address,
+        }
 
-            return render(self.request, "member/setup.html", context)
+        return render(self.request, "member/setup.html", context)
 
     def post(self, *args, **kwargs):
         try:
@@ -67,12 +53,6 @@ class Setup(View):
                     hasCompany = True
 
             if form_user.is_valid():
-                # set this users group to client
-                try:
-                    theUser.groups.add(Group.objects.get(name="client"))
-                except ObjectDoesNotExist:
-                    # skip this
-                    groups = 0
                 # check that we dont already have info on this user
                 try:
                     userInfo = UserInfo.objects.get(user=theUser)
