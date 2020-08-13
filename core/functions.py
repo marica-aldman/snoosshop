@@ -10,11 +10,11 @@ def which_page(self):
     path = self.request.get_full_path()
     split_path = path.split("/")
     page = split_path[-1]
-    print(page)
     if page == "":
-        page = split_path[-2]
-    page_number = page.split("=")
-
+        page = "homestart"
+    else:
+        page_number = page.split("=")
+        page = page_number[1]
     return page
 
 

@@ -894,12 +894,12 @@ class SpecificProductsView(View):
                         category_id = int(self.request.POST['category'])
                         category = Category.objects.get(id=category_id)
                         product.category = category
-
+                    product.slug = "temp"
                     # save
 
                     product.save()
 
-                    product.slug = product.title + str(product.id)
+                    product.slug = "item" + str(product.id)
 
                     product.save()
 

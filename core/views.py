@@ -366,27 +366,79 @@ class HomeView(ListView):
 class NewHomeView(View):
     def get(self, *args, **kwargs):
         theUser = self.request.user
-
         if(theUser.is_authenticated):
             group1 = Group.objects.get(name="client")
             group2 = Group.objects.get(name="moderator")
             group3 = Group.objects.get(name="support")
             groups = theUser.groups.all()
-            has_no_group = groups != group1 or groups != group2 or groups != group3
+            has_no_group = True
+
+            for group in groups:
+                if group == group1:
+                    has_no_group = False
+                elif group == group2:
+                    has_no_group = False
+                elif group == group3:
+                    has_no_group = False
             if has_no_group:
                 return redirect("member:setup")
 
         categories = Category.objects.all()
-
-        products = Item.objects.all()[:20]
+        aqire_index = 2
         number_products = Item.objects.all().count()
-        print(type(number_products))
-        if(number_products >= 1):
-            page = which_page(self)
-            pagination = {}
-            is_paginated = False
+        print(number_products)
+        pagination = {}
+        is_paginated = False
+        if(number_products > aqire_index):
 
+            page = which_page(self)
+            if page == "homestart":
+                pagination = {
+                    "has_previous": False,
+                    "previous_page_number": 1,
+                    "number": 1,
+                    "has_next": True,
+                    "next_page_number": 2
+                }
+                is_paginated = True
+                products = Item.objects.all()[:aqire_index]
+            else:
+                page = int(page)
+                offset = int(page) * aqire_index
+                # look up test is not the aqire index or the previous page number if aqire is 1 it is not aqire * page it is however page -1 if it aqire is 2 then lookup = page if aqire is 3 then lookup = ?
+                lookup_test = page
+                print(offset)
+                products = Item.objects.all()[lookup_test:offset]
+                print(products)
+                is_paginated = True
+                number_of_pages = number_products / aqire_index
+                test = int(number_of_pages)
+                print(test)
+                print(number_of_pages)
+                if number_of_pages > test:
+                    number_of_pages += 1
+                    print(number_of_pages)
+                if page < number_of_pages:
+                    next_page = page + 1
+                    previous_page = page - 1
+                    pagination = {
+                        "has_previous": True,
+                        "previous_page_number": previous_page,
+                        "number": page,
+                        "has_next": True,
+                        "next_page_number": next_page
+                    }
+                else:
+                    pagination = {
+                        "has_previous": True,
+                        "previous_page_number": page - 1,
+                        "number": page,
+                        "has_next": False,
+                        "next_page_number": page
+                    }
         else:
+            products = Item.objects.all()[:aqire_index]
+
             is_paginated = False
             pagination = {}
 
