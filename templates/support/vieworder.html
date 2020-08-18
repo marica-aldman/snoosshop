@@ -135,28 +135,6 @@
                             {{ billing_address.street_address }}
                         </td>
                     </tr>
-                    {% if order.subscription_order and not order.being_delivered %}
-                    
-                    <tr>
-                        <td>
-                            Premunation startad
-                        </td>
-                        <td>
-                            {{ subscription.start_date|date:"d m Y" }}
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>
-                            Nästa utskick
-                        </td>
-                        <td>
-                            {{ order.sub_out_date|date:"d m Y" }}
-                        </td>
-                    </tr>
-
-                    {% else %}
-
                     <tr>
                         <td>
                             Beställd
@@ -166,7 +144,6 @@
                         </td>
                     </tr>
 
-                    {% endif %}
                     <tr>
                         <td>
                             Status

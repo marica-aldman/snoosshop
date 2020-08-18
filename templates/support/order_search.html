@@ -35,12 +35,6 @@
                         Order Ref
                     </th>
                     <th>
-                        Typ
-                    </th>
-                    <th>
-                        Premuneration skickas
-                    </th>
-                    <th>
                         Beställd
                     </th>
                     <th>
@@ -57,20 +51,6 @@
                 <tr>
                     <td>
                         {{ order.ref_code }}
-                    </td>
-                    <td>
-                        {% if order.subscription_order %}
-                            Prenumeration
-                        {% else %}
-                            Vanlig
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if order.subscription_order %}
-                            {{ order.sub_out_date }}
-                        {% else %}
-                            ---
-                        {% endif %}
                     </td>
                     <td>
                         {{ order.ordered_date }}
@@ -108,20 +88,6 @@
                 <tr>
                     <td>
                         {{ order.ref_code }}
-                    </td>
-                    <td>
-                        {% if order.subscription_order %}
-                            Prenumeration
-                        {% else %}
-                            Vanlig
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if order.subscription_order %}
-                            {{ order.sub_out_date }}
-                        {% else %}
-                            ---
-                        {% endif %}
                     </td>
                     <td>
                         {{ order.ordered_date }}

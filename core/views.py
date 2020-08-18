@@ -386,7 +386,6 @@ class NewHomeView(View):
         categories = Category.objects.all()
         aqire_index = 2
         number_products = Item.objects.all().count()
-        print(number_products)
         pagination = {}
         is_paginated = False
         if(number_products > aqire_index):
@@ -761,8 +760,18 @@ class FAQView(View):
                                 i += 1
                             if not same:
                                 search_no_duplicates.append(entry)
-                else:
-                    comment = get_message("info", code)
+                elif len_s == 0:
+                    try:
+                        search_no_duplicates = FAQ.objects.filter(
+                            language=theLanguage)
+                    except ObjectDoesNotExist:
+                        message = get_message('error', 135)
+                        search_no_duplicates = [
+                            {
+                                "question": "Ett fel har uppstått:",
+                                "answer": message,
+                            }
+                        ]
 
                 try:
                     aButtonType = ButtonType.objects.get(

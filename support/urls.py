@@ -17,8 +17,6 @@ from .views import (
     EditAdresses,
     SettingsView,
     EditCompany,
-    Subscriptions,
-    SpecificSubscription,
 )
 
 from member.views import CookieSettingsView, changePassword
@@ -42,8 +40,6 @@ urlpatterns = [
     path('new_address/', NewAddress.as_view(), name='new_address'),
     path('settings/', CookieSettingsView.as_view(), name='settings'),
     path('user_settings/', SettingsView.as_view(), name='user_settings'),
-    path('subscriptions/', Subscriptions.as_view(), name='subscriptions'),
-    path('subscription/<slug>', SpecificSubscription.as_view(), name='subscription'),
 
 ]
 

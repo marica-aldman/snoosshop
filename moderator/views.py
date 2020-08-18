@@ -1535,7 +1535,7 @@ class OrderHandlingView(View):
         # get max pages regular orders
         r_pages = 1
         reg_orders = Order.objects.filter(
-            ordered=True, being_delivered=False, subscription_order=False).order_by('id')
+            ordered=True, being_delivered=False).order_by('id')
         number_reg_orders = reg_orders.count()
 
         if number_reg_orders > 10:
@@ -1547,24 +1547,10 @@ class OrderHandlingView(View):
             if testR != r_pages:
                 r_pages = int(r_pages)
                 r_pages += 1
-        # get max pages subscription orders
-        s_pages = 1
-        sub_orders = Order.objects.filter(
-            being_delivered=False, subscription_order=True)
-        number_sub_orders = sub_orders.count()
-
-        if number_sub_orders > 10:
-            # if there are more we divide by ten
-            s_pages = number_sub_orders / 10
-            # see if there is a decimal
-            testS = int(s_pages)
-            # if there isn't an even number of ten make an extra page for the last group
-            if testS != s_pages:
-                s_pages = int(s_pages)
-                s_pages += 1
+        
         try:
             reg_orders = Order.objects.filter(
-                ordered=True, being_delivered=False, subscription_order=False).order_by('id')[:10]
+                ordered=True, being_delivered=False).order_by('id')[:10]
             info1 = ""
         except ObjectDoesNotExist:
             reg_orders = {}
@@ -1584,28 +1570,6 @@ class OrderHandlingView(View):
 
         r_current_page = 1
 
-        try:
-            sub_orders = Order.objects.filter(
-                being_delivered=False, subscription_order=True).order_by('sub_out_date')[:10]
-            info2 = ""
-        except ObjectDoesNotExist:
-            sub_orders = {}
-            info2 = get_message('info', 50)
-
-        # create a list for a ul to work through
-
-        more_sub_orders = []
-
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(s_pages):
-            i += 1
-            more_sub_orders.append({'number': i})
-
-        # sub current page
-
-        s_current_page = 1
-
         # make search form for specific order or customer
 
         form = searchOrderForm()
@@ -1620,19 +1584,13 @@ class OrderHandlingView(View):
             'search_type': search_type,
             'search_value': search_value,
             'reg_orders': reg_orders,
-            'sub_orders': sub_orders,
             'rmax': r_pages,
             'r_current_page': r_current_page,
             'more_reg_orders': more_reg_orders,
-            's_current_page': s_current_page,
-            'more_sub_orders': more_sub_orders,
-            'smax': s_pages,
         }
 
         if info1 != "":
             messages.info(self.request, info1)
-        if info2 != "":
-            messages.info(self.request, info2)
 
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
@@ -1646,11 +1604,11 @@ class OrderHandlingView(View):
             search_value = int(self.request.POST['search_value'])
         # handle status change and pagination
         r_current_page = int(self.request.POST['r_current_page'])
-        s_current_page = int(self.request.POST['s_current_page'])
+        
         # get max pages regurlar orders
         r_pages = 1
         number_reg_orders = Order.objects.filter(
-            ordered=True, being_delivered=False, subscription_order=False).count()
+            ordered=True, being_delivered=False).count()
 
         if number_reg_orders > 10:
             # if there are more we divide by ten
@@ -1662,22 +1620,9 @@ class OrderHandlingView(View):
                 r_pages = int(r_pages)
                 r_pages += 1
 
-        # get max pages subscription orders
-        s_pages = 1
-        number_sub_orders = Order.objects.filter(
-            being_delivered=False, subscription_order=True).count()
-
-        if number_sub_orders > 10:
-            # if there are more we divide by ten
-            s_pages = number_sub_orders / 10
-            # see if there is a decimal
-            testS = int(s_pages)
-            # if there isn't an even number of ten make an extra page for the last group
-            if testS != s_pages:
-                s_pages = int(s_pages)
-                s_pages += 1
+        
         if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-            if not 'previousPageRegOrder' in self.request.POST.keys() or not 'nextPageRegOrder' in self.request.POST.keys() or not 'r_page' in self.request.POST.keys() or not 'previousPageSubOrder' in self.request.POST.keys() or not 'nextPageSubOrder' in self.request.POST.keys() or not 's_page' in self.request.POST.keys():
+            if not 'previousPageRegOrder' in self.request.POST.keys() or not 'nextPageRegOrder' in self.request.POST.keys() or not 'r_page' in self.request.POST.keys():
                 # make a form and populate so we can clean the data
                 form = searchOrderForm(self.request.POST)
 
@@ -1694,7 +1639,7 @@ class OrderHandlingView(View):
                         # get max pages regular orders
                         r_pages = 1
                         reg_orders = Order.objects.filter(
-                            ref_code=search_value, subscription_order=False).order_by('id')
+                            ref_code=search_value).order_by('id')
                         number_reg_orders = 1
                         r_pages = 1
 
@@ -1706,20 +1651,6 @@ class OrderHandlingView(View):
 
                         r_current_page = 1
 
-                        # get max pages subscription orders
-                        s_pages = 1
-                        sub_orders = Order.objects.filter(
-                            ref_code=search_value, subscription_order=True).order_by('id')
-                        number_sub_orders = 1
-
-                        # create a list for a ul to work through
-
-                        more_sub_orders = [{'number': 1}]
-
-                        # current page for regular
-
-                        s_current_page = 1
-
                         # set the search type
 
                         search_type = "Reference"
@@ -1729,13 +1660,9 @@ class OrderHandlingView(View):
                             'search_type': search_type,
                             'search_value': search_value,
                             'reg_orders': reg_orders,
-                            'sub_orders': sub_orders,
                             'rmax': r_pages,
                             'r_current_page': r_current_page,
                             'more_reg_orders': more_reg_orders,
-                            's_current_page': s_current_page,
-                            'more_sub_orders': more_sub_orders,
-                            'smax': s_pages,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
@@ -1748,7 +1675,7 @@ class OrderHandlingView(View):
                         # get max pages regular orders
                         r_pages = 1
                         reg_orders = Order.objects.filter(
-                            id=search_value, subscription_order=False).order_by('id')
+                            id=search_value).order_by('id')
                         number_reg_orders = 1
                         r_pages = 1
 
@@ -1760,20 +1687,6 @@ class OrderHandlingView(View):
 
                         r_current_page = 1
 
-                        # get max pages subscription orders
-                        s_pages = 1
-                        sub_orders = Order.objects.filter(
-                            id=search_value, subscription_order=True).order_by('id')
-                        number_sub_orders = 1
-
-                        # create a list for a ul to work through
-
-                        more_sub_orders = [{'number': 1}]
-
-                        # current page for regular
-
-                        s_current_page = 1
-
                         # set the search type
 
                         search_type = "Reference"
@@ -1783,13 +1696,9 @@ class OrderHandlingView(View):
                             'search_type': search_type,
                             'search_value': search_value,
                             'reg_orders': reg_orders,
-                            'sub_orders': sub_orders,
                             'rmax': r_pages,
                             'r_current_page': r_current_page,
                             'more_reg_orders': more_reg_orders,
-                            's_current_page': s_current_page,
-                            'more_sub_orders': more_sub_orders,
-                            'smax': s_pages,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
@@ -1811,16 +1720,6 @@ class OrderHandlingView(View):
             page = int(self.request.POST['r_page'])
             if page <= r_pages:
                 r_current_page = page
-        elif 'previousPageSubOrder' in self.request.POST.keys():
-            if s_current_page >= 2:
-                s_current_page -= 1
-        elif 'nextPageSubOrder' in self.request.POST.keys():
-            if s_current_page < s_pages:
-                s_current_page += 1
-        elif 's_page' in self.request.POST.keys():
-            page = int(self.request.POST['s_page'])
-            if page <= s_pages:
-                s_current_page = page
         else:
             # bugg handle this
             test = ""
@@ -1833,14 +1732,14 @@ class OrderHandlingView(View):
             try:
                 offset = r_current_page * 10
                 reg_orders = Order.objects.filter(
-                    ordered=True, being_delivered=False, subscription_order=False).order_by('id')[10:offset]
+                    ordered=True, being_delivered=False).order_by('id')[10:offset]
             except ObjectDoesNotExist:
                 # no orders left to complete
                 info1 = get_message('info', 49)
         else:
             try:
                 reg_orders = Order.objects.filter(
-                    ordered=True, being_delivered=False, subscription_order=False).order_by('id')[:10]
+                    ordered=True, being_delivered=False).order_by('id')[:10]
             except ObjectDoesNotExist:
                 # no orders left to complete
                 info1 = get_message('info', 49)
@@ -1855,35 +1754,6 @@ class OrderHandlingView(View):
             i += 1
             more_reg_orders.append({'number': i})
 
-        date = datetime.now()
-        sub_orders = {}
-        info2 = ""
-        if s_current_page > 1:
-            try:
-                offset = s_current_page * 10
-                sub_orders = Order.objects.filter(
-                    being_delivered=False, subscription_order=True).order_by('sub_out_date')[10:offset]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info2 = get_message('info', 50)
-        else:
-            try:
-                # get todays date
-                sub_orders = Order.objects.filter(
-                    being_delivered=False, subscription_order=True).order_by('sub_out_date')[:10]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info2 = get_message('info', 50)
-
-        # create a list for a ul to work through
-
-        more_sub_orders = []
-
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(s_pages):
-            i += 1
-            more_sub_orders.append({'number': i})
         # make search form for specific order or customer
 
         form = searchOrderForm()
@@ -1893,19 +1763,13 @@ class OrderHandlingView(View):
             'search_type': search_type,
             'search_value': search_value,
             'reg_orders': reg_orders,
-            'sub_orders': sub_orders,
             'rmax': r_pages,
             'r_current_page': r_current_page,
             'more_reg_orders': more_reg_orders,
-            's_current_page': s_current_page,
-            'more_sub_orders': more_sub_orders,
-            'smax': s_pages,
         }
 
         if info1 != "":
             messages.info(self.request, info1)
-        if info2 != "":
-            messages.info(self.request, info2)
 
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
@@ -1970,58 +1834,6 @@ class SpecificOrderHandlingView(View):
                         # we havent packed anything, abort
                         order.comment = 'Nothing'
                         order.being_delivered = False
-
-                if order.subscription_order and order.comment != 'Partial' and order.comment != 'Nothing':
-                    sub = Subscription.objects.get(next_order=order.id)
-                    sub.next_order_date = get_next_order_date(
-                        make_aware(datetime.now()), sub.intervall)
-                    sub.updated_date = make_aware(datetime.now())
-
-                    # create a new order for this sub
-                    new_order = Order()
-                    new_order.user = sub.user
-
-                    # create a reference code and check that there isnt already one before setting the orders ref code to the code
-                    refcode = create_ref_code()
-                    ref_test = True
-
-                    while ref_test:
-                        try:
-                            testOrder = Order.objects.get(ref_code=refcode)
-                            refcode = create_ref_code()
-                        except ObjectDoesNotExist:
-                            ref_test = False
-                    total_order_price = 0
-                    new_order.ref_code = refcode
-                    new_order.total_price = order.total_price
-                    new_order.freight = order.freight
-                    new_order.sub_out_date = sub.next_order_date
-                    new_order.ordered_date = make_aware(datetime.now())
-                    new_order.updated_date = make_aware(datetime.now())
-                    new_order.ordered = True
-                    new_order.subscription_order = True
-                    new_order.being_read = False
-                    new_order.shipping_address = order.shipping_address
-                    new_order.billing_address = order.billing_address
-                    new_order.payment_type = order.payment_type
-                    new_order.coupon = order.coupon
-                    new_order.save()
-                    sub.next_order = new_order.id
-
-                    # get the subitems
-                    subItems = SubscriptionItem.objects.filter(
-                        subscription=sub)
-
-                    # create order items from sub items
-                    for subItem in subItems:
-                        # saving subscription and order items
-                        orderItem = save_orderItem(subItem)
-                        new_order.items.add(orderItem)
-                        total_order_price = total_order_price + orderItem.total_price
-                    new_order.total_price = total_order_price + new_order.freight
-                    new_order.save()
-                order.comment = ""
-                order.save()
 
                 if order.being_delivered:
                     info_message = get_message('info', 51)

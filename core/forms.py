@@ -63,7 +63,7 @@ class PaymentForm(forms.Form):
 
 
 class SearchFAQForm(forms.Form):
-    searchTerm = forms.CharField(required=True)
+    searchTerm = forms.CharField(required=False)
 
     def language(self, theLanguage, *args, **kwargs):
 

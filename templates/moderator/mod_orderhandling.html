@@ -8,7 +8,6 @@
         <form method="POST" class="w-100">
             {% csrf_token %}
             <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-            <input type="hidden" value="{{s_current_page}}" name="s_current_page">
             <input type="hidden" name="search" value="{{search_type}}">
             <div class="d-flex justify-content-around">
                 <div>
@@ -25,7 +24,7 @@
     </div>
     <!-- results or all orders -->
     <div class="row border border-dark mb-3 p-2">
-        <h3>Vanliga Ordrar</h3>
+        <h3>Ordrar</h3>
         <table class="table-striped table-hover w-100  mb-2">
             <thead class="mdb-color lighten-5">
                 <tr style="text-align: center;">
@@ -70,7 +69,6 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="previousPageRegOrder" class="page-link" {% if r_current_page == 1 %}disabled{% endif %}>
                         <
@@ -82,7 +80,6 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="{{ r_order.number }}" name="r_page" {% if r_current_page == r_order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
                         {{r_order.number}}
@@ -94,7 +91,6 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="True" name="nextPageRegOrder" class="page-link" {% if rmax == r_current_page %} disabled{% endif %}>
                         >
@@ -104,100 +100,7 @@
         </ul>
 
     </div>
-    <div class="row border border-dark mb-3 p-2">
-        <h3>Premunations Ordrar</h3>
-        <table class="table-striped table-hover w-100  mb-2">
-            <thead class="mdb-color lighten-5">
-                <tr style="text-align: center;">
-                    <th>
-                        Order ID
-                    </th>
-                    <th>
-                        Order Ref
-                    </th>
-                    <th>
-                        Datum för utskick
-                    </th>
-                    <th>
-                        Titta på ordern
-                    </th>
-                    <th>
-                        &nbsp;
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-        {% for sub_order in sub_orders %}
-                <tr style="text-align: center;">
-                    <td>
-                        {{ sub_order.id }}
-                    </td>
-                    <td>
-                        {{ sub_order.ref_code }}
-                    </td>
-                    <td>
-                        {{ sub_order.sub_out_date }}
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ sub_order.get_absolute_url_moderator }}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{sub_order.id}}" name="lookAtOrder" class='btn btn-primary'>
-                                Se order
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <button style="line-height: 0;font-size: .81rem; text-align: center;valign: center; border-radius: .125rem; padding: 20px; color: #000000; border: none; height: 20px;background-color: {% if sub_order.red_flag %}#f54242;{% elif sub_order.warning %}#f5ec42;{% else %}#00ff1a;{% endif %}" disabled>
-                            {% if sub_order.red_flag %}NEEDS TO BE SHIPPED NOW{% elif sub_order.warning %}WARNING{% else %}SAFE{% endif %}
-                        </button>
-                    </td>
-                </tr>
-        {% endfor %}
-            </tbody>
-        </table>
-    </div>
 
-
-    <div class="d-flex w-100 justify-content-around">
-        <ul class="pagination">
-            <li class="page-item">
-                <form method="POST">
-                {% csrf_token %}
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="True" name="previousPageSubOrder" class="page-link" {% if s_current_page == 1 %}disabled{% endif %}>
-                        <
-                    </button>
-                </form>
-            </li>
-            {% for s_order in more_sub_orders %}
-            <li class="page-item">
-                <form method="POST">
-                {% csrf_token %}
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="{{ s_order.number }}" name="s_page" {% if s_current_page == s_order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{s_order.number}}
-                    </button>
-                </form>
-            </li>
-            {% endfor %}
-            <li class="page-item">
-                <form method="POST">
-                {% csrf_token %}
-                    <input type="hidden" value="{{s_current_page}}" name="s_current_page">
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="True" name="nextPageSubOrder" class="page-link" {% if smax == s_current_page %} disabled{% endif %}>
-                        >
-                    </button>
-                </form>
-            </li>
-        </ul>
-
-    </div>
 </div>
 
 

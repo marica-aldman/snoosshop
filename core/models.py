@@ -22,10 +22,10 @@ ADDRESS_CHOICES_EXTENDED = [
 ]
 
 LANGUAGE_CHOICES = (
-    ('SWE', 'Svenska'),
-    ('ENG', 'English'),
-    ('DEU', 'Deutch'),
-    ('RUS', 'Russian'),
+    ('swe', 'Svenska'),
+    ('eng', 'English'),
+    ('deu', 'Deutch'),
+    ('rus', 'Russian'),
 )
 
 INTERVALL_CHOICES = (
@@ -455,64 +455,6 @@ class GenericSupport(models.Model):
         return reverse("member:support", kwargs={
             'slug': self.slug
         })
-
-
-class Subscription(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    start_date = models.DateTimeField(default=datetime.now, blank=True)
-    freight = models.ForeignKey(
-        'Freight', on_delete=models.SET_NULL, blank=True, null=True)
-    freight_price = models.FloatField(blank=True, null=True)
-    next_order_date = models.DateTimeField()
-    updated_date = models.DateTimeField(default=datetime.now, blank=True)
-    next_order = models.IntegerField(default=1)
-    comment = models.IntegerField(default=0)
-    intervall = models.CharField(choices=INTERVALL_CHOICES, max_length=3)
-    shipping_address = models.ForeignKey(
-        Address, related_name='shipping', on_delete=models.SET_NULL, blank=True, null=True)
-    billing_address = models.ForeignKey(
-        Address, related_name='billing', on_delete=models.SET_NULL, blank=True, null=True)
-    active = models.BooleanField(default=True)
-    number_of_items = models.PositiveIntegerField()
-    slug = models.SlugField(max_length=20, null=False, unique=True)
-
-    def __str__(self):
-        return self.slug
-
-    def get_absolute_url(self):
-        return reverse("member:my_subscription", kwargs={
-            'slug': self.slug
-        })
-
-    # for the moderatorsupport_get_absolute_url
-
-    def moderator_get_absolute_url(self):
-        return reverse("moderator:subscription", kwargs={
-            'slug': self.slug
-        })
-
-    # for the support
-
-    def support_get_absolute_url(self):
-        return reverse("support:subscription", kwargs={
-            'slug': self.slug
-        })
-
-
-class SubscriptionItem(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    subscription = models.ForeignKey(
-        Subscription, related_name='subscription', on_delete=models.CASCADE, blank=True, null=True)
-    item = models.ForeignKey(
-        Item, on_delete=models.SET_NULL, blank=True, null=True)
-    item_title = models.CharField(
-        max_length=100, default="Somethings wrong, contact support")
-    quantity = models.PositiveIntegerField()
-    price = models.FloatField(blank=True, null=True)
-    discount_price = models.FloatField(blank=True, null=True)
-    total_price = models.FloatField(blank=True, null=True)
 
 
 class Cookies(models.Model):
