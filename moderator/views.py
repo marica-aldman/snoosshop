@@ -19,7 +19,7 @@ from core.functions import *
 from core.info_error_msg import *
 
 
-class Overview(View):
+class Overview(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
 
@@ -232,7 +232,7 @@ class Overview(View):
             return redirect("moderator:overview")
 
 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get moderators own user info
@@ -256,7 +256,7 @@ class ProfileView(View):
             return redirect("moderator:my_overview")
 
 
-class InfoView(View):
+class InfoView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get form for this using the user id
@@ -329,7 +329,7 @@ class InfoView(View):
             return redirect("moderator:my_profile")
 
 
-class ProductsView(View):
+class ProductsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get the first 20 products and a count of all products
@@ -813,7 +813,7 @@ class ProductsView(View):
             return redirect("moderator:overview")
 
 
-class SpecificProductsView(View):
+class SpecificProductsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         message = get_message('error', 90)
         messages.warning(
@@ -953,7 +953,7 @@ class SpecificProductsView(View):
                 return render(self.request, "moderator/mod_single_product.html", context)
 
 
-class CategoriesView(View):
+class CategoriesView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get the first 20 categories and a count of all products
@@ -1439,7 +1439,7 @@ class CategoriesView(View):
             return redirect("moderator:overview")
 
 
-class SpecificCategoryView(View):
+class SpecificCategoryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         message = get_message('error', 104)
         messages.warning(
@@ -1528,7 +1528,7 @@ class SpecificCategoryView(View):
             return redirect("moderator:categories")
 
 
-class OrderHandlingView(View):
+class OrderHandlingView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # display all unsent orders, oldest first
         # first get the constants
@@ -1774,7 +1774,7 @@ class OrderHandlingView(View):
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
 
-class SpecificOrderHandlingView(View):
+class SpecificOrderHandlingView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 105)
@@ -1863,7 +1863,7 @@ class SpecificOrderHandlingView(View):
             return redirect("moderator:orderhandling")
 
 
-class FreightView(View):
+class FreightView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # get the 20 first current freights
         freights = Freight.objects.all().order_by('title')[:20]
@@ -2215,7 +2215,7 @@ class FreightView(View):
             return render(self.request, "moderator/mod_freights.html", context)
 
 
-class SpecificFreightView(View):
+class SpecificFreightView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 8)
@@ -2326,7 +2326,7 @@ class SpecificFreightView(View):
             return redirect("moderator:freights")
 
 
-class CouponsView(View):
+class CouponsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # get the 20 first current freights
         coupons = Coupon.objects.all().order_by('code')[:20]
@@ -2681,7 +2681,7 @@ class CouponsView(View):
             return render(self.request, "moderator/mod_coupons.html", context)
 
 
-class SpecificCouponView(View):
+class SpecificCouponView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 9)
@@ -2807,7 +2807,7 @@ class SpecificCouponView(View):
             return redirect("moderator:coupons")
 
 
-class FAQsView(View):
+class FAQsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # establish language first, this should later have a check
         theLang = "swe"
@@ -2905,7 +2905,7 @@ class FAQsView(View):
                 test = "test"
 
 
-class SpecificFAQView(View):
+class SpecificFAQView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # this shouldnt happen, send back to FAQS
         return redirect("moderator:faqs")
@@ -2971,7 +2971,7 @@ class SpecificFAQView(View):
             return redirect("moderator:faqs")
 
 
-class DeleteSpecificFAQView(View):
+class DeleteSpecificFAQView(LoginRequiredMixin, View):
 
     def get(self, *args, **kwargs):
         return redirect("moderator:faqs")
@@ -3102,7 +3102,7 @@ class DeleteSpecificFAQView(View):
             return redirect("moderator:faqs")
 
 
-class NewSpecificFAQView(View):
+class NewSpecificFAQView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # this shouldnt happen, send back to FAQS
         return redirect("moderator:faqs")

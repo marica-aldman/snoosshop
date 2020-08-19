@@ -19,7 +19,7 @@ from core.functions import *
 from core.info_error_msg import *
 
 
-class Overview(View):
+class Overview(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
 
@@ -651,7 +651,7 @@ class Overview(View):
             return redirect("support:overview")
 
 
-class MultipleOrdersView(View):
+class MultipleOrdersView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get the first 20 orders and a count of all orders
@@ -1090,7 +1090,7 @@ class MultipleOrdersView(View):
             return redirect("support:overview")
 
 
-class Users(View):
+class Users(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get the first 20 users and a count of all users
@@ -1619,7 +1619,7 @@ class Users(View):
             return redirect("support:overview")
 
 
-class OrderView(View):
+class OrderView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # this is either a redirect or someone refreshing the page
         # if redirect
@@ -1828,7 +1828,7 @@ class OrderView(View):
             return redirect("support:orders")
 
 
-class OrderItemView(View):
+class OrderItemView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 10)
@@ -1938,7 +1938,7 @@ class OrderItemView(View):
             return redirect(url)
 
 
-class SupportView(View):
+class SupportView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get all unanswered errands and a count of them
@@ -1957,7 +1957,7 @@ class SupportView(View):
             return redirect("support:overview")
 
 
-class Errand(View):
+class Errand(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get the specific errand. Show all answers and responces as well as a responce form
@@ -1976,7 +1976,7 @@ class Errand(View):
             return redirect("support:support")
 
 
-class EditUser(View):
+class EditUser(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search
 
@@ -2052,7 +2052,7 @@ class EditUser(View):
             return redirect("support:overview")
 
 
-class EditCompany(View):
+class EditCompany(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search
 
@@ -2229,7 +2229,7 @@ class EditCompany(View):
                     return redirect("support:search_users")
 
 
-class EditAdresses(View):
+class EditAdresses(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search
 
@@ -2325,7 +2325,7 @@ class EditAdresses(View):
             return redirect("support:search_users")
 
 
-class EditAdress(View):
+class EditAdress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search
 
@@ -2447,7 +2447,7 @@ class EditAdress(View):
                 return render(self.request, "support/edit_address.html", context)
 
 
-class NewAddress(View):
+class NewAddress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search as we dont know the user
 
@@ -2579,7 +2579,7 @@ class NewAddress(View):
                 return render(self.request, "support/edit_address.html", context)
 
 
-class SettingsView(View):
+class SettingsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # return to search
 
@@ -2609,7 +2609,7 @@ class SettingsView(View):
             return redirect("core:home")
 
 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get supports own user info
@@ -2633,7 +2633,7 @@ class ProfileView(View):
             return redirect("support:my_overview")
 
 
-class InfoView(View):
+class InfoView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get form for this using the user id

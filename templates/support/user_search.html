@@ -46,9 +46,6 @@
                     <th>
                         Inställningar
                     </th>
-                    <th>
-                        Prenumerationer
-                    </th>
                     {% comment %} <th>
                         Support
                     </th> {% endcomment %}
@@ -97,14 +94,6 @@
                         <form method="POST" action="{% url 'support:user_settings' %}">
                             {% csrf_token %}
                             <button type="submit" value="{{person.id}}" name="lookAtSettings" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:subscriptions' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSubscriptions" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>

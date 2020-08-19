@@ -19,7 +19,7 @@ from core.functions import *
 from core.info_error_msg import *
 
 
-class Setup(View):
+class Setup(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         theUser = self.request.user
         group = Group.objects.get(name="client")
@@ -162,7 +162,7 @@ class Setup(View):
             return redirect("core:home")
 
 
-class CompanyView(View):
+class CompanyView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
 
         # get form
@@ -247,7 +247,7 @@ class CompanyView(View):
             return render(self.request, "member/company.html", context)
 
 
-class Overview(View):
+class Overview(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
 
@@ -344,7 +344,7 @@ class Overview(View):
             return redirect("core:home")
 
 
-class Orders(View):
+class Orders(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
 
@@ -457,7 +457,7 @@ class OrderView(LoginRequiredMixin, View):
             return redirect("member:my_orders")
 
 
-class SupportView(View):
+class SupportView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get all errands, sort out the active ones
@@ -487,7 +487,7 @@ class SupportView(View):
             return redirect("member:my_overview")
 
 
-class NewErrandView(View):
+class NewErrandView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # new errand
@@ -507,7 +507,7 @@ class NewErrandView(View):
             return redirect("member:my_overview")
 
 
-class ErrandView(View):
+class ErrandView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # id check here
@@ -540,7 +540,7 @@ class ErrandView(View):
             return redirect("member:my_overview")
 
 
-class Profile(View):
+class Profile(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get user info
@@ -628,7 +628,7 @@ class Profile(View):
                 return redirect("member:my_profile")
 
 
-class changePassword(View):
+class changePassword(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         message = get_message('error', 131)
         messages.warning(
@@ -720,7 +720,7 @@ class changePassword(View):
             return redirect("member:my_profile")
 
 
-class InfoView(View):
+class InfoView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # get form for this using the user id
@@ -809,7 +809,7 @@ class InfoView(View):
 # switch this to SetupAddressForm
 
 
-class Editaddress(View):
+class Editaddress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # which adress
@@ -926,7 +926,7 @@ class Editaddress(View):
             return redirect("member:my_overview")
 
 
-class Newaddress(View):
+class Newaddress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # get form for this using the user id
         form = NewAddressForm()
@@ -1080,7 +1080,7 @@ class Newaddress(View):
             return redirect("member:my_overview")
 
 
-class Settings(View):
+class Settings(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             # obs make a form view for editing info and adding info
@@ -1291,7 +1291,7 @@ class GenericSupportFormView(View):
             return redirect("core:home")
 
 
-class CancelOrder(View):
+class CancelOrder(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 133)
@@ -1306,7 +1306,7 @@ class CancelOrder(View):
             test = "test"
 
 
-class ReturnOrder(View):
+class ReturnOrder(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 134)
@@ -1321,7 +1321,7 @@ class ReturnOrder(View):
             test = "test"
 
 
-class ReturnItem(View):
+class ReturnItem(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # reroute
         message = get_message('error', 135)
