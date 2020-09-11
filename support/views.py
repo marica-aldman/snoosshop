@@ -1722,7 +1722,7 @@ class OrderView(LoginRequiredMixin, View):
                 return render(self.request, "support/vieworder.html", context)
 
             elif 'back' in self.request.POST.keys():
-                # perhaps change this to a soft redirect with search paramaters later
+                # perhaps change this to a soft redirect with search paramaters later if this is found through a search
                 return redirect("support:orders")
 
             elif 'save' in self.request.POST.keys():

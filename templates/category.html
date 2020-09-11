@@ -116,11 +116,21 @@
           </li>
           {% endif %}
 
+          {% for p in page_list %}
+            {% if p == page_obj.number %}
           <li class="page-item active">
-            <a class="page-link" href="?page={{ page_obj.number }}">{{ page_obj.number }}
+            <a class="page-link" href="?page={{ p }}">{{ p }}
               <span class="sr-only">(current)</span>
             </a>
           </li>
+            {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ p }}">{{ p }}
+              <span class="sr-only"></span>
+            </a>
+          </li>
+            {% endif %}
+          {% endfor %}
 
           {% if page_obj.has_next %}
           <li class="page-item">

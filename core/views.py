@@ -22,7 +22,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def products(request):
     context = {
         'items': Item.objects.all(),
-        'category_choices': Categories.objects.all(),
+        'category_choices': Category.objects.all(),
     }
     return render(request, "products.html", context)
 
@@ -391,7 +391,7 @@ class NewHomeView(View):
         if(number_products > aqire_index):
 
             page = which_page(self)
-            if page == "homestart":
+            if page == "homestart" or page == "1":
                 pagination = {
                     "has_previous": False,
                     "previous_page_number": 1,
@@ -406,17 +406,12 @@ class NewHomeView(View):
                 offset = int(page) * aqire_index
                 # look up test is not the aqire index or the previous page number if aqire is 1 it is not aqire * page it is however page -1 if it aqire is 2 then lookup = page if aqire is 3 then lookup = ?
                 lookup_test = page
-                print(offset)
                 products = Item.objects.all()[lookup_test:offset]
-                print(products)
                 is_paginated = True
                 number_of_pages = number_products / aqire_index
                 test = int(number_of_pages)
-                print(test)
-                print(number_of_pages)
                 if number_of_pages > test:
                     number_of_pages += 1
-                    print(number_of_pages)
                 if page < number_of_pages:
                     next_page = page + 1
                     previous_page = page - 1
@@ -439,13 +434,16 @@ class NewHomeView(View):
             products = Item.objects.all()[:aqire_index]
 
             is_paginated = False
-            pagination = {}
+            pagination = {
+                "has_previous": False,
+                "has_next": False,
+            }
 
         context = {
             "category_choices": categories,
             "object_list": products,
             "is_paginated": is_paginated,
-            "page_obj": pagination
+            "page_obj": pagination,
         }
 
         return render(self.request, 'home.html', context)
@@ -501,8 +499,10 @@ def add_to_cart(request, slug):
             return redirect("core:order-summary")
     else:
         ordered_date = timezone.now()
+        refCode = create_ref_code()
+        rcode = test_order_ref_code(refCode)
         order = Order.objects.create(
-            user=request.user, ordered_date=ordered_date)
+            user=request.user, ordered_date=ordered_date, ref_code=rcode)
         order.items.add(order_item)
         messages.info(request, "This item was added to your cart.")
         return redirect("core:order-summary")
@@ -637,15 +637,109 @@ class RequestRefundView(View):
 # Category views
 
 class CategoryView(View):
-    def get(self, slug, *args, **kwargs):
+    def get(self, *args, **kwargs):
         try:
-            categoryquery = Category.objects.filter(slug="TS")
+            page, am_i = where_am_i_and_page(self)
+            categoryquery = Category.objects.get(slug=am_i)
+
+            # alter this to a set number of products and add pagination
+            aqire_index = 2
+            number_products = Item.objects.filter(
+                category=categoryquery).count()
+            pagination = {}
+            is_paginated = False
+
+            if(number_products > aqire_index):
+
+                max_page = number_products/aqire_index
+                testM = int(max_page)
+                if(testM != max_page):
+                    max_page = testM + 1
+                page_list = get_list_of_pages(int(page), int(max_page))
+                if page == "homestart" or page == "1":
+                    if(page_list[-1] == max_page):
+                        hasNext = False
+                    else:
+                        hasNext = True
+                    pagination = {
+                        "has_previous": False,
+                        "previous_page_number": 1,
+                        "number": 1,
+                        "has_next": hasNext,
+                        "next_page_number": 2
+                    }
+                    is_paginated = True
+                    products = Item.objects.filter(
+                        category=categoryquery)[:aqire_index]
+                else:
+                    page = int(page)
+                    offset = int(page) * aqire_index
+                    # look up test is not the aqire index or the previous page number if aqire is 1 it is not aqire * page it is however page -1 if it aqire is 2 then lookup = page if aqire is 3 then lookup = ?
+                    lookup_test = page
+                    products = Item.objects.filter(category=categoryquery)[
+                        lookup_test:offset]
+                    is_paginated = True
+                    number_of_pages = number_products / aqire_index
+                    test = int(number_of_pages)
+                    if number_of_pages > test:
+                        number_of_pages += 1
+
+                    if page < number_of_pages:
+                        next_page = page + 1
+                        previous_page = page - 1
+                        if(page_list[-1] == max_page):
+                            hasNext = False
+                        else:
+                            hasNext = True
+
+                        if(len(page_list) == max_page):
+                            hasPreivous = False
+                            print("test")
+                        else:
+                            hasPreivous = True
+
+                        pagination = {
+                            "has_previous": hasPreivous,
+                            "previous_page_number": previous_page,
+                            "number": page,
+                            "has_next": hasNext,
+                            "next_page_number": next_page
+                        }
+                    else:
+
+                        if(len(page_list) == max_page):
+                            hasPreivous = False
+                            print("test")
+                        else:
+                            hasPreivous = True
+
+                        pagination = {
+                            "has_previous": hasPreivous,
+                            "previous_page_number": page - 1,
+                            "number": page,
+                            "has_next": False,
+                            "next_page_number": page
+                        }
+            else:
+                products = Item.objects.filter(
+                    category=categoryquery)[:aqire_index]
+
+                is_paginated = False
+                pagination = {
+                    "has_previous": False,
+                    "has_next": False,
+                }
+
             context = {
-                'object_list': categoryquery
+                'object_list': products,
+                'category_choices': Category.objects.all(),
+                "is_paginated": is_paginated,
+                "page_obj": pagination,                    "page_list": page_list,
             }
             return render(self.request, "category.html", context)
         except ObjectDoesNotExist:
-            message.info(self.request, "Something went wrong, contact support")
+            messages.info(
+                self.request, "Something went wrong, contact support")
             return redirect("core:home")
 
 # FAQ

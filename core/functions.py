@@ -27,6 +27,28 @@ def where_am_i(self):
     return page
 
 
+def where_am_i_and_page(self):
+    path = self.request.get_full_path()
+    split_path = path.split("/")
+    page = split_path[-1]
+    am_i = "none"
+    categories = Category.objects.all()
+    for cat in categories:
+        if (page == cat.slug):
+            am_i = page
+            page = "homestart"
+
+    if(am_i == "none"):
+        am_i = split_path[-2]
+
+        page_number = page.split("=")
+        page = page_number[1]
+        seeking_i = page_number[0].split("?")
+        am_i = seeking_i[0]
+
+    return page, am_i
+
+
 def test_slug_company(slug):
     test = False
     companyQuery = CompanyInfo.objects.filter(slug=slug)
@@ -224,6 +246,23 @@ def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 
+def test_order_ref_code(rcode):
+    try:
+        all_orders = Order.objects.all()
+        test = False
+        for order in all_orders:
+            if order.ref_code == rcode:
+                test = True
+
+        if test:
+            rcode = create_ref_code()
+            rcode = test_order_ref_code(rcode)
+
+        return rcode
+    except ObjectDoesNotExist:
+        return rcode
+
+
 def get_order_total(order):
     # calculate total
     total = 0
@@ -278,3 +317,84 @@ def get_message(theType, theCode):
         return messageObject.text
     else:
         return "There was an error retrieving this message. Contact IT support imidiately."
+
+
+def get_list_of_pages(selected_page, max_page):
+
+    i = 1
+    max_number = 5
+    page_list = []
+
+    if(selected_page == 1):
+        if (selected_page + max_number > max_page):
+            max_number = max_page
+
+        while i <= max_number:
+            page_list.append(i)
+            i += 1
+
+        return page_list
+
+    elif (selected_page == max_page):
+        if (max_page < max_number):
+            max_number = max_page
+            while i <= max_number:
+                page_list.append(i)
+                i += 1
+
+            return page_list
+        else:
+            i = max_page - max_number
+            if (i > 1):
+                i = 1
+                while i <= max_page:
+                    page_list.append(i)
+                    i += 1
+
+            return page_list
+
+    elif (selected_page - 2 <= 0):
+        # test for max pages max_number or less
+        if (max_page <= 5):
+            max_number = max_page
+
+            while i <= max_number:
+                page_list.append(i)
+                i += 1
+
+        else:
+            # max pages more than max_number
+
+            while i <= max_number:
+                page_list.append(i)
+                i += 1
+
+        return page_list
+
+    elif (selected_page + 2 >= max_page):
+        # close to max page check
+        # if max_page is more than max_number
+        if (max_page <= max_number):
+            max_number = max_page
+
+            while i <= max_number:
+                page_list.append(i)
+        else:
+            i = max_page - max_number
+
+            while i <= max_number:
+                page_list.append(i)
+                i += 1
+
+        return page_list
+    else:
+        # we're somewhere in the middle away from min and max
+
+        i = selected_page - 2
+        max_number = selected_page + 2
+
+        while i <= max_number:
+            page_list.append(i)
+            i += 1
+
+        return page_list
