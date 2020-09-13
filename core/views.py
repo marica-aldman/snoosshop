@@ -391,12 +391,23 @@ class NewHomeView(View):
         if(number_products > aqire_index):
 
             page = which_page(self)
-            if page == "homestart" or page == "1":
+
+            max_page = number_products/aqire_index
+            testM = int(max_page)
+            if(testM != max_page):
+                max_page = testM + 1
+            page_list = get_list_of_pages(int(page), int(max_page))
+
+            if page == "homestart" or page == 1:
+                if(page_list[-1] == max_page):
+                    hasNext = False
+                else:
+                    hasNext = True
                 pagination = {
                     "has_previous": False,
                     "previous_page_number": 1,
                     "number": 1,
-                    "has_next": True,
+                    "has_next": hasNext,
                     "next_page_number": 2
                 }
                 is_paginated = True
@@ -415,16 +426,32 @@ class NewHomeView(View):
                 if page < number_of_pages:
                     next_page = page + 1
                     previous_page = page - 1
+                    if(page_list[-1] == max_page):
+                        hasNext = False
+                    else:
+                        hasNext = True
+
+                    if(len(page_list) == max_page):
+                        hasPreivous = False
+                    else:
+                        hasPreivous = True
+
                     pagination = {
-                        "has_previous": True,
+                        "has_previous": hasPreivous,
                         "previous_page_number": previous_page,
                         "number": page,
-                        "has_next": True,
+                        "has_next": hasNext,
                         "next_page_number": next_page
                     }
                 else:
+
+                    if(len(page_list) == max_page):
+                        hasPreivous = False
+                    else:
+                        hasPreivous = True
+
                     pagination = {
-                        "has_previous": True,
+                        "has_previous": hasPreivous,
                         "previous_page_number": page - 1,
                         "number": page,
                         "has_next": False,
@@ -443,7 +470,7 @@ class NewHomeView(View):
             "category_choices": categories,
             "object_list": products,
             "is_paginated": is_paginated,
-            "page_obj": pagination,
+            "page_obj": pagination,             "page_list": page_list,
         }
 
         return render(self.request, 'home.html', context)
@@ -656,7 +683,7 @@ class CategoryView(View):
                 if(testM != max_page):
                     max_page = testM + 1
                 page_list = get_list_of_pages(int(page), int(max_page))
-                if page == "homestart" or page == "1":
+                if page == "homestart" or page == 1:
                     if(page_list[-1] == max_page):
                         hasNext = False
                     else:
@@ -694,7 +721,6 @@ class CategoryView(View):
 
                         if(len(page_list) == max_page):
                             hasPreivous = False
-                            print("test")
                         else:
                             hasPreivous = True
 
@@ -709,7 +735,6 @@ class CategoryView(View):
 
                         if(len(page_list) == max_page):
                             hasPreivous = False
-                            print("test")
                         else:
                             hasPreivous = True
 
