@@ -21,20 +21,33 @@
 
           <!-- Menu -->
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
+            <li class="nav-item">
               <a class="nav-link" href="/">
                 All
               </a>
             </li>
-            {% for cat in category_choices %}
 
-                <li class="nav-item">
-                  <a class="nav-link" href="{{cat.get_absolute_cat_url}}">
-                    {{cat.title}}
-                  </a>
-                </li>
+            {% for part in category_list %}
 
-            {% endfor %}
+
+              {% if part.selected %}
+
+              <li class="nav-item active">
+                <a class="nav-link" href="{{part.url}}">
+                  {{part.title}}
+                </a>
+              </li>
+
+              {% else %}
+
+              <li class="nav-item">
+                <a class="nav-link" href="{{part.url}}">
+                  {{part.title}}
+                </a>
+              </li>
+              {% endif %}
+              
+            {% endfor%}
 
           </ul>
           <!-- Links -->
@@ -116,6 +129,19 @@
           </li>
           {% endif %}
 
+          {% if start_extras %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">1
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link">...
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          {% endif %}
+
           {% for p in page_list %}
             {% if p == page_obj.number %}
           <li class="page-item active">
@@ -131,6 +157,20 @@
           </li>
             {% endif %}
           {% endfor %}
+          
+
+          {% if end_extras %}
+          <li class="page-item">
+            <a class="page-link">...
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ max_page }}">{{ max_page }}
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          {% endif %}
 
           {% if page_obj.has_next %}
           <li class="page-item">

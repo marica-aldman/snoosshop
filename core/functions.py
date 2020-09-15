@@ -36,13 +36,13 @@ def where_am_i_and_page(self):
     for cat in categories:
         if (page == cat.slug):
             am_i = page
-            page = "homestart"
+            page = 1
 
     if(am_i == "none"):
         am_i = split_path[-2]
 
         page_number = page.split("=")
-        page = page_number[1]
+        page = int(page_number[1])
         seeking_i = page_number[0].split("?")
         am_i = seeking_i[0]
 
@@ -324,6 +324,7 @@ def get_list_of_pages(selected_page, max_page):
     i = 1
     max_number = 5
     page_list = []
+    where = "unset"
 
     if(selected_page == 1):
         if (selected_page + max_number > max_page):
@@ -333,60 +334,63 @@ def get_list_of_pages(selected_page, max_page):
             page_list.append(i)
             i += 1
 
-        return page_list
+        where = "start"
+
+        return page_list, where
 
     elif (selected_page == max_page):
-        if (max_page < max_number):
-            max_number = max_page
-            while i <= max_number:
+
+        i = max_page - (max_number - 1)
+        if (i >= 1):
+            while i <= max_page:
                 page_list.append(i)
                 i += 1
-
-            return page_list
         else:
-            i = max_page - max_number
-            if (i > 1):
-                i = 1
-                while i <= max_page:
-                    page_list.append(i)
-                    i += 1
+            i = 1
+            while i <= max_page:
+                page_list.append(i)
+                i += 1
 
-            return page_list
+        where = "end"
 
-    elif (selected_page - 2 <= 0):
-        # test for max pages max_number or less
-        if (max_page <= 5):
+        return page_list, where
+
+    elif (selected_page - 2 <= 1):
+        # here we have less than 5 pages but still pagination or we are situated close to the start (ex page 2)
+
+        if (max_page <= max_number):
+            # 5 pages or less
             max_number = max_page
 
             while i <= max_number:
                 page_list.append(i)
                 i += 1
 
+            where = "no extras"
+
         else:
-            # max pages more than max_number
+            # max pages more than max_number but close to the edge
 
             while i <= max_number:
                 page_list.append(i)
                 i += 1
 
-        return page_list
+            where = "start"
+
+        return page_list, where
 
     elif (selected_page + 2 >= max_page):
-        # close to max page check
-        # if max_page is more than max_number
-        if (max_page <= max_number):
-            max_number = max_page
+        # if we have less than 5 pages we wont be here  just create and edge list
 
-            while i <= max_number:
-                page_list.append(i)
-        else:
-            i = max_page - max_number
+        where = "end"
 
-            while i <= max_number:
-                page_list.append(i)
-                i += 1
+        i = max_page - (max_number - 1)
 
-        return page_list
+        while i <= max_page:
+            page_list.append(i)
+            i += 1
+
+        return page_list, where
     else:
         # we're somewhere in the middle away from min and max
 
@@ -397,4 +401,11 @@ def get_list_of_pages(selected_page, max_page):
             page_list.append(i)
             i += 1
 
-        return page_list
+        if i == 1:
+            where = "start"
+        elif max_number == max_page:
+            where = "end"
+        else:
+            where = "mid"
+
+        return page_list, where

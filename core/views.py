@@ -365,40 +365,26 @@ class HomeView(ListView):
 
 class NewHomeView(View):
     def get(self, *args, **kwargs):
-        theUser = self.request.user
-        if(theUser.is_authenticated):
-            group1 = Group.objects.get(name="client")
-            group2 = Group.objects.get(name="moderator")
-            group3 = Group.objects.get(name="support")
-            groups = theUser.groups.all()
-            has_no_group = True
-
-            for group in groups:
-                if group == group1:
-                    has_no_group = False
-                elif group == group2:
-                    has_no_group = False
-                elif group == group3:
-                    has_no_group = False
-            if has_no_group:
-                return redirect("member:setup")
 
         categories = Category.objects.all()
         aqire_index = 2
         number_products = Item.objects.all().count()
         pagination = {}
         is_paginated = False
+        start_extras = False
+        end_extras = False
         if(number_products > aqire_index):
 
             page = which_page(self)
 
             max_page = number_products/aqire_index
+
             testM = int(max_page)
             if(testM != max_page):
                 max_page = testM + 1
-            page_list = get_list_of_pages(int(page), int(max_page))
+            page_list, where = get_list_of_pages(int(page), int(max_page))
 
-            if page == "homestart" or page == 1:
+            if page == 1:
                 if(page_list[-1] == max_page):
                     hasNext = False
                 else:
@@ -412,21 +398,20 @@ class NewHomeView(View):
                 }
                 is_paginated = True
                 products = Item.objects.all()[:aqire_index]
+                if where != "no extras":
+                    end_extras = True
+
             else:
                 page = int(page)
-                offset = int(page) * aqire_index
-                # look up test is not the aqire index or the previous page number if aqire is 1 it is not aqire * page it is however page -1 if it aqire is 2 then lookup = page if aqire is 3 then lookup = ?
-                lookup_test = page
-                products = Item.objects.all()[lookup_test:offset]
+                # query[offset:offset + limit]
+                start_point = (int(page) - 1) * aqire_index
+                o_and_l = start_point + aqire_index
+                products = Item.objects.all()[start_point:o_and_l]
                 is_paginated = True
-                number_of_pages = number_products / aqire_index
-                test = int(number_of_pages)
-                if number_of_pages > test:
-                    number_of_pages += 1
-                if page < number_of_pages:
+                if page < max_page:
                     next_page = page + 1
                     previous_page = page - 1
-                    if(page_list[-1] == max_page):
+                    if(page == max_page):
                         hasNext = False
                     else:
                         hasNext = True
@@ -444,6 +429,7 @@ class NewHomeView(View):
                         "next_page_number": next_page
                     }
                 else:
+                    previous_page = page - 1
 
                     if(len(page_list) == max_page):
                         hasPreivous = False
@@ -452,11 +438,19 @@ class NewHomeView(View):
 
                     pagination = {
                         "has_previous": hasPreivous,
-                        "previous_page_number": page - 1,
+                        "previous_page_number": previous_page,
                         "number": page,
                         "has_next": False,
                         "next_page_number": page
                     }
+
+                if where == "start":
+                    end_extras = True
+                elif where == "end":
+                    start_extras = True
+                elif where == "mid":
+                    start_extras = True
+                    end_extras = True
         else:
             products = Item.objects.all()[:aqire_index]
 
@@ -470,7 +464,11 @@ class NewHomeView(View):
             "category_choices": categories,
             "object_list": products,
             "is_paginated": is_paginated,
-            "page_obj": pagination,             "page_list": page_list,
+            "page_obj": pagination,
+            "page_list": page_list,
+            "start_extras": start_extras,
+            "end_extras": end_extras,
+            "max_page": max_page,
         }
 
         return render(self.request, 'home.html', context)
@@ -675,6 +673,8 @@ class CategoryView(View):
                 category=categoryquery).count()
             pagination = {}
             is_paginated = False
+            start_extras = False
+            end_extras = False
 
             if(number_products > aqire_index):
 
@@ -682,9 +682,9 @@ class CategoryView(View):
                 testM = int(max_page)
                 if(testM != max_page):
                     max_page = testM + 1
-                page_list = get_list_of_pages(int(page), int(max_page))
-                if page == "homestart" or page == 1:
-                    if(page_list[-1] == max_page):
+                page_list, where = get_list_of_pages(int(page), int(max_page))
+                if page == 1:
+                    if(page == max_page):
                         hasNext = False
                     else:
                         hasNext = True
@@ -698,13 +698,16 @@ class CategoryView(View):
                     is_paginated = True
                     products = Item.objects.filter(
                         category=categoryquery)[:aqire_index]
+                    if where != "no extras":
+                        end_extras = True
                 else:
                     page = int(page)
-                    offset = int(page) * aqire_index
-                    # look up test is not the aqire index or the previous page number if aqire is 1 it is not aqire * page it is however page -1 if it aqire is 2 then lookup = page if aqire is 3 then lookup = ?
-                    lookup_test = page
+
+                    # query[offset:offset + limit]
+                    start_point = (int(page) - 1) * aqire_index
+                    o_and_l = start_point + aqire_index
                     products = Item.objects.filter(category=categoryquery)[
-                        lookup_test:offset]
+                        start_point:o_and_l]
                     is_paginated = True
                     number_of_pages = number_products / aqire_index
                     test = int(number_of_pages)
@@ -745,6 +748,15 @@ class CategoryView(View):
                             "has_next": False,
                             "next_page_number": page
                         }
+
+                if where == "start":
+                    end_extras = True
+                elif where == "end":
+                    start_extras = True
+                elif where == "mid":
+                    start_extras = True
+                    end_extras = True
+
             else:
                 products = Item.objects.filter(
                     category=categoryquery)[:aqire_index]
@@ -755,11 +767,34 @@ class CategoryView(View):
                     "has_next": False,
                 }
 
+            # we need to create a list of objects to loop through to mark the apropriate category
+
+            category_choices = Category.objects.all()
+
+            new_list = []
+            for cat in category_choices:
+                if cat.title == categoryquery.title:
+                    new_list.append({
+                        'title': cat.title,
+                        'url': cat.get_absolute_cat_url,
+                        'selected': True
+                    })
+                else:
+                    new_list.append({
+                        'title': cat.title,
+                        'url': cat.get_absolute_cat_url,
+                        'selected': False
+                    })
+
             context = {
                 'object_list': products,
-                'category_choices': Category.objects.all(),
+                'category_list': new_list,
+                'selected_cateogory': categoryquery,
                 "is_paginated": is_paginated,
                 "page_obj": pagination,                    "page_list": page_list,
+                "start_extras": start_extras,
+                "end_extras": end_extras,
+                "max_page": max_page,
             }
             return render(self.request, "category.html", context)
         except ObjectDoesNotExist:

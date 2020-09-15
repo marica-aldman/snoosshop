@@ -116,6 +116,19 @@
           </li>
           {% endif %}
 
+          {% if start_extras %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">1
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link">...
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          {% endif %}
+
           {% for p in page_list %}
             {% if p == page_obj.number %}
           <li class="page-item active">
@@ -131,6 +144,20 @@
           </li>
             {% endif %}
           {% endfor %}
+          
+
+          {% if end_extras %}
+          <li class="page-item">
+            <a class="page-link">...
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ max_page }}">{{ max_page }}
+              <span class="sr-only"></span>
+            </a>
+          </li>
+          {% endif %}
 
           {% if page_obj.has_next %}
           <li class="page-item">

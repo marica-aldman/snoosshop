@@ -22,6 +22,20 @@ from core.info_error_msg import *
 class Setup(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         theUser = self.request.user
+        theUser = self.request.user
+        if(theUser.is_authenticated):
+            group1 = Group.objects.get(name="client")
+            group2 = Group.objects.get(name="moderator")
+            group3 = Group.objects.get(name="support")
+            groups = theUser.groups.all()
+
+            for group in groups:
+                if group == group1:
+                    return redirect("member:my_overview")
+                elif group == group2:
+                    return redirect("moderator:overview")
+                elif group == group3:
+                    return redirect("support:overview")
         group = Group.objects.get(name="client")
         group.user_set.add(theUser)
 
