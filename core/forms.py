@@ -63,7 +63,7 @@ class PaymentForm(forms.Form):
 
 
 class SearchFAQForm(forms.Form):
-    searchTerm = forms.CharField(required=False)
+    searchTerm = forms.CharField(required=True)
 
     def language(self, theLanguage, *args, **kwargs):
 
@@ -76,3 +76,6 @@ class SearchFAQForm(forms.Form):
                 {'placeholder': field.formTextPlaceholder})
             self.fields['searchTerm'].widget.attrs.update(
                 {'class': 'p-2'})
+
+        self.fields['searchID'].widget.attrs.update(
+            {'style': 'hidden'})

@@ -1,6 +1,7 @@
 from slugify import slugify
 from datetime import datetime, timedelta
 from core.models import *
+from moderator.forms import *
 
 import random
 import string
@@ -322,7 +323,7 @@ def get_message(theType, theCode):
 def get_list_of_pages(selected_page, max_page):
 
     i = 1
-    max_number = 5
+    max_number = default_pagination_values
     page_list = []
     where = "unset"
 
@@ -334,7 +335,10 @@ def get_list_of_pages(selected_page, max_page):
             page_list.append(i)
             i += 1
 
-        where = "start"
+        if (max_number <= 5):
+            where = "no extras"
+        else:
+            where = "start"
 
         return page_list, where
 
@@ -345,13 +349,14 @@ def get_list_of_pages(selected_page, max_page):
             while i <= max_page:
                 page_list.append(i)
                 i += 1
+
+            where = "no extras"
         else:
             i = 1
             while i <= max_page:
                 page_list.append(i)
                 i += 1
-
-        where = "end"
+            where = "end"
 
         return page_list, where
 

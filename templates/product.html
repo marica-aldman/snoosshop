@@ -68,7 +68,7 @@
         <div class="col-md-6 mb-4">
 
           {% load static %}
-            <img src="{% static "placeholder.jpg" %}" alt="My image">
+            <img src="/media/{{ object.image }}" alt="Produkt bild för {{ object.title }}">
 
         </div>
         <!--Grid column-->
@@ -84,6 +84,8 @@
                 <span class="badge purple mr-1">{{ object.get_category_display }}</span>
               </a>
             </div>
+
+            <p class="lead font-weight-bold">{{ object.title }}</p>
 
             <p class="lead">
               {% if object.discount_price %}

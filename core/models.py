@@ -72,6 +72,8 @@ BUTTON_TYPES = (
     ('015', 'continue to checkout'),
 )
 
+default_pagination_values = 2
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -587,7 +589,7 @@ class FAQ(models.Model):
     # additional languages can be added here
 
     def __str__(self):
-        return self.description
+        return str(self.id)
 
     def get_absolute_url_moderator(self):
         return reverse("moderator:faq", kwargs={

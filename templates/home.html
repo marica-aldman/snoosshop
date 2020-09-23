@@ -54,11 +54,11 @@
       <section class="text-center mb-4">
 
         <div class="row wow fadeIn">
-
           {% for item in object_list %}
           <div class="col-lg-3 col-md-6 mb-4">
 
             <div class="card">
+              
 
               <div class="view overlay">
                 {% comment %} <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Vertical/12.jpg" class="card-img-top" {% endcomment %}
@@ -119,12 +119,12 @@
           {% if start_extras %}
           <li class="page-item">
             <a class="page-link" href="?page=1">1
-              <span class="sr-only"></span>
+              <span class="sr-only">1</span>
             </a>
           </li>
           <li class="page-item">
             <a class="page-link">...
-              <span class="sr-only"></span>
+              <span class="sr-only">...</span>
             </a>
           </li>
           {% endif %}
@@ -139,7 +139,7 @@
             {% else %}
           <li class="page-item">
             <a class="page-link" href="?page={{ p }}">{{ p }}
-              <span class="sr-only"></span>
+              <span class="sr-only">{{ p }}</span>
             </a>
           </li>
             {% endif %}
@@ -149,12 +149,12 @@
           {% if end_extras %}
           <li class="page-item">
             <a class="page-link">...
-              <span class="sr-only"></span>
+              <span class="sr-only">...</span>
             </a>
           </li>
           <li class="page-item">
             <a class="page-link" href="?page={{ max_page }}">{{ max_page }}
-              <span class="sr-only"></span>
+              <span class="sr-only">{{ max_page }}</span>
             </a>
           </li>
           {% endif %}

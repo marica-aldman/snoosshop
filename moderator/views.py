@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
@@ -875,8 +876,7 @@ class SpecificProductsView(LoginRequiredMixin, View):
 
         elif 'saveProduct' in self.request.POST.keys():
 
-            form = editOrCreateProduct(self.request.POST)
-            img_form = editProductImage(self.request.POST)
+            form = editOrCreateProduct(self.request.POST, self.request.FILES)
 
             if form.is_valid():
                 product_id = self.request.POST['old']
@@ -888,8 +888,8 @@ class SpecificProductsView(LoginRequiredMixin, View):
                     product.discount_price = form.cleaned_data.get(
                         'discount_price')
                     product.description = form.cleaned_data.get('description')
-                    if img_form.is_valid():
-                        product.image = img_form.cleaned_data.get('image')
+                    product.image = form.cleaned_data['image']
+
                     if 'category' in self.request.POST.keys():
                         category_id = int(self.request.POST['category'])
                         category = Category.objects.get(id=category_id)
@@ -914,8 +914,11 @@ class SpecificProductsView(LoginRequiredMixin, View):
                     product.discount_price = form.cleaned_data.get(
                         'discount_price')
                     product.description = form.cleaned_data.get('description')
-                    if img_form.is_valid():
-                        product.image = img_form.cleaned_data.get('image')
+                    img_file = self.request.FILES['image'].read()
+                    img_name = str(self.request.FILES['image'])
+                    file_data = {'img': SimpleUploadedFile(
+                        img_name, img_file)}
+                    product.image = form.cleaned_data['image']
                     if 'category' in self.request.POST.keys():
                         category_id = int(self.request.POST['category'])
                         category = Category.objects.get(id=category_id)
@@ -1547,7 +1550,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
             if testR != r_pages:
                 r_pages = int(r_pages)
                 r_pages += 1
-        
+
         try:
             reg_orders = Order.objects.filter(
                 ordered=True, being_delivered=False).order_by('id')[:10]
@@ -1604,7 +1607,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
             search_value = int(self.request.POST['search_value'])
         # handle status change and pagination
         r_current_page = int(self.request.POST['r_current_page'])
-        
+
         # get max pages regurlar orders
         r_pages = 1
         number_reg_orders = Order.objects.filter(
@@ -1620,7 +1623,6 @@ class OrderHandlingView(LoginRequiredMixin, View):
                 r_pages = int(r_pages)
                 r_pages += 1
 
-        
         if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
             if not 'previousPageRegOrder' in self.request.POST.keys() or not 'nextPageRegOrder' in self.request.POST.keys() or not 'r_page' in self.request.POST.keys():
                 # make a form and populate so we can clean the data

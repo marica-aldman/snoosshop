@@ -136,19 +136,8 @@ class editOrCreateProduct(forms.ModelForm):
         self.fields['discount_price'].widget.attrs.update(
             {'value': product.discount_price})
         self.fields['description'].initial = product.description
-
-
-class editProductImage(forms.ModelForm):
-    # sort this meta class out
-
-    class Meta:
-        model = Item
-        fields = ['image']
-
-    def __init__(self, *args, **kwargs):
-        super(editProductImage, self).__init__(*args, **kwargs)
-        self.fields['image'].label = ""
-        self.fields['image'].required = False
+        print(product.image)
+        self.fields['image'].initial = product.image
 
 
 class editOrCreateCategory(forms.ModelForm):

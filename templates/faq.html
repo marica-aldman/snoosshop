@@ -7,6 +7,7 @@
     <div class="border rounded mb-3 d-flex justify-content-center">
         <form action="." method="POST" class="m-4">
             {% csrf_token %}
+            <input type="hidden" name="searchID" value="1">
             {{searchForm.searchTerm}}
             {% for button in searchButton %}
                 <button type='submit' class='btn btn-primary'>{{button.buttonText}}</button>
@@ -36,6 +37,37 @@
             </div>
         </div>
         {% endfor%}
+    {% endif %}
+    {% if is_paginated %}
+        <div class="d-flex w-100 justify-content-center">
+            <form action="." method="POST" class="m-4">
+                {% csrf_token %}
+                <input type="hidden" name="SearchTerms" value="{{ searchTerms }}">
+                {% if start_page %}
+                    <button type="submit" value="1" name="page" class="page-link"><span aria-hidden="true">1</span><span class="sr-only">1</span></button>
+                    <button type="submit" value="previous" name="page" class="page-link" disabled><span aria-hidden="true">...</span><span class="sr-only">...</span></button>
+                {% endif %}
+                {% for page in page_list %}
+                    {% if page == page_obj.number %}
+                        <button type="submit" value="{{ page }}" name="page" class="page-link" style="background-color:#4285f4; color:#FFFFFF;-webkit-box-shadow:0 2px 5px 0 rgba(0,0,0,.16),0 2px 10px 0 rgba(0,0,0,.12); display:inline; margin: 0">{{ page }}
+                            <span class="sr-only">{{ page }}(current)</span>
+                        </button>
+                    {% else %}
+                        <button type="submit" value={{ page }} name="page" class="page-link" style="color:#000000; display:inline; margin: 0; border: 0">
+                            <span aria-hidden="true">{{ page }}</span>
+                            <span class="sr-only">{{ page }}</span>
+                        </button>
+                    {% endif %}
+                {% endfor %}
+                {% if end_page %}
+                    <button type="submit" value="next" name="page" class="page-link" disabled><span aria-hidden="true">...</span><span class="sr-only">...</span></button>
+                    <button type="submit" value="{{max_page}}" name="page" class="page-link"><span aria-hidden="true">{{max_page}}</span><span class="sr-only">{{max_page}}</span></button>
+                {% endif %}
+                {% if next_page %}
+                    <button type="submit" value="{{next}}" name="page" class="page-link"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></button>
+                {% endif %}
+            </form>
+        </div>
     {% endif %}
     </main>
 </main>

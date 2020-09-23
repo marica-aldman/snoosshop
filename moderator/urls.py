@@ -52,7 +52,9 @@ urlpatterns = [
     path('coupons/', CouponsView.as_view(), name='coupons'),
     path('coupon/<slug>',
          SpecificCouponView.as_view(), name='coupon'),
-
 ]
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
 # move cookies for general use to base

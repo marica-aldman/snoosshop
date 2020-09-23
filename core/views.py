@@ -367,17 +367,17 @@ class NewHomeView(View):
     def get(self, *args, **kwargs):
 
         categories = Category.objects.all()
-        aqire_index = 2
+        aquire_index = default_pagination_values
         number_products = Item.objects.all().count()
         pagination = {}
         is_paginated = False
         start_extras = False
         end_extras = False
-        if(number_products > aqire_index):
+        if(number_products > aquire_index):
 
             page = which_page(self)
 
-            max_page = number_products/aqire_index
+            max_page = number_products/aquire_index
 
             testM = int(max_page)
             if(testM != max_page):
@@ -397,15 +397,15 @@ class NewHomeView(View):
                     "next_page_number": 2
                 }
                 is_paginated = True
-                products = Item.objects.all()[:aqire_index]
+                products = Item.objects.all()[:aquire_index]
                 if where != "no extras":
                     end_extras = True
 
             else:
                 page = int(page)
                 # query[offset:offset + limit]
-                start_point = (int(page) - 1) * aqire_index
-                o_and_l = start_point + aqire_index
+                start_point = (int(page) - 1) * aquire_index
+                o_and_l = start_point + aquire_index
                 products = Item.objects.all()[start_point:o_and_l]
                 is_paginated = True
                 if page < max_page:
@@ -452,7 +452,7 @@ class NewHomeView(View):
                     start_extras = True
                     end_extras = True
         else:
-            products = Item.objects.all()[:aqire_index]
+            products = Item.objects.all()[:aquire_index]
 
             is_paginated = False
             pagination = {
@@ -468,7 +468,7 @@ class NewHomeView(View):
             "page_list": page_list,
             "start_extras": start_extras,
             "end_extras": end_extras,
-            "max_page": max_page,
+            "max_page": int(max_page),
         }
 
         return render(self.request, 'home.html', context)
@@ -668,7 +668,7 @@ class CategoryView(View):
             categoryquery = Category.objects.get(slug=am_i)
 
             # alter this to a set number of products and add pagination
-            aqire_index = 2
+            aquire_index = default_pagination_values
             number_products = Item.objects.filter(
                 category=categoryquery).count()
             pagination = {}
@@ -676,9 +676,9 @@ class CategoryView(View):
             start_extras = False
             end_extras = False
 
-            if(number_products > aqire_index):
+            if(number_products > aquire_index):
 
-                max_page = number_products/aqire_index
+                max_page = number_products/aquire_index
                 testM = int(max_page)
                 if(testM != max_page):
                     max_page = testM + 1
@@ -697,19 +697,19 @@ class CategoryView(View):
                     }
                     is_paginated = True
                     products = Item.objects.filter(
-                        category=categoryquery)[:aqire_index]
+                        category=categoryquery)[:aquire_index]
                     if where != "no extras":
                         end_extras = True
                 else:
                     page = int(page)
 
                     # query[offset:offset + limit]
-                    start_point = (int(page) - 1) * aqire_index
-                    o_and_l = start_point + aqire_index
+                    start_point = (int(page) - 1) * aquire_index
+                    o_and_l = start_point + aquire_index
                     products = Item.objects.filter(category=categoryquery)[
                         start_point:o_and_l]
                     is_paginated = True
-                    number_of_pages = number_products / aqire_index
+                    number_of_pages = number_products / aquire_index
                     test = int(number_of_pages)
                     if number_of_pages > test:
                         number_of_pages += 1
@@ -759,7 +759,7 @@ class CategoryView(View):
 
             else:
                 products = Item.objects.filter(
-                    category=categoryquery)[:aqire_index]
+                    category=categoryquery)[:aquire_index]
 
                 is_paginated = False
                 pagination = {
@@ -811,21 +811,69 @@ class FAQView(View):
         try:
             # need to add language tests here at a later date
             theLanguage = LanguageChoices.objects.get(language_short="swe")
+            aquire_index = default_pagination_values
+            number_faqs = FAQ.objects.filter(language=theLanguage).count()
+            pagination = {}
+            page_list = []
+            is_paginated = False
+            start_extras = False
+            end_extras = False
+            max_page = 0
+            if(number_faqs > aquire_index):
+                # we only land here if we are on page one without a search and we have more FAQs than fit on one page
+                max_page = number_faqs/aquire_index
+                testM = int(max_page)
+                if(testM != max_page):
+                    max_page = testM + 1
 
-            try:
-                faqs = FAQ.objects.filter(language=theLanguage)
-            except ObjectDoesNotExist:
-                message = get_message('error', 135)
-                faqs = [
-                    {
-                        "question": "Ett fel har uppstått:",
-                        "answer": message,
-                    }
-                ]
+                page_list, where = get_list_of_pages(1, int(max_page))
+                print(page_list)
+                print(where)
+                print(max_page)
+
+                if(1 != max_page):
+                    hasNext = False
+                else:
+                    hasNext = True
+
+                pagination = {
+                    "has_previous": False,
+                    "previous_page_number": 1,
+                    "number": 1,
+                    "has_next": hasNext,
+                    "next_page_number": 2
+                }
+                is_paginated = True
+                try:
+                    faqs = FAQ.objects.filter(language=theLanguage)[
+                        :aquire_index]
+                except ObjectDoesNotExist:
+                    message = get_message('error', 135)
+                    faqs = [
+                        {
+                            "question": "Ett FAQ fel har uppstått:",
+                            "answer": message,
+                        }
+                    ]
+
+                if where != "no extras":
+                    end_extras = True
+
+            else:
+                # we have less FAQs then we want from aquire index, so no pagination here and no need to do a specialised search
+                try:
+                    faqs = FAQ.objects.filter(language=theLanguage)
+                except ObjectDoesNotExist:
+                    message = get_message('error', 135)
+                    faqs = [
+                        {
+                            "question": "Ett FAQ fel har uppstått:",
+                            "answer": message,
+                        }
+                    ]
 
             try:
                 searchForm = SearchFAQForm()
-                searchForm.language(theLanguage)
                 aButtonType = ButtonType.objects.get(buttonType="search")
                 searchButton = ButtonText.objects.filter(
                     language=theLanguage, theButtonType=aButtonType)
@@ -836,9 +884,15 @@ class FAQView(View):
                 searchButton = {"buttonText": "Search"}
 
         except ObjectDoesNotExist:
+            pagination = {}
+            page_list = []
+            is_paginated = False
+            start_extras = False
+            end_extras = False
+            max_page = 0
             faqs = [
                 {
-                    "question": "Ett fel har uppstått:",
+                    "question": "Ett språk fel har uppstått:",
                     "answer": message,
                 }
             ]
@@ -849,22 +903,175 @@ class FAQView(View):
         context = {
             'search': False,
             'faqs': faqs,
-            "comment": comment,
+            "searchTerms": "",
             'searchForm': searchForm,
             "searchButton": searchButton,
+            'is_paginated': is_paginated,
+            'start_page': start_extras,
+            'end_page': end_extras,
+            'page_list': page_list,
+            'max_page': max_page,
+            'page_obj': pagination,
         }
         return render(self.request, "faq.html", context)
 
     def post(self, *args, **kwargs):
         if "searchTerm" in self.request.POST.keys():
-            form = SearchFAQForm(self.request.POST)
-            if form.is_valid():
-                # need to add language tests here at a later date
-                theLanguage = LanguageChoices.objects.get(
-                    language_short="swe")
-                search_terms = form.cleaned_data.get('searchTerm')
-                search_term_split = search_terms.split()
-                len_search_term = len(search_term_split)
+            # check that the search field isnt empty, if empty redirect to get section
+            searchTest = self.request.POST["searchTerm"]
+
+            if searchTest != "":
+                # we just did a search, no matter what we are on page 1
+                form = SearchFAQForm(self.request.POST)
+                comment = ""
+                if form.is_valid():
+                    # need to add language tests here at a later date
+                    theLanguage = LanguageChoices.objects.get(
+                        language_short="swe")
+                    search_terms = form.cleaned_data.get('searchTerm')
+                    search_term_split = search_terms.split()
+                    len_search_term = len(search_term_split)
+
+                    # make all the combinations of the search
+
+                    a = len_search_term
+                    searchTermList = []
+                    while a > 0:
+                        searchCombinations = combinations(search_term_split, a)
+                        for combination in searchCombinations:
+                            term = ""
+                            for word in combination:
+                                if term == "":
+                                    term = word
+                                else:
+                                    term = term + " " + word
+                            searchTermList.append(term)
+                        a -= 1
+                    search = []
+                    search_no_duplicates = []
+                    aquire_index = default_pagination_values
+                    pagination = {}
+                    page_list = []
+                    is_paginated = False
+                    start_extras = False
+                    end_extras = False
+                    max_page = 1
+
+                    # get all results
+
+                    for term in searchTermList:
+                        faqs = FAQ.objects.filter(
+                            Q(subject__contains=term) | Q(content__contains=term))
+                        search.append(faqs)
+
+                    # place all query entries in a new array
+
+                    for_sorting = []
+
+                    for query in search:
+                        for entry in query:
+                            for_sorting.append(entry)
+
+                    # remove all duplicates
+                    for entry in for_sorting:
+                        if(len(search_no_duplicates) == 0):
+                            search_no_duplicates.append(entry)
+                        else:
+                            i = 0
+                            same = False
+                            while i < len(search_no_duplicates):
+                                if search_no_duplicates[i].id == entry.id:
+                                    i = len(search_no_duplicates)
+                                    same = True
+                                else:
+                                    same = False
+                                i += 1
+                            if not same:
+                                search_no_duplicates.append(entry)
+                    # remove those not to be used
+
+                    final_search_array = []
+
+                    i = 0
+                    while i < aquire_index:
+                        final_search_array.append(search_no_duplicates[i])
+                        i += 1
+
+                    # create pagination
+
+                    number_faqs = len(search_no_duplicates)
+                    if(number_faqs > aquire_index):
+                        max_page = number_faqs/aquire_index
+                        testM = int(max_page)
+                        if(testM != max_page):
+                            max_page = testM + 1
+
+                        if(max_page > 1):
+
+                            page_list, where = get_list_of_pages(
+                                1, int(max_page))
+
+                            if(page_list[-1] == max_page):
+                                hasNext = False
+                            else:
+                                hasNext = True
+                            pagination = {
+                                "has_previous": False,
+                                "previous_page_number": 1,
+                                "number": 1,
+                                "has_next": hasNext,
+                                "next_page_number": 2
+                            }
+                            if where != "no extras":
+                                end_extras = True
+
+                            is_paginated = True
+
+                    try:
+                        aButtonType = ButtonType.objects.get(
+                            buttonType="search")
+                        searchButton = ButtonText.objects.filter(
+                            language=theLanguage, theButtonType=aButtonType)
+                    except ObjectDoesNotExist:
+                        searchButton = {"buttonText": "Search"}
+
+                context = {
+                    'search': True,
+                    'faqs': final_search_array,
+                    "searchTerms": searchTest,
+                    'searchForm': form,
+                    "searchButton": searchButton,
+                    'is_paginated': is_paginated,
+                    'start_page': start_extras,
+                    'end_page': end_extras,
+                    'page_list': page_list,
+                    'max_page': max_page,
+                    'page_obj': pagination,
+                }
+                return render(self.request, "faq.html", context)
+            else:
+                return redirect("core:faq")
+
+        elif "SearchTerms" in self.request.POST.keys():
+            # we are paginating a search this didnt start in the form
+            search_terms = self.request.POST['SearchTerms']
+            page = self.request.POST['page']
+
+            # need to add language tests here at a later date
+            theLanguage = LanguageChoices.objects.get(
+                language_short="swe")
+            search_term_split1 = search_terms.split("\"")
+            if len(search_term_split1) == 1:
+                search_term_split = search_term_split1[0].split()
+            elif len(search_term_split1) > 1:
+                search_term_split = search_term_split1[1].split()
+            else:
+                search_term_split = search_term_split1
+            len_search_term = len(search_term_split)
+
+            # check if the search is empty
+
+            if len_search_term > 0:
 
                 # make all the combinations of the search
 
@@ -882,119 +1089,142 @@ class FAQView(View):
                         searchTermList.append(term)
                     a -= 1
                 search = []
-                comment = ""
-                for term in searchTermList:
-                    try:
-                        faqs = FAQ.objects.filter(subject__contains=term)
-                        search.append(faqs)
-                    except ObjectDoesNotExist:
-                        # this is only because we want the test without an error thrown. This comment wont be used
-                        comment = term + " doesn't exist in subject."
-                    try:
-                        faqs = FAQ.objects.filter(content__contains=term)
-                        search.append(faqs)
-                    except ObjectDoesNotExist:
-                        # this is only because we want the test without an error thrown. This comment wont be used
-                        comment = term + " doesn't exist in content."
-
                 search_no_duplicates = []
-                len_s = len(search)
-                if len_s > 0:
-                    comment = ""
-                    for query in search:
-                        for entry in query:
-                            i = 0
-                            if len(search_no_duplicates) == 0:
-                                search_no_duplicates.append(entry)
-                            same = False
-                            while i < len(search_no_duplicates):
-                                if search_no_duplicates[i].id == entry.id:
-                                    i = len(search_no_duplicates)
-                                    same = True
-                                i += 1
-                            if not same:
-                                search_no_duplicates.append(entry)
-                elif len_s == 0:
-                    try:
-                        search_no_duplicates = FAQ.objects.filter(
-                            language=theLanguage)
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 135)
-                        search_no_duplicates = [
-                            {
-                                "question": "Ett fel har uppstått:",
-                                "answer": message,
-                            }
-                        ]
+                aquire_index = default_pagination_values
+                pagination = {}
+                page_list = []
+                is_paginated = False
+                start_extras = False
+                end_extras = False
+                max_page = 1
+
+                # get all results
+
+                for term in searchTermList:
+                    faqs = FAQ.objects.filter(
+                        Q(subject__contains=term) | Q(content__contains=term))
+                    search.append(faqs)
+
+                # place all query entries in a new array
+
+                for_sorting = []
+
+                for query in search:
+                    for entry in query:
+                        for_sorting.append(entry)
+
+                # remove all duplicates
+                for entry in for_sorting:
+                    if(len(search_no_duplicates) == 0):
+                        search_no_duplicates.append(entry)
+                    else:
+                        i = 0
+                        same = False
+                        while i < len(search_no_duplicates):
+                            if search_no_duplicates[i].id == entry.id:
+                                i = len(search_no_duplicates)
+                                same = True
+                            else:
+                                same = False
+                            i += 1
+                        if not same:
+                            search_no_duplicates.append(entry)
+                # remove those not to be used
+
+                final_search_array = []
+
+                finish = (int(page) * aquire_index)
+                j = finish - aquire_index
+                while j < finish:
+                    if(j < len(search_no_duplicates)):
+                        final_search_array.append(search_no_duplicates[j])
+                    j += 1
+
+                # create pagination
+
+                number_faqs = len(search_no_duplicates)
+                if(number_faqs > aquire_index):
+                    max_page = number_faqs/aquire_index
+                    testM = int(max_page)
+                    if(testM != max_page):
+                        max_page = testM + 1
+
+                    if(max_page > 1):
+
+                        page_list, where = get_list_of_pages(
+                            int(page), int(max_page))
+                        print(where)
+
+                        if(where == "no extras"):
+                            start_extras = False
+                            end_extras = False
+                            hasNext = False
+                            has_previous = False
+                            previous_page_number = int(page)
+                            next_page_number = int(page)
+                        elif(where == "start"):
+                            start_extras = False
+                            end_extras = True
+                            has_previous = False
+                            hasNext = True
+                            previous_page_number = int(page)
+                            next_page_number = int(page) - 1
+                        elif(where == "end"):
+                            start_extras = True
+                            end_extras = False
+                            has_previous = True
+                            hasNext = False
+                            previous_page_number = int(page) - 1
+                            next_page_number = int(page)
+                        else:
+                            start_extras = True
+                            end_extras = True
+                            has_previous = True
+                            hasNext = True
+                            previous_page_number = int(page) - 1
+                            next_page_number = int(page) + 1
+
+                        pagination = {
+                            "has_previous": has_previous,
+                            "previous_page_number": previous_page_number,
+                            "number": int(page),
+                            "has_next": hasNext,
+                            "next_page_number": next_page_number
+                        }
+
+                        is_paginated = True
 
                 try:
-                    aButtonType = ButtonType.objects.get(
-                        buttonType="search")
+                    searchForm = SearchFAQForm()
+                    aButtonType = ButtonType.objects.get(buttonType="search")
                     searchButton = ButtonText.objects.filter(
                         language=theLanguage, theButtonType=aButtonType)
                 except ObjectDoesNotExist:
+                    message = get_message('error', 135)
+                    # flag it support
+                    searchForm = SearchFAQForm()
                     searchButton = {"buttonText": "Search"}
 
                 context = {
                     'search': True,
-                    'faqs': search_no_duplicates,
-                    "comment": comment,
-                    'searchForm': form,
+                    'faqs': final_search_array,
+                    "searchTerms": search_terms,
+                    'searchForm': searchForm,
                     "searchButton": searchButton,
+                    'is_paginated': is_paginated,
+                    'start_page': start_extras,
+                    'end_page': end_extras,
+                    'page_list': page_list,
+                    'max_page': max_page,
+                    'page_obj': pagination,
                 }
                 return render(self.request, "faq.html", context)
             else:
-                # add error message here
-                try:
-                    # need to add language tests here at a later date
-                    theLanguage = LanguageChoices.objects.get(
-                        language_short="swe")
-
-                    try:
-                        faqs = FAQ.objects.filter(language=theLanguage)
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 135)
-                        faqs = [
-                            {
-                                "question": "Ett fel har uppstått:",
-                                "answer": message,
-                            }
-                        ]
-
-                    try:
-                        searchForm = SearchFAQForm()
-                        searchForm.language(theLanguage)
-                        aButtonType = ButtonType.objects.get(
-                            buttonType="search")
-                        searchButton = ButtonText.objects.filter(
-                            language=theLanguage, theButtonType=aButtonType)
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 135)
-                        # flag it support
-                        searchForm = SearchFAQForm()
-                        searchButton = {"buttonText": "Search"}
-
-                except ObjectDoesNotExist:
-                    faqs = [
-                        {
-                            "question": "Ett fel har uppstått:",
-                            "answer": message,
-                        }
-                    ]
-                    searchForm = SearchFAQForm()
-                    searchButton = {"buttonText": "Search"}
-                    comment = ""
-
-                context = {
-                    'search': False,
-                    'faqs': faqs,
-                    "comment": comment,
-                    'searchForm': searchForm,
-                    "searchButton": searchButton,
-                }
-                return render(self.request, "faq.html", context)
+                # put in searchless pagination
+                test = "test"
 
         else:
+            print(self.request.POST)
 
             try:
                 # need to add language tests here at a later date
@@ -1032,12 +1262,10 @@ class FAQView(View):
                 ]
                 searchForm = SearchFAQForm()
                 searchButton = {"buttonText": "Search"}
-                comment = ""
 
             context = {
                 'search': False,
                 'faqs': faqs,
-                "comment": comment,
                 'searchForm': searchForm,
                 "searchButton": searchButton,
             }
