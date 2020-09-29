@@ -324,10 +324,14 @@ class Order(models.Model):
     def __str__(self):
         return self.user.username
 
+    def get_total_basket(self):
+        total = self.total_price
+        if self.freight:
+            total -= self.freight_price
+        return total
+
     def get_total(self):
-        total = 0
-        for order_item in self.items.all():
-            total += order_item.get_final_price()
+        total = self.total_price
         if self.coupon:
             total -= self.coupon.amount
         return total
@@ -361,6 +365,14 @@ class Order(models.Model):
             return True
         else:
             return False
+
+
+class PaymentTypes(models.Model):
+    name = models.CharField(max_length=50)
+    short = models.CharField(max_length=3)
+
+    def __str__(self):
+        return self.name
 
 
 class Payment(models.Model):

@@ -48,6 +48,7 @@ class AddressAdmin(admin.ModelAdmin):
         'apartment_address',
         'country',
         'zip',
+        'post_town',
         'address_type',
         'default'
     ]
@@ -68,6 +69,7 @@ admin.site.register(UserInfo)
 admin.site.register(CompanyInfo)
 admin.site.register(Cookies)
 admin.site.register(PaymentType)
+admin.site.register(PaymentTypes)
 admin.site.register(Freight)
 admin.site.register(LanguageChoices)
 admin.site.register(TextTypeChoices)

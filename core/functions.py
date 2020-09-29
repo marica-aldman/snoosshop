@@ -414,3 +414,21 @@ def get_list_of_pages(selected_page, max_page):
             where = "mid"
 
         return page_list, where
+
+
+def calculate_total_order(order):
+    total = 0
+    # get the items
+    all_items = order.items.all()
+
+    for i in all_items:
+        print(i.total_price)
+        total = total + i.total_price
+
+    if(order.freight):
+        print("in calculate with freight")
+        freight = int(order.freight.amount)
+
+        total = total + freight
+
+    return total

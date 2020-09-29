@@ -425,6 +425,7 @@ class OrderView(LoginRequiredMixin, View):
                 # get the cupon used
                 coupon_id = 0
                 coupons = Coupon()
+                noCoupons = False
 
                 if order.coupon is not None:
                     coupon_id = order.coupon.id
@@ -433,6 +434,8 @@ class OrderView(LoginRequiredMixin, View):
 
                     for coupon in couponsQuery:
                         coupons = coupon
+                else:
+                    noCoupons = True
 
                 # get the payment info
                 payment_id = 1
@@ -459,6 +462,7 @@ class OrderView(LoginRequiredMixin, View):
                     'shipping_address': shipping_address,
                     'billing_address': billing_address,
                     'coupons': coupons,
+                    'noCoupons': noCoupons,
                     'payment': payments,
                 }
 

@@ -75,18 +75,26 @@
                     </tr>
                     <tr>
                         <td class="mdb-color lighten-5">
-                            Använda rabattkoder
+                            Totalkostnad av produkter
                         </td>
                         <td>
-                            {{ coupons.code }}
+                            ${{ order.get_total_basket }}
                         </td>
                     </tr>
                     <tr>
                         <td class="mdb-color lighten-5">
-                            Frakt
+                            Frakttyp
                         </td>
                         <td>
-                            {{ order.freight }}
+                            {{ order.freight.title }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mdb-color lighten-5">
+                            Fraktkostnad
+                        </td>
+                        <td>
+                            {{ order.freight.amount }}
                         </td>
                     </tr>
                     <tr>
@@ -94,7 +102,11 @@
                             Använda rabattkoder
                         </td>
                         <td>
+                            {% if noCoupons %}
+                            Inga
+                            {% else %}
                             {{ coupons.code }}
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>

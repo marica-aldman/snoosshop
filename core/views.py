@@ -38,8 +38,10 @@ def is_valid_form(values):
 class CheckoutView(View):
     def get(self, *args, **kwargs):
         try:
+            # get the content of the basket
             order = Order.objects.get(user=self.request.user, ordered=False)
             form = CheckoutForm()
+
             context = {
                 'form': form,
                 'couponform': CouponForm(),
@@ -47,6 +49,7 @@ class CheckoutView(View):
                 'DISPLAY_COUPON_FORM': True
             }
 
+            # get the users preset adresses if there are some
             shipping_address_qs = Address.objects.filter(
                 user=self.request.user,
                 address_type='S',
@@ -65,6 +68,21 @@ class CheckoutView(View):
                 context.update(
                     {'default_billing_address': billing_address_qs[0]})
 
+            if order.freight:
+                freights = Freight.objects.all()
+
+                selectedFreights = []
+
+                for f in freights:
+                    if f.id == int(order.freight.id):
+                        selectedFreights.append(
+                            {"chosen": True, "choice": f})
+                    else:
+                        selectedFreights.append(
+                            {"chosen": False, "choice": f})
+                context.update({"chosen_freight": True})
+                context.update({"selectedFreights": selectedFreights})
+
             return render(self.request, "checkout.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "You do not have an active order")
@@ -74,6 +92,7 @@ class CheckoutView(View):
         form = CheckoutForm(self.request.POST or None)
         try:
             order = Order.objects.get(user=self.request.user, ordered=False)
+            form_not_complete = False
             if form.is_valid():
 
                 use_default_shipping = form.cleaned_data.get(
@@ -97,17 +116,20 @@ class CheckoutView(View):
                         'shipping_address')
                     shipping_address2 = form.cleaned_data.get(
                         'shipping_address2')
-                    shipping_country = form.cleaned_data.get(
-                        'shipping_country')
                     shipping_zip = form.cleaned_data.get('shipping_zip')
+                    s_post_town = form.cleaned_data.get('s_post_town')
+                    if shipping_address2 == "<input":
+                        shipping_address2 = ""
+                    if shipping_address1 == "<input":
+                        shipping_address1 = ""
 
-                    if is_valid_form([shipping_address1, shipping_country, shipping_zip]):
+                    if is_valid_form([shipping_address1, shipping_zip, s_post_town]):
                         shipping_address = Address(
                             user=self.request.user,
                             street_address=shipping_address1,
                             apartment_address=shipping_address2,
-                            country=shipping_country,
                             zip=shipping_zip,
+                            post_town=s_post_town,
                             address_type='S'
                         )
                         shipping_address.save()
@@ -122,6 +144,7 @@ class CheckoutView(View):
                             shipping_address.save()
 
                     else:
+                        form_not_complete = True
                         messages.info(
                             self.request, "Please fill in the required shipping address fields")
 
@@ -130,14 +153,16 @@ class CheckoutView(View):
                 same_billing_address = form.cleaned_data.get(
                     'same_billing_address')
 
-                if same_billing_address:
+                if same_billing_address and not form_not_complete:
                     billing_address = shipping_address
-                    billing_address.pk = None
-                    billing_address.save()
-                    billing_address.address_type = 'B'
-                    billing_address.save()
                     order.billing_address = billing_address
                     order.save()
+
+                elif same_billing_address and form_not_complete:
+                    billing_address1 = shipping_address1
+                    billing_address2 = shipping_address2
+                    billing_zip = shipping_zip
+                    b_post_town = s_post_town
 
                 elif use_default_billing:
                     address_qs = Address.objects.filter(
@@ -158,17 +183,22 @@ class CheckoutView(View):
                         'billing_address')
                     billing_address2 = form.cleaned_data.get(
                         'billing_address2')
-                    billing_country = form.cleaned_data.get(
-                        'billing_country')
                     billing_zip = form.cleaned_data.get('billing_zip')
+                    b_post_town = form.cleaned_data.get(
+                        'b_post_town')
+                    if billing_address1 == "<input":
+                        billing_address1 = ""
+                    if billing_address2 == "<input":
+                        billing_address2 = ""
 
-                    if is_valid_form([billing_address1, billing_country, billing_zip]):
+                    if is_valid_form([billing_address1, billing_zip, b_post_town]):
                         billing_address = Address(
                             user=self.request.user,
                             street_address=billing_address1,
                             apartment_address=billing_address2,
-                            country=billing_country,
+                            country="Sverige",
                             zip=billing_zip,
+                            post_town=b_post_town,
                             address_type='B'
                         )
                         billing_address.save()
@@ -183,19 +213,106 @@ class CheckoutView(View):
                             billing_address.save()
 
                     else:
+                        form_not_complete = True
                         messages.info(
                             self.request, "Please fill in the required billing address fields")
 
+                freight_option = form.cleaned_data.get('freight_option')
+                freight = Freight.objects.filter(id=int(freight_option))
+                order.freight = freight[0]
+                order.freight_price = order.freight.amount
+
+                # recalculate order total
+
+                order.total_price = calculate_total_order(order)
+                order.save()
+
                 payment_option = form.cleaned_data.get('payment_option')
 
-                if payment_option == 'S':
-                    return redirect('core:payment', payment_option='stripe')
-                elif payment_option == 'P':
-                    return redirect('core:payment', payment_option='paypal')
+                if(form_not_complete):
+
+                    # get the content of the basket
+                    order = Order.objects.get(
+                        user=self.request.user, ordered=False)
+
+                    # create freight choices to go through to preselect if it is selected
+
+                    freights = Freight.objects.all()
+
+                    selectedFreights = []
+
+                    for f in freight:
+                        if f.id == int(freight_option):
+                            selectedFreights.append(
+                                {"chosen": True, "choice": f})
+                        else:
+                            selectedFreights.append(
+                                {"chosen": False, "choice": f})
+
+                    # create payment choices to go through to preselect if it is selected
+
+                    payments = PaymentTypes.objects.all()
+
+                    selectedPayments = []
+
+                    for p in payments:
+                        if p.short == payment_option:
+                            selectedPayments.append(
+                                {"chosen": True, "choice": p})
+                        else:
+                            selectedPayments.append(
+                                {"chosen": False, "choice": p})
+
+                    context = {
+                        'form': form,
+                        'couponform': CouponForm(),
+                        'order': order,
+                        'DISPLAY_COUPON_FORM': True,
+                        'form_not_complete': form_not_complete,
+                        'shipping_address1': shipping_address1,
+                        'shipping_address2': shipping_address2,
+                        'shipping_zip': shipping_zip,
+                        's_post_town': s_post_town,
+                        'billing_address1': billing_address1,
+                        'billing_address2': billing_address2,
+                        'billing_zip': billing_zip,
+                        'b_post_town': b_post_town,
+                        'use_default_shipping': use_default_shipping,
+                        'use_default_billing': use_default_billing,
+                        'same_billing_address': same_billing_address,
+                        'selectedPayments': selectedPayments,
+                        'selectedFreights': selectedFreights,
+                    }
+
+                    # get the users preset adresses if there are some
+                    shipping_address_qs = Address.objects.filter(
+                        user=self.request.user,
+                        address_type='S',
+                        default=True
+                    )
+                    if shipping_address_qs.exists():
+                        context.update(
+                            {'default_shipping_address': shipping_address_qs[0]})
+
+                    billing_address_qs = Address.objects.filter(
+                        user=self.request.user,
+                        address_type='B',
+                        default=True
+                    )
+                    if billing_address_qs.exists():
+                        context.update(
+                            {'default_billing_address': billing_address_qs[0]})
+
+                    return render(self.request, "checkout.html", context)
                 else:
-                    messages.warning(
-                        self.request, "Invalid payment option selected")
-                    return redirect('core:checkout')
+                    if payment_option == 'S':
+                        return redirect('core:payment', payment_option='stripe')
+                    elif payment_option == 'P':
+                        return redirect('core:payment', payment_option='paypal')
+                    else:
+                        messages.warning(
+                            self.request, "Invalid payment option selected")
+                        return redirect('core:checkout')
         except ObjectDoesNotExist:
             messages.warning(self.request, "You do not have an active order")
             return redirect("core:order-summary")
@@ -515,11 +632,21 @@ def add_to_cart(request, slug):
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
+            order_item.total_price = order_item.quantity * order_item.price
             order_item.save()
             messages.info(request, "This item quantity was updated.")
             return redirect("core:order-summary")
         else:
+            order_item.quantity = 1
+            if item.discount_price:
+                order_item.price = item.discount_price
+            else:
+                order_item.price = item.price
+            order_item.total_price = order_item.price * order_item.quantity
+            order_item.save()
             order.items.add(order_item)
+            order.total_price = calculate_total_order(order)
+            order.save()
             messages.info(request, "This item was added to your cart.")
             return redirect("core:order-summary")
     else:
@@ -528,7 +655,16 @@ def add_to_cart(request, slug):
         rcode = test_order_ref_code(refCode)
         order = Order.objects.create(
             user=request.user, ordered_date=ordered_date, ref_code=rcode)
+        order_item.quantity = 1
+        if item.discount_price:
+            order_item.price = item.discount_price
+        else:
+            order_item.price = item.price
+        order_item.total_price = order_item.price * order_item.quantity
+        order_item.save()
         order.items.add(order_item)
+        order.total_price = calculate_total_order(order)
+        order.save()
         messages.info(request, "This item was added to your cart.")
         return redirect("core:order-summary")
 
@@ -550,7 +686,11 @@ def remove_from_cart(request, slug):
                 ordered=False
             )[0]
             order.items.remove(order_item)
+            order_item.delete()
             messages.info(request, "This item was removed from your cart.")
+            all_items = order.items.all()
+            if all_items == None:
+                order.delete()
             return redirect("core:order-summary")
         else:
             messages.info(request, "This item was not in your cart")
@@ -578,9 +718,11 @@ def remove_single_item_from_cart(request, slug):
             )[0]
             if order_item.quantity > 1:
                 order_item.quantity -= 1
+                order_item.total_price = order_item.quantity * order_item.price
                 order_item.save()
             else:
                 order.items.remove(order_item)
+                order_item.delete()
             messages.info(request, "This item quantity was updated.")
             return redirect("core:order-summary")
         else:
@@ -827,9 +969,6 @@ class FAQView(View):
                     max_page = testM + 1
 
                 page_list, where = get_list_of_pages(1, int(max_page))
-                print(page_list)
-                print(where)
-                print(max_page)
 
                 if(1 != max_page):
                     hasNext = False
@@ -1153,7 +1292,6 @@ class FAQView(View):
 
                         page_list, where = get_list_of_pages(
                             int(page), int(max_page))
-                        print(where)
 
                         if(where == "no extras"):
                             start_extras = False
@@ -1224,7 +1362,6 @@ class FAQView(View):
                 test = "test"
 
         else:
-            print(self.request.POST)
 
             try:
                 # need to add language tests here at a later date
