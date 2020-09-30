@@ -28,15 +28,6 @@ LANGUAGE_CHOICES = (
     ('rus', 'Russian'),
 )
 
-INTERVALL_CHOICES = (
-    ('001', 'En gång i veckan'),
-    ('002', 'Varannan vecka'),
-    ('010', 'En gång i månaden'),
-    ('020', 'Varannan månad'),
-    ('100', 'Var sjätte månad'),
-    ('200', 'En gång om året'),
-)
-
 BUTTON_TYPES = (
     ('001', 'Search'),
     ('002', 'Save'),
