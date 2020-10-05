@@ -61,10 +61,15 @@ class searchCouponForm(forms.Form):
 
 class searchFreightForm(forms.Form):
     freight_id = forms.IntegerField(required=False, label="")
+    freight_type = forms.ChoiceField(choices=(("1", "current"), ("2", "old")))
 
-    def populate(self, freight_id, *args, **kwargs):
+    def startup(self, *args, **kwargs):
         self.fields['freight_id'].widget.attrs.update(
-            {'value': freight_id})
+            {'class': 'p-2'})
+        self.fields['freight_type'].widget.attrs.update(
+            {'class': 'p-2'})
+        self.fields['freight_id'].label = "Id:"
+        self.fields['freight_type'].label = "Status:"
 
 
 class freightForm(forms.ModelForm):
@@ -83,6 +88,28 @@ class freightForm(forms.ModelForm):
 
     def populate(self, freight_id, *args, **kwargs):
         freight = Freight.objects.get(id=freight_id)
+        self.fields['title'].widget.attrs.update(
+            {'value': freight.title})
+        self.fields['amount'].widget.attrs.update(
+            {'value': freight.amount})
+
+
+class oldFreightForm(forms.ModelForm):
+    # sort this meta class out
+
+    class Meta:
+        model = OldFreight
+        fields = ['title', 'amount']
+
+    def __init__(self, *args, **kwargs):
+        super(oldFreightForm, self).__init__(*args, **kwargs)
+        self.fields['title'].label = ""
+        self.fields['amount'].label = ""
+        self.fields['title'].required = True
+        self.fields['amount'].required = True
+
+    def populate(self, freight_id, *args, **kwargs):
+        freight = OldFreight.objects.get(id=freight_id)
         self.fields['title'].widget.attrs.update(
             {'value': freight.title})
         self.fields['amount'].widget.attrs.update(

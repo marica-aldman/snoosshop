@@ -1867,15 +1867,27 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
 
 class FreightView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
-        # get the 20 first current freights
-        freights = Freight.objects.all().order_by('title')[:20]
+        # get the default_pagination_values of the current freights
+        limit = default_pagination_values
+        freights = Freight.objects.all().order_by('title')[:limit]
         number_of_freights = Freight.objects.all().count()
+        lessThen = False
+        try:
+            number_of_old_freights = OldFreight.objects.all().count()
+            if freights.count() < limit:
+                lessThen = True
+                left = limit - number_of_freights
+                oldfreights = OldFreight.objects.all().order_by('title')[:left]
+            number_of_freights = number_of_freights + number_of_old_freights
+        except ObjectDoesNotExist:
+            # there are no old freights
+            oldfreights = []
 
         f_pages = 1
 
-        if number_of_freights > 20:
-            # if there are more we divide by 20
-            f_pages = number_of_freights / 20
+        if number_of_freights > limit:
+            # if there are more we divide by the offset
+            f_pages = number_of_freights / limit
             # see if there is a decimal
             testO = int(f_pages)
             # if there isn't an even number of ten make an extra page for the last group
@@ -1893,10 +1905,9 @@ class FreightView(LoginRequiredMixin, View):
             i += 1
             more_freights.append({'number': i})
 
-        # make an empty freight for the new form
-        freight = Freight()
         # search form
         form = searchFreightForm()
+        form.startup()
 
         # set current page, search type and search_value to start values
         current_page = 1
@@ -1906,8 +1917,10 @@ class FreightView(LoginRequiredMixin, View):
         onSubmit = get_message('warning', 5)
 
         context = {
+            'warning': False,
             'freights': freights,
-            'freight': freight,
+            'oldfreights': oldfreights,
+            'lessThenOffset': lessThen,
             'form': form,
             'current_page': current_page,
             'search_type': search_type,
@@ -1925,6 +1938,12 @@ class FreightView(LoginRequiredMixin, View):
             # get id
             freight_id = int(self.request.POST['delete'])
             freight = Freight.objects.get(id=freight_id)
+            saveInOld = OldFreight()
+            saveInOld.title = freight.title
+            saveInOld.slug = freight.slug
+            saveInOld.description = freight.description
+            saveInOld.amount = freight.amount
+            saveInOld.save()
             freight.delete()
             info_message = get_message('info', 76)
             messages.info(self.request, info_message)
@@ -1936,12 +1955,39 @@ class FreightView(LoginRequiredMixin, View):
                 current_page = int(self.request.POST['current_page'])
 
                 if current_page >= 2:
-                    # get the right 20 freights
+                    # get the right offset freights
+                    # query[offset:offset + limit]
                     current_page -= 1
-                    offset = current_page
-                    freights = Freight.objects.all().order_by('title')[
-                        20:offset]
-                    number_of_freights = Freight.objects.all().count()
+                    offset = current_page * default_pagination_values
+                    o_and_l = offset + current_page
+                    lessThen = False
+                    stillSome = False
+                    try:
+                        freights = Freight.objects.all().order_by('title')[
+                            offset:o_and_l]
+                        number_of_freights = Freight.objects.all().count()
+                        stillSome = True
+                    except ObjectDoesNotExist:
+                        # not that many freights, we must have old freights though
+                        number_of_freights = Freight.objects.all().count()
+
+                    try:
+                        number_of_old_freights = OldFreight.objects.all().count()
+                        print(number_of_old_freights)
+                        if stillSome:
+                            if freights.count() < offset:
+                                lessThen = True
+                                left = offset - number_of_freights
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                        if not stillSome:
+                            lessThen = True
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                        number_of_freights = number_of_freights + number_of_old_freights
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
 
                     f_pages = 1
 
@@ -1969,10 +2015,14 @@ class FreightView(LoginRequiredMixin, View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    form.startup()
                     onSubmit = get_message('warning', 5)
 
                     context = {
+                        'warning': False,
                         'freights': freights,
+                        'oldfreights': oldfreights,
+                        'lessThenOffset': lessThen,
                         'freight': freight,
                         'form': form,
                         'current_page': current_page,
@@ -1986,15 +2036,28 @@ class FreightView(LoginRequiredMixin, View):
                     return render(self.request, "moderator/mod_freights.html", context)
                 if current_page == 1:
                     # this shouldnt happen but to make sure
-                    # get the right 20 freights
-                    freights = Freight.objects.all().order_by('title')[:20]
+                    # get the default_pagination_values of the current freights
+                    limit = default_pagination_values
+                    freights = Freight.objects.all().order_by('title')[:limit]
                     number_of_freights = Freight.objects.all().count()
+                    lessThen = False
+                    try:
+                        number_of_old_freights = OldFreight.objects.all().count()
+                        if freights.count() < limit:
+                            lessThen = True
+                            left = limit - number_of_freights
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                :left]
+                        number_of_freights = number_of_freights + number_of_old_freights
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
 
                     f_pages = 1
 
-                    if number_of_freights > 20:
-                        # if there are more we divide by 20
-                        f_pages = number_of_freights / 20
+                    if number_of_freights > limit:
+                        # if there are more we divide by the offset
+                        f_pages = number_of_freights / limit
                         # see if there is a decimal
                         testO = int(f_pages)
                         # if there isn't an even number of ten make an extra page for the last group
@@ -2016,10 +2079,20 @@ class FreightView(LoginRequiredMixin, View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    form.startup()
+
+                    # set current page, search type and search_value to start values
+                    current_page = 1
+                    search_type = "None"
+                    search_value = "None"
+
                     onSubmit = get_message('warning', 5)
 
                     context = {
+                        'warning': False,
                         'freights': freights,
+                        'oldfreights': oldfreights,
+                        'lessThenOffset': lessThen,
                         'freight': freight,
                         'form': form,
                         'current_page': current_page,
@@ -2041,12 +2114,16 @@ class FreightView(LoginRequiredMixin, View):
                 # we need the max pages first
 
                 number_of_freights = Freight.objects.all().count()
+                number_of_old_freights = OldFreight.objects.all().count()
+                total = number_of_freights + number_of_old_freights
 
                 f_pages = 1
+                limit = default_pagination_values
 
-                if number_of_freights > 20:
-                    # if there are more we divide by 20
-                    f_pages = number_of_freights / 20
+                if (number_of_freights + number_of_old_freights) > limit:
+                    # if there are more we divide by default_pagination_values
+                    limit = limit
+                    f_pages = total / limit
                     # see if there is a decimal
                     testO = int(f_pages)
                     # if there isn't an even number of ten make an extra page for the last group
@@ -2055,8 +2132,21 @@ class FreightView(LoginRequiredMixin, View):
                         f_pages += 1
 
                 if page == 1:
-                    freights = Freight.objects.all().order_by('title')[
-                        :20]
+                    freights = Freight.objects.all().order_by('title')[:limit]
+                    number_of_freights = Freight.objects.all().count()
+                    lessThen = False
+                    try:
+                        number_of_old_freights = OldFreight.objects.all().count()
+                        if freights.count() < limit:
+                            lessThen = True
+                            left = limit - number_of_freights
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                :left]
+                        number_of_freights = number_of_freights + number_of_old_freights
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
+
                     # create a list for a ul to work through
 
                     more_freights = []
@@ -2071,10 +2161,14 @@ class FreightView(LoginRequiredMixin, View):
                     freight = Freight()
                     # search form
                     form = searchFreightForm()
+                    form.startup()
                     onSubmit = get_message('warning', 5)
 
                     context = {
+                        'warning': False,
                         'freights': freights,
+                        'oldfreights': oldfreights,
+                        'lessThenOffset': lessThen,
                         'freight': freight,
                         'form': form,
                         'current_page': current_page,
@@ -2088,11 +2182,44 @@ class FreightView(LoginRequiredMixin, View):
                     return render(self.request, "moderator/mod_freights.html", context)
                 elif page > f_pages:
                     page = f_pages
+                    offset = current_page * default_pagination_values
+                    o_and_l = offset + current_page
+                    lessThen = False
+                    stillSome = False
+                    if o_and_l > number_of_freights:
+                        try:
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:number_of_freights]
+                            stillSome = True
+                        except ObjectDoesNotExist:
+                            # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
+                            freights = []
+                    else:
+                        try:
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            stillSome = True
+                        except ObjectDoesNotExist:
+                            # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
+                            test = "test"
 
-                # get the right 20 freights
-                offset = page
-                freights = Freight.objects.all().order_by('title')[
-                    20:offset]
+                    try:
+                        number_of_old_freights = OldFreight.objects.all().count()
+                        print(number_of_old_freights)
+                        if stillSome:
+                            if freights.count() < offset:
+                                lessThen = True
+                                left = offset - number_of_freights
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                        if not stillSome:
+                            lessThen = True
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                        number_of_freights = number_of_freights + number_of_old_freights
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
 
                 # create a list for a ul to work through
 
@@ -2108,12 +2235,16 @@ class FreightView(LoginRequiredMixin, View):
                 freight = Freight()
                 # search form
                 form = searchFreightForm()
+                form.startup()
 
                 current_page = page
                 onSubmit = get_message('warning', 5)
 
                 context = {
+                    'warning': False,
                     'freights': freights,
+                    'oldfreights': oldfreights,
+                    'lessThenOffset': lessThen,
                     'freight': freight,
                     'form': form,
                     'current_page': current_page,
@@ -2135,12 +2266,15 @@ class FreightView(LoginRequiredMixin, View):
                 # first we need the max amount of pages
 
                 number_of_freights = Freight.objects.all().count()
+                number_of_old_freights = OldFreight.objects.all().count()
+                total = number_of_freights + number_of_old_freights
 
                 f_pages = 1
+                limit = default_pagination_values
 
-                if number_of_freights > 20:
-                    # if there are more we divide by 20
-                    f_pages = number_of_freights / 20
+                if total > limit:
+                    # if there are more we divide by limit
+                    f_pages = total / limit
                     # see if there is a decimal
                     testO = int(f_pages)
                     # if there isn't an even number of ten make an extra page for the last group
@@ -2151,9 +2285,60 @@ class FreightView(LoginRequiredMixin, View):
                 if current_page < f_pages:
                     current_page += 1
 
-                offset = current_page
-                freights = Freight.objects.all().order_by('title')[
-                    20:offset]
+                f_only_pages = 1
+                limit = default_pagination_values
+
+                if number_of_freights > limit:
+                    # if there are more we divide by limit
+                    f_only_pages = number_of_freights / limit
+                    # see if there is a decimal
+                    testO = int(f_only_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != f_only_pages:
+                        f_only_pages = int(f_only_pages)
+                        f_only_pages += 1
+
+                new_current_page = current_page
+                if current_page > f_only_pages:
+                    new_current_page = current_page - f_only_pages
+
+                limit = default_pagination_values
+                offset = current_page * limit
+                o_and_l = offset + current_page
+                lessThen = False
+                stillSome = False
+                if current_page <= f_only_pages:
+                    freights = Freight.objects.all().order_by('title')[
+                        offset:o_and_l]
+                    stillSome = True
+
+                    try:
+                        if stillSome:
+                            if freights.count() < offset:
+                                lessThen = True
+                                left = offset - number_of_freights
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                        if not stillSome:
+                            lessThen = True
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                        number_of_freights = number_of_freights + number_of_old_freights
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
+                else:
+                    new_current_page = current_page - f_only_pages
+                    offset = new_current_page * limit
+                    o_and_l = offset + new_current_page
+
+                    try:
+                        lessThen = True
+                        oldfreights = OldFreight.objects.all().order_by('title')[
+                            offset:o_and_l]
+                    except ObjectDoesNotExist:
+                        # there are no old freights
+                        oldfreights = []
 
                 # create a list for a ul to work through
 
@@ -2169,10 +2354,14 @@ class FreightView(LoginRequiredMixin, View):
                 freight = Freight()
                 # search form
                 form = searchFreightForm()
+                form.startup()
                 onSubmit = get_message('warning', 5)
 
                 context = {
+                    'warning': False,
                     'freights': freights,
+                    'oldfreights': oldfreights,
+                    'lessThenOffset': lessThen,
                     'freight': freight,
                     'form': form,
                     'current_page': current_page,
@@ -2185,25 +2374,147 @@ class FreightView(LoginRequiredMixin, View):
 
                 return render(self.request, "moderator/mod_freights.html", context)
         elif 'search' in self.request.POST.keys():
-            # get the 20 first current freights
-            if 'freight_id' in self.request.POST.keys():
-                freight_id = int(self.request.POST['freight_id'])
-                freights = Freight.objects.filter(id=freight_id)
-                f_pages = 1
-                more_freights = [{'number': 1}]
+            # get the default number of current freights
+            warning = False
+            allFreight = False
+            form = searchFreightForm(self.request.POST)
+            form.startup()
+            if form.is_valid():
+                freight_id = form.cleaned_data.get('freight_id')
+                if freight_id == None:
+                    # we are searching for all of a type
+                    allFreight = True
+                freight_type = form.cleaned_data.get('freight_type')
+                lessThen = False
+                if freight_type == "1":
+                    if allFreight:
+                        # all current  we wont paginate here for now
+                        freights = Freight.objects.all()
+                        f_pages = 1
+                        more_freights = [{'number': 1}]
+                        oldfreights = []
+                        if freights.count() == 0:
+                            warning = True
+                    else:
+                        freights = Freight.objects.filter(id=freight_id)
+                        f_pages = 1
+                        more_freights = [{'number': 1}]
+                        oldfreights = []
+                        if freights.count() == 0:
+                            warning = True
+                elif freight_type == "2":
+                    freights = []
+                    if allFreight:
+                        # all old ones we wont paginate here for now
+                        oldfreights = OldFreight.objects.all()
+                        f_pages = 1
+                        more_freights = [{'number': 1}]
+                        if oldfreights.count() == 0:
+                            warning = True
+                    else:
+                        oldfreights = OldFreight.objects.filter(id=freight_id)
+                        f_pages = 1
+                        more_freights = [{'number': 1}]
+                        if oldfreights.count() == 0:
+                            warning = True
+                else:
+                    #something is wrong
+                    test = "test"
+                    freights = []
+                    oldfreights = []
 
-                # make an empty freight for the new form
-                freight = Freight()
-                # search form
-                form = searchFreightForm()
-                form.populate(freight_id)
                 current_page = 1
-                search_type = "freight_id"
                 search_value = freight_id
+                search_type = "freight_id"
+                print(allFreight)
+                if allFreight and freight_type == "1":
+                    print("all one")
+                    search_value = "Alla nuvarande"
+                elif allFreight and freight_type == "2":
+                    print("all two")
+                    search_value = "Alla gamla"
+                elif not allFreight and freight_type == "1":
+                    search_value = "Id " + \
+                        str(freight_id) + " nuvarande alternativ"
+                elif not allFreight and freight_type == "2":
+                    search_value = "Id " + \
+                        str(freight_id) + " gamla alternativ"
+                else:
+                    print("else")
+                    search_value = ""
+
+                search_done = True
                 onSubmit = get_message('warning', 5)
 
                 context = {
+                    'warning': warning,
                     'freights': freights,
+                    'oldfreights': oldfreights,
+                    'lessThenOffset': lessThen,
+                    'form': form,
+                    'current_page': current_page,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'search_done': search_done,
+                    'more_freights': more_freights,
+                    'max_pages': f_pages,
+                    'onSubmit': onSubmit,
+                }
+
+                return render(self.request, "moderator/mod_freights.html", context)
+            else:
+                # display just the regular page, show warning
+                warning = True
+                limit = default_pagination_values
+                freights = Freight.objects.all().order_by('title')[:limit]
+                number_of_freights = Freight.objects.all().count()
+                lessThen = False
+                try:
+                    number_of_old_freights = OldFreight.objects.all().count()
+                    if freights.count() < limit:
+                        lessThen = True
+                        left = limit - number_of_freights
+                        oldfreights = OldFreight.objects.all().order_by('title')[
+                            :left]
+                    number_of_freights = number_of_freights + number_of_old_freights
+                except ObjectDoesNotExist:
+                    # there are no old freights
+                    oldfreights = []
+
+                f_pages = 1
+
+                if number_of_freights > limit:
+                    # if there are more we divide by the offset
+                    f_pages = number_of_freights / limit
+                    # see if there is a decimal
+                    testO = int(f_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testO != f_pages:
+                        f_pages = int(f_pages)
+                        f_pages += 1
+
+                # create a list for a ul to work through
+
+                more_freights = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(f_pages):
+                    i += 1
+                    more_freights.append({'number': i})
+
+                # set current page, search type and search_value to start values
+                current_page = 1
+                search_type = "None"
+                search_value = "None"
+
+                onSubmit = get_message('warning', 5)
+
+                context = {
+                    'warning': warning,
+                    'freights': freights,
+                    'oldfreights': oldfreights,
+                    'lessThenOffset': lessThen,
                     'freight': freight,
                     'form': form,
                     'current_page': current_page,
@@ -2214,7 +2525,13 @@ class FreightView(LoginRequiredMixin, View):
                     'onSubmit': onSubmit,
                 }
 
-            return render(self.request, "moderator/mod_freights.html", context)
+                return render(self.request, "moderator/mod_freights.html", context)
+
+        elif "resetFreightSearch" in self.request.POST.keys():
+            # resetting form
+            return redirect("moderator:freights")
+        else:
+            print("nope")
 
 
 class SpecificFreightView(LoginRequiredMixin, View):
@@ -2229,16 +2546,32 @@ class SpecificFreightView(LoginRequiredMixin, View):
         if 'see' in self.request.POST.keys():
             # get the id
             freight_id = int(self.request.POST['see'])
-            # get freight form
-            form = freightForm()
-            form.populate(freight_id)
-            context = {
-                'form': form,
-                'new': False,
-                'freight': freight_id,
-            }
+            freight_type = self.request.POST['freight_type']
+            print(freight_type)
+            if freight_type == "current":
+                print("current")
+                # get freight form
+                form = freightForm()
+                form.populate(freight_id)
+                context = {
+                    'form': form,
+                    'new': False,
+                    'freight': freight_id,
+                }
 
-            return render(self.request, "moderator/mod_single_freight.html", context)
+                return render(self.request, "moderator/mod_single_freight.html", context)
+            elif freight_type == "old":
+                print("old")
+                # get freight form
+                form = oldFreightForm()
+                form.populate(freight_id)
+                context = {
+                    'form': form,
+                    'new': False,
+                    'freight': freight_id,
+                }
+
+                return render(self.request, "moderator/mod_single_freight.html", context)
         elif 'new' in self.request.POST.keys():
             # get freight form
             form = freightForm()

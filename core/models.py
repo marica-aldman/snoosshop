@@ -167,6 +167,7 @@ class UserInfo(models.Model):
 class Freight(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=False)
+    description = models.CharField(max_length=256, null=True)
     amount = models.FloatField(blank=True, null=True)
 
     def __str__(self):
@@ -180,6 +181,21 @@ class Freight(models.Model):
     def get_absolute_url_moderator_new(self):
         return reverse("moderator:freight", kwargs={
             'slug': 'new'
+        })
+
+
+class OldFreight(models.Model):
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=False)
+    description = models.CharField(max_length=256, null=True)
+    amount = models.FloatField(blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url_moderator(self):
+        return reverse("moderator:freight", kwargs={
+            'slug': self.slug
         })
 
 
