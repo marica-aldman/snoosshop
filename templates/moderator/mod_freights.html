@@ -98,13 +98,9 @@
                         </form>
                     </td>
                     <td>
-                        <form method="POST" action="." onSubmit="return confirm('{{onSubmit}}');">
-                            {% csrf_token %}
-                            <input type="hidden" name="delete" value={{a_freight.id}}>
-                            <button type="submit" class="btn btn-primary float-right">
-                                Ta bort
-                            </button>
-                        </form>
+                        <div class="btn btn-success float-right">
+                            Aktiv
+                        </div>
                     </td>
                 </tr>
         {% endfor %}
@@ -130,13 +126,9 @@
                             </form>
                         </td>
                         <td>
-                            <form method="POST" action="." onSubmit="return confirm('{{onSubmit}}');">
-                                {% csrf_token %}
-                                <input type="hidden" name="delete" value={{o_freight.id}}>
-                                <button type="submit" class="btn btn-primary float-right" disabled>
-                                    Ej aktiv
-                                </button>
-                            </form>
+                            <div class="btn btn-warning float-right">
+                                Ej aktiv
+                            </div>
                         </td>
                     </tr>
             {% endfor %}
@@ -151,7 +143,7 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" name="search_value" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
                         <
@@ -163,7 +155,7 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" name="search_value" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <button type="submit" value="{{ the_freight.number }}" name="page" {% if current_page == the_freight.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
                         {{the_freight.number}}
@@ -175,7 +167,7 @@
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" name="search_value" value="{{search_value}}">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <button type="submit" value="True" name="nextPage" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
                         >

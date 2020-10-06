@@ -26,10 +26,35 @@
                             {{ form.amount }}
                         </td>
                     </tr>
+                    <tr>
+                        <td>
+                            Beskrivning
+                        <td>
+                            {{ form.description }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <button type='submit' class='btn btn-primary' {% if new %}name="saveNew" value="new"
-            {% else %}name="saveOld" value="{{freight}}"{% endif %}>Spara</button>
+            {% else %}name="saveOld" value="old"{% endif %} {% if old %}disabled{% endif%}>Spara</button>
+            {% if new %}
+            <!-- new freight -->
+            {% else %}
+            <input type="hidden" name="freight" value="{{freight}}">
+            {% endif %}
+            {% if old %} 
+                <input type="hidden" name="inactive" value="yes">
+                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt</button>
+                <button type='submit' class='btn btn-primary'  name="reactivate" value="yes">Återaktivera</button>
+            {% else %}
+                <input type="hidden" name="inactive" value="yes">
+                {% if new %}
+                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt utan att spara</button>
+                {% else %}
+                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt utan att spara</button>
+                <button type='submit' class='btn btn-primary'  name="reactivate" value="no">Avaktivera</button>
+                {% endif %}
+            {% endif %}
         </form>
     </div>
 </div>

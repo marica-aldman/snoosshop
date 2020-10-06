@@ -77,21 +77,16 @@ class freightForm(forms.ModelForm):
 
     class Meta:
         model = Freight
-        fields = ['title', 'amount']
+        fields = ['title', 'amount', 'description']
 
     def __init__(self, *args, **kwargs):
         super(freightForm, self).__init__(*args, **kwargs)
         self.fields['title'].label = ""
-        self.fields['amount'].label = ""
         self.fields['title'].required = True
+        self.fields['amount'].label = ""
         self.fields['amount'].required = True
-
-    def populate(self, freight_id, *args, **kwargs):
-        freight = Freight.objects.get(id=freight_id)
-        self.fields['title'].widget.attrs.update(
-            {'value': freight.title})
-        self.fields['amount'].widget.attrs.update(
-            {'value': freight.amount})
+        self.fields['description'].label = ""
+        self.fields['description'].required = True
 
 
 class oldFreightForm(forms.ModelForm):
@@ -99,21 +94,16 @@ class oldFreightForm(forms.ModelForm):
 
     class Meta:
         model = OldFreight
-        fields = ['title', 'amount']
+        fields = ['title', 'amount', 'description']
 
     def __init__(self, *args, **kwargs):
         super(oldFreightForm, self).__init__(*args, **kwargs)
         self.fields['title'].label = ""
-        self.fields['amount'].label = ""
         self.fields['title'].required = True
+        self.fields['amount'].label = ""
         self.fields['amount'].required = True
-
-    def populate(self, freight_id, *args, **kwargs):
-        freight = OldFreight.objects.get(id=freight_id)
-        self.fields['title'].widget.attrs.update(
-            {'value': freight.title})
-        self.fields['amount'].widget.attrs.update(
-            {'value': freight.amount})
+        self.fields['description'].label = ""
+        self.fields['description'].required = True
 
 
 class couponForm(forms.ModelForm):
