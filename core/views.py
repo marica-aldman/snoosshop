@@ -85,7 +85,7 @@ class CheckoutView(View):
 
             return render(self.request, "checkout.html", context)
         except ObjectDoesNotExist:
-            messages.info(self.request, "You do not have an active order")
+            messages.info(self.request, "Varukorgen är tom.")
             return redirect("core:checkout")
 
     def post(self, *args, **kwargs):
@@ -109,7 +109,7 @@ class CheckoutView(View):
                         order.save()
                     else:
                         messages.info(
-                            self.request, "No default shipping address available")
+                            self.request, "Ingen förinställd leveransadress funnen.")
                         return redirect('core:checkout')
                 else:
                     shipping_address1 = form.cleaned_data.get(
@@ -146,7 +146,7 @@ class CheckoutView(View):
                     else:
                         form_not_complete = True
                         messages.info(
-                            self.request, "Please fill in the required shipping address fields")
+                            self.request, "Vargod fyll i de obligatoriska fälten för leveransadressen.")
 
                 use_default_billing = form.cleaned_data.get(
                     'use_default_billing')
@@ -176,7 +176,7 @@ class CheckoutView(View):
                         order.save()
                     else:
                         messages.info(
-                            self.request, "No default billing address available")
+                            self.request, "Ingen förinställd faktureringsadress funnen.")
                         return redirect('core:checkout')
                 else:
                     billing_address1 = form.cleaned_data.get(
@@ -215,7 +215,7 @@ class CheckoutView(View):
                     else:
                         form_not_complete = True
                         messages.info(
-                            self.request, "Please fill in the required billing address fields")
+                            self.request, "Vargod fyll i de obligatoriska fälten under faktureringsadressen.")
 
                 freight_option = form.cleaned_data.get('freight_option')
                 freight = Freight.objects.filter(id=int(freight_option))
@@ -311,10 +311,10 @@ class CheckoutView(View):
                         return redirect('core:payment', payment_option='paypal')
                     else:
                         messages.warning(
-                            self.request, "Invalid payment option selected")
+                            self.request, "Ogiltig betalningsalternativ valt.")
                         return redirect('core:checkout')
         except ObjectDoesNotExist:
-            messages.warning(self.request, "You do not have an active order")
+            messages.warning(self.request, "Varukorgen är tom.")
             return redirect("core:order-summary")
 
 
@@ -343,7 +343,7 @@ class PaymentView(View):
             return render(self.request, "payment.html", context)
         else:
             messages.warning(
-                self.request, "You have not added a billing address")
+                self.request, "Du har inte laggt till någon faktureringsadress.")
             return redirect("core:checkout")
 
     def post(self, *args, **kwargs):
@@ -420,7 +420,7 @@ class PaymentView(View):
                 order.ref_code = ref_code
                 order.save()
 
-                messages.success(self.request, "Your order was successful!")
+                messages.success(self.request, "Din order är registrerad!")
                 return redirect("/")
 
             except stripe.error.CardError as e:
@@ -431,39 +431,40 @@ class PaymentView(View):
 
             except stripe.error.RateLimitError as e:
                 # Too many requests made to the API too quickly
-                messages.warning(self.request, "Rate limit error")
+                messages.warning(
+                    self.request, "För många API förfrågningar under kort tid")
                 return redirect("/")
 
             except stripe.error.InvalidRequestError as e:
                 # Invalid parameters were supplied to Stripe's API
-                messages.warning(self.request, "Invalid parameters")
+                messages.warning(self.request, "Ogiltiga parametrar")
                 return redirect("/")
 
             except stripe.error.AuthenticationError as e:
                 # Authentication with Stripe's API failed
                 # (maybe you changed API keys recently)
-                messages.warning(self.request, "Not authenticated")
+                messages.warning(self.request, "Ej autentiserad")
                 return redirect("/")
 
             except stripe.error.APIConnectionError as e:
                 # Network communication with Stripe failed
-                messages.warning(self.request, "Network error")
+                messages.warning(self.request, "Nätverksfel")
                 return redirect("/")
 
             except stripe.error.StripeError as e:
                 # Display a very generic error to the user, and maybe send
                 # yourself an email
                 messages.warning(
-                    self.request, "Something went wrong. You were not charged. Please try again.")
+                    self.request, "Något gick fel. Betalningen gick inte igenom. Vargod försök igen.")
                 return redirect("/")
 
             except Exception as e:
                 # send an email to ourselves
                 messages.warning(
-                    self.request, "A serious error occurred. We have been notifed.")
+                    self.request, "Ett mycket allvarligt fel har inträffat.")
                 return redirect("/")
 
-        messages.warning(self.request, "Invalid data received")
+        messages.warning(self.request, "Ogiltig data inkommen")
         return redirect("/payment/stripe/")
 
 
@@ -603,7 +604,7 @@ class OrderSummaryView(LoginRequiredMixin, View):
             }
             return render(self.request, 'order_summary.html', context)
         except ObjectDoesNotExist:
-            messages.warning(self.request, "You do not have an active order")
+            messages.warning(self.request, "Varukorgen är tom.")
             return redirect("/")
 
 
@@ -634,7 +635,7 @@ def add_to_cart(request, slug):
             order_item.quantity += 1
             order_item.total_price = order_item.quantity * order_item.price
             order_item.save()
-            messages.info(request, "This item quantity was updated.")
+            messages.info(request, "Varans mängd har uppdaterats.")
             return redirect("core:order-summary")
         else:
             order_item.quantity = 1
@@ -647,7 +648,7 @@ def add_to_cart(request, slug):
             order.items.add(order_item)
             order.total_price = calculate_total_order(order)
             order.save()
-            messages.info(request, "This item was added to your cart.")
+            messages.info(request, "Varan lagd i varukorgen.")
             return redirect("core:order-summary")
     else:
         ordered_date = timezone.now()
@@ -665,7 +666,7 @@ def add_to_cart(request, slug):
         order.items.add(order_item)
         order.total_price = calculate_total_order(order)
         order.save()
-        messages.info(request, "This item was added to your cart.")
+        messages.info(request, "Varan lagd i varukorgen.")
         return redirect("core:order-summary")
 
 
@@ -687,16 +688,16 @@ def remove_from_cart(request, slug):
             )[0]
             order.items.remove(order_item)
             order_item.delete()
-            messages.info(request, "This item was removed from your cart.")
+            messages.info(request, "Varan borttagen ur varukorgen.")
             all_items = order.items.all()
             if all_items == None:
                 order.delete()
             return redirect("core:order-summary")
         else:
-            messages.info(request, "This item was not in your cart")
+            messages.info(request, "Denna vara fanns inte i din varukorg.")
             return redirect("core:product", slug=slug)
     else:
-        messages.info(request, "You do not have an active order")
+        messages.info(request, "Din varukorg är tom")
         return redirect("core:product", slug=slug)
 
 
@@ -723,13 +724,13 @@ def remove_single_item_from_cart(request, slug):
             else:
                 order.items.remove(order_item)
                 order_item.delete()
-            messages.info(request, "This item quantity was updated.")
+            messages.info(request, "Varans mängd har uppdaterats.")
             return redirect("core:order-summary")
         else:
-            messages.info(request, "This item was not in your cart")
+            messages.info(request, "Denna vara fanns inte i din varukorg.")
             return redirect("core:product", slug=slug)
     else:
-        messages.info(request, "You do not have an active order")
+        messages.info(request, "Varukorgen är tom.")
         return redirect("core:product", slug=slug)
 
 
@@ -738,7 +739,7 @@ def get_coupon(request, code):
         coupon = Coupon.objects.get(code=code)
         return coupon
     except ObjectDoesNotExist:
-        messages.info(request, "This coupon does not exist")
+        messages.info(request, "Denna rabattkod är inte giltig.")
         return redirect("core:checkout")
 
 
@@ -759,10 +760,10 @@ class AddCouponView(View):
                     user=self.request.user, ordered=False)
                 order.coupon = get_coupon(self.request, code)
                 order.save()
-                messages.success(self.request, "Successfully added coupon")
+                messages.success(self.request, "Rabattkod tillagd.")
                 return redirect("core:checkout")
             except ObjectDoesNotExist:
-                messages.info(self.request, "You do not have an active order")
+                messages.info(self.request, "Din varukorg är tom.")
                 return redirect("core:checkout")
 
 
@@ -793,11 +794,12 @@ class RequestRefundView(View):
                 refund.email = email
                 refund.save()
 
-                messages.info(self.request, "Your request was received.")
+                messages.info(self.request, "Din begäran har mottagits.")
                 return redirect("core:request-refund")
 
             except ObjectDoesNotExist:
-                messages.info(self.request, "This order does not exist.")
+                messages.info(
+                    self.request, "Denna order finns inte i systemet.")
                 return redirect("core:request-refund")
 
 
@@ -941,7 +943,7 @@ class CategoryView(View):
             return render(self.request, "category.html", context)
         except ObjectDoesNotExist:
             messages.info(
-                self.request, "Something went wrong, contact support")
+                self.request, "Något har gått fel, vargod kontakta supporten.")
             return redirect("core:home")
 
 # FAQ

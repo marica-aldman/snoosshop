@@ -5,15 +5,15 @@
     <div class="container">
 
     <div class="table-responsive text-nowrap">
-    <h2>Order Summary</h2>
+    <h2>Sammanställning av order</h2>
     <table class="table">
         <thead>
         <tr>
             <th scope="col">#</th>
-            <th scope="col">Item title</th>
-            <th scope="col">Price</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Total Item Price</th>
+            <th scope="col">Vara</th>
+            <th scope="col">Pris</th>
+            <th scope="col">Mängd</th>
+            <th scope="col">Totalpris för varan</th>
         </tr>
         </thead>
         <tbody>
@@ -29,10 +29,10 @@
             </td>
             <td>
             {% if order_item.item.discount_price %}
-                ${{ order_item.get_total_discount_item_price }}
-                <span class="badge badge-primary">Saving ${{ order_item.get_amount_saved }}</span>
+                {{ order_item.get_total_discount_item_price }} kr
+                <span class="badge badge-primary">Sparar {{ order_item.get_amount_saved }} kr</span>
             {% else %}
-                ${{ order_item.get_total_item_price }}
+                {{ order_item.get_total_item_price }} kr
             {% endif %}
             <a style='color: red;' href="{% url 'core:remove-from-cart' order_item.item.slug %}">
                 <i class="fas fa-trash float-right"></i>
@@ -41,29 +41,29 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan='5'>Your cart is empty</td>
+            <td colspan='5'>Varukorgen är tom</td>
         </tr>
         <tr>
             <td colspan="5">
-            <a class='btn btn-primary float-right' href='/'>Continue shopping</a>
+            <a class='btn btn-primary float-right' href='/'>Fortsätt shoppa</a>
             </td>
         </tr>
         {% endfor %}
         {% if object.coupon %}
         <tr>
-            <td colspan="4"><b>Coupon</b></td>
-            <td><b>-${{ object.coupon.amount }}</b></td>
+            <td colspan="4"><b>Kuppong</b></td>
+            <td><b>-{{ object.coupon.amount }} kr</b></td>
         </tr>
         {% endif %}
         {% if object.get_total %}
         <tr>
-            <td colspan="4"><b>Order Total</b></td>
-            <td><b>${{ object.get_total_basket }}</b></td>
+            <td colspan="4"><b>Totalpris för ordern</b></td>
+            <td><b>{{ object.get_total_basket }} kr</b></td>
         </tr>
         <tr>
             <td colspan="5">
-            <a class='btn btn-warning float-right ml-2' href='/checkout/'>Proceed to checkout</a>
-            <a class='btn btn-primary float-right' href='/'>Continue shopping</a>
+            <a class='btn btn-warning float-right ml-2' href='/checkout/'>Fortsätt till kassan</a>
+            <a class='btn btn-primary float-right' href='/'>Fortsätt shoppa</a>
             </td>
         </tr>
         {% endif %}

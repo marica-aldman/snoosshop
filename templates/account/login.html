@@ -3,7 +3,7 @@
 {% load account socialaccount %}
 {% load crispy_forms_tags %}
 
-{% block head_title %}{% trans "Sign In" %}{% endblock %}
+{% block head_title %}{% trans "Logga in" %}{% endblock %}
 
 {% block content %}
   <main>
@@ -11,14 +11,13 @@
       <section class="mb-4">
         <div class="row wow fadeIn">
           <div class='col-6 offset-3'>
-          <h1>{% trans "Sign In" %}</h1>
+          <h1>{% trans "Logga in" %}</h1>
 
           {% get_providers as socialaccount_providers %}
 
           {% if socialaccount_providers %}
-          <p>{% blocktrans with site.name as site_name %}Please sign in with one
-          of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
-          for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
+          <p>{% blocktrans with site.name as site_name %}Var god och logga in med en av dina existerande tredjepartskonton eller, <a href="{{ signup_url }}">Skapa Konto</a>
+          för {{ site_name }} och logga in nedan:{% endblocktrans %}</p>
 
           <div class="socialaccount_ballot">
 
@@ -33,18 +32,41 @@
           {% include "socialaccount/snippets/login_extra.html" %}
 
           {% else %}
-          <p>{% blocktrans %}If you have not created an account yet, then please
-          <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}</p>
+          <p>{% blocktrans %}Om du inte har ett konto ännu, vargod och
+          <a href="{{ signup_url }}"> skapa ett konto</a> först.{% endblocktrans %}</p>
           {% endif %}
 
           <form class="login" method="POST" action="{% url 'account_login' %}">
             {% csrf_token %}
-            {{ form|crispy }}
+              <div class="form-group">
+                <div class="form-group">
+                  Användarnamn
+                </div>
+                <div>
+                  <input type="text" name="login" placeholder="Användarnamn" autofocus="autofocus" maxlength="150" class="textinput textInput form-control" required="" id="id_login">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-group">
+                  Lösenord
+                </div>
+                <div>
+                  <input type="password" name="password" placeholder="Lösenord" class="textinput textInput form-control" required="" id="id_password">
+                </div>
+              </div>
+              <div class="form-group">
+                <div id="div_id_remember" class="form-check">
+                  <input type="checkbox" name="remember" class="checkboxinput form-check-input" id="id_remember">
+                  <label for="id_remember" class="form-check-label">
+                    Kom ihåg mig
+                  </label>
+                </div>
+              </div>
             {% if redirect_field_value %}
             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
             {% endif %}
-            <a class="btn btn-default" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-            <button class="btn btn-primary" type="submit">{% trans "Sign In" %}</button>
+            <a class="btn btn-default" href="{% url 'account_reset_password' %}">{% trans "Glömt lösenordet?" %}</a>
+            <button class="btn btn-primary" type="submit">{% trans "Logga in" %}</button>
           </form>
           </div>
         </div>

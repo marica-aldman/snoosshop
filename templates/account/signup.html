@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block head_title %}{% trans "Signup" %}{% endblock %}
+{% block head_title %}{% trans "Skaffa konto" %}{% endblock %}
 
 {% block content %}
   <main>
@@ -14,7 +14,38 @@
             <p>{% blocktrans %}Har du redan ett konto? Var god <a href="{{ login_url }}">logga in</a> istället.{% endblocktrans %}</p>
             <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
               {% csrf_token %}
-              {{ form|crispy }}
+              <div class="form-group">
+                <div class="form-group">
+                  Användarnamn
+                </div>
+                <div>
+                  <input type="text" name="username" placeholder="Användarnamn" autofocus="autofocus" minlength="1" maxlength="150" class="textinput textInput form-control" required="" id="id_username">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-group">
+                  Emailaddress
+                </div>
+                <div>
+                  <input type="email" name="email" placeholder="Emailaddress" class="textinput textInput form-control" id="id_email">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-group">
+                  Lösenord
+                </div>
+                <div>
+                  <input type="password" name="password1" placeholder="Lösenord" class="textinput textInput form-control" required="" id="id_password1">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-group">
+                  Upprepa Lösenord
+                </div>
+                <div>
+                  <input type="password" name="password2" placeholder="Lösenord (igen)" class="textinput textInput form-control" required="" id="id_password2">
+                </div>
+              </div>
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
               {% endif %}

@@ -2224,7 +2224,7 @@ class EditCompany(LoginRequiredMixin, View):
                             return render(self.request, "support/company.html", context)
                 except ObjectDoesNotExist:
                     messages.warning(
-                        self.request, error_message_60)
+                        self.request, "Användare finns inte")
 
                     return redirect("support:search_users")
 

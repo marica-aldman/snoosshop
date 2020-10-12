@@ -2021,9 +2021,8 @@ class FreightView(LoginRequiredMixin, View):
         elif 'previousPage' in self.request.POST.keys():
             search_type = self.request.POST['search']
             if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                print(search_type)
                 messages.warning(
-                    self.request, "Something is wrong, contact IT support")
+                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
                 return redirect("moderator:freights")
             search_value = self.request.POST['search_value']
             current_page = int(self.request.POST['current_page'])
@@ -2221,9 +2220,8 @@ class FreightView(LoginRequiredMixin, View):
         elif 'page' in self.request.POST.keys():
             search_type = self.request.POST['search']
             if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                print(search_type)
                 messages.warning(
-                    self.request, "Something is wrong, contact IT support")
+                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
                 return redirect("moderator:freights")
             search_value = self.request.POST['search_value']
             page = int(self.request.POST['page'])
@@ -2414,9 +2412,8 @@ class FreightView(LoginRequiredMixin, View):
         elif 'nextPage' in self.request.POST.keys():
             search_type = self.request.POST['search']
             if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                print(search_type)
                 messages.warning(
-                    self.request, "Something is wrong, contact IT support")
+                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
                 return redirect("moderator:freights")
             search_value = self.request.POST['search_value']
             current_page = int(self.request.POST['current_page'])
@@ -3655,7 +3652,7 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
             for faq in faqs:
                 faq.delete()
             #info_message = get_message('info', code)
-            messages.info(self.request, "FAQs deleted")
+            messages.info(self.request, "FAQs borttagen")
             return redirect("moderator:faqs")
 
         elif 'cancel' in self.request.POST.keys():
@@ -3733,7 +3730,7 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     post = self.request.POST
                     form2.saveForm(post, description)
                     #info_message = get_message('info', code)
-                    messages.info(self.request, "FAQs saved")
+                    messages.info(self.request, "FAQs sparad")
                     return redirect("moderator:faqs")
 
             except ObjectDoesNotExist:

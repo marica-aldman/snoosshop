@@ -61,7 +61,8 @@ class searchCouponForm(forms.Form):
 
 class searchFreightForm(forms.Form):
     freight_id = forms.IntegerField(required=False, label="")
-    freight_type = forms.ChoiceField(choices=(("1", "current"), ("2", "old")))
+    freight_type = forms.ChoiceField(
+        choices=(("1", "Nuvarande"), ("2", "Gamla")))
 
     def startup(self, *args, **kwargs):
         self.fields['freight_id'].widget.attrs.update(
