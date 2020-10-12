@@ -1093,30 +1093,41 @@ class MultipleOrdersView(LoginRequiredMixin, View):
 class Users(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
-            # get the first 20 users and a count of all users
+            # get the limit of users and a count of all users
+
+            limit = default_pagination_values
 
             try:
-                users = User.objects.filter(groups__name='client')[:20]
+                user_objects = User.objects.filter(
+                    groups__name='client')[:limit]
+                users = []
+                for a_user in user_objects:
+                    the_user = UserInfo.objects.get(user=a_user)
+                    users.append({
+                        'id': a_user.id,
+                        'person': the_user})
                 number_users = User.objects.filter(
                     groups__name='client').count()
             except ObjectDoesNotExist:
-                users = {}
+                users = []
                 number_users = 0
 
-            # figure out how many pages of 20 there are
-            # if there are only 20 or fewer pages will be 1
+            # figure out how many pages there are
+            # if there are only the limit or fewer pages will be 1
 
             u_pages = 1
 
-            if number_users > 20:
-                # if there are more we divide by ten
-                u_pages = number_users / 20
+            if number_users > limit:
+                # if there are more we divide by the limit
+                u_pages = number_users / limit
                 # see if there is a decimal
                 testU = int(u_pages)
-                # if there isn't an even number of ten make an extra page for the last group
+                # if there isn't an even number make an extra page for the last group
                 if testU != u_pages:
                     u_pages = int(u_pages)
                     u_pages += 1
+                if type(u_pages) != "int":
+                    u_pages = int(u_pages)
 
             # create a list for a ul to work through
 
@@ -1165,205 +1176,254 @@ class Users(LoginRequiredMixin, View):
 
     def post(self, *args, **kwargs):
         try:
+            limit = default_pagination_values
             # where are we
             current_page = 1
             if 'current_page' in self.request.POST.keys():
                 current_page = int(self.request.POST['current_page'])
+            else:
+                messages.warning(
+                    self.request, "Något har gått fel. Kontakta IT supporten.")
+                return redirect("support:search_users")
 
             # what button did we press
 
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
                 # make a form and populate so we can clean the data
-                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # we only have one page when doing a search on user id, show that page
-                    user_id = int(self.request.POST['search_value'])
+                form = searchUserForm(self.request.POST)
 
-                    if user_id != 0:
-                        # next page on a single user is the same as the search for single user
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-                            userProfile = UserProfile.objects.get(
-                                user=the_user)
-
-                            # there is only one
-                            u_pages = 1
-                            more_users = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'person': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': u_pages,
-                            }
-
-                            return render(self.request, "support/user_search.html", context)
-
-                        except ObjectDoesNotExist:
-                            info_message = get_message('info', 21)
-                            messages.info(self.request, info_message)
-                            return redirect("support:search_users")
-                else:
-                    form = searchUserForm(self.request.POST)
-
-                    if form.is_valid():
-                        # get the values
-                        user_id = form.cleaned_data.get('user_id')
-                        # search done on user
-                        search_value = user_id
-                        # get the user
-
-                        try:
-                            the_user = User.objects.get(id=user_id)
-
-                            # there is only one
-                            u_pages = 1
-                            more_users = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "userID"
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'person': the_user,
-                                'more_users': more_users,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': u_pages,
-                            }
-
-                            return render(self.request, "support/user_search.html", context)
-
-                        except ObjectDoesNotExist:
-                            info_message = get_message('info', 22)
-                            messages.info(
-                                self.request, info_message)
-                            return redirect("support:search_users")
-                    else:
+                if form.is_valid():
+                    # get the values
+                    user_id = form.cleaned_data.get('user_id')
+                    if user_id == None:
+                        # resetting page
                         return redirect("support:search_users")
+                    # search done on user
+                    search_type = user_id
+                    # get the user
+
+                    try:
+                        the_user = []
+                        the_user_object = User.objects.get(id=user_id)
+
+                        a_user = UserInfo.objects.get(
+                            user=the_user_object)
+
+                        the_user.append({
+                            "id": the_user_object.id,
+                            'person': a_user,
+                        })
+
+                        # there is only one
+                        u_pages = 1
+                        more_users = [{'number': 1}]
+
+                        # set current page to 1
+                        current_page = 1
+
+                        # set a bool to check if we are showing one or multiple orders
+
+                        multiple = False
+
+                        context = {
+                            'search_type': search_type,
+                            'multiple': multiple,
+                            'users': the_user,
+                            'more_users': more_users,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': u_pages,
+                        }
+
+                        return render(self.request, "support/user_search.html", context)
+
+                    except ObjectDoesNotExist:
+                        info_message = get_message('info', 22)
+                        print(info_message)
+                        messages.info(
+                            self.request, info_message)
+                        return redirect("support:search_users")
+                else:
+                    messages.info(
+                        self.request, "Formuläret ej korrekt ifyllt, var god använd siffror för id. Om problemet kvarstår kontakta IT supporten.")
+                    return redirect("support:search_users")
 
             elif 'nextPage' in self.request.POST.keys():
+                limit = default_pagination_values
                 # get what type of search
-                search_type = self.request.POST['search']
-
+                search_type = self.request.POST['searched']
+                if search_type != None:
+                    try:
+                        search_type = int(search_type)
+                    except ValueError:
+                        messages.warning(
+                            self.request, "ID kan endast skrivas med siffror.")
+                        return redirect("support:search_users")
                 try:
-                    number_users = User.objects.filter(
-                        groups__name='client').count()
-                    number_pages = number_users / 20
-                    if current_page < number_pages:
-                        current_page += 1
-                    offset = current_page * 20
-                    users = User.objects.filter(
-                        groups__name='client')[20:offset]
-                except ObjectDoesNotExist:
-                    users = {}
-                    number_users = 0
+                    current_page = int(self.request.POST['page'])
+                except ValueError:
+                    messages.warning(
+                        self.request, "Något gick fel, om detta fortsätter kontakta it supporten.")
+                    return redirect("support:search_users")
 
-                # figure out how many pages of 20 there are
-                # if there are only 20 or fewer pages will be 1
+                if search_type == None:
+                    try:
+                        number_users = User.objects.filter(
+                            groups__name='client').count()
+                    except ObjectDoesNotExist:
+                        users = {}
+                        number_users = 0
 
-                u_pages = 1
+                    # figure out how many pages there are
+                    # if there are only the limit or fewer number of pages will be 1
 
-                if number_users > 20:
-                    # if there are more we divide by ten
-                    u_pages = number_users / 20
-                    # see if there is a decimal
-                    testU = int(u_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testU != u_pages:
-                        u_pages = int(u_pages)
-                        u_pages += 1
+                    u_pages = 1
 
-                # create a list for a ul to work through
+                    if number_users > limit:
+                        # if there are more we divide by the limit
+                        u_pages = number_users / limit
+                        # see if there is a decimal
+                        testU = int(u_pages)
+                        # if there isn't an even number make an extra page for the last group
+                        if testU != u_pages:
+                            u_pages = int(u_pages)
+                            u_pages += 1
 
-                more_users = []
+                    # create a list for a ul to work through
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(u_pages):
-                    i += 1
-                    more_users.append({'number': i})
+                    more_users = []
 
-                # make search for specific order or customer
+                    i = 0
+                    # populate the list with the amount of pages there are
+                    for i in range(u_pages):
+                        i += 1
+                        more_users.append({'number': i})
+                        try:
+                            if current_page < u_pages:
+                                current_page += 1
 
-                form = searchOrderForm()
+                            offset = current_page * limit
+                            o_and_l = offset + limit
+                            user_objects = User.objects.filter(
+                                groups__name='client')[offset:o_and_l]
+                            users = []
+                            for a_user in user_objects:
+                                the_user = UserInfo.objects.get(user=a_user)
+                                users.append({
+                                    'id': a_user.id,
+                                    'person': the_user})
+                        except ObjectDoesNotExist:
+                            message = get_message('error', 48)
+                            messages.warning(
+                                self.request, message)
+                            return redirect("support:search_users")
 
-                # set a bool to check if we are showing one or multiple orders
+                    # make search for specific order or customer
 
-                multiple = True
+                    form = searchOrderForm()
 
-                # set the hidden value for wether or not we have done a search
+                    # set a bool to check if we are showing one or multiple orders
 
-                search_type = "None"
-                search_value = "None"
+                    multiple = True
 
-                context = {
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'multiple': multiple,
-                    'users': users,
-                    'more_users': more_users,
-                    'form': form,
-                    'current_page': current_page,
-                    'max_pages': u_pages,
-                }
+                    # set the hidden value for wether or not we have done a search
 
-                return render(self.request, "support/user_search.html", context)
+                    search_type = "None"
+                    search_value = "None"
+
+                    context = {
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'multiple': multiple,
+                        'users': users,
+                        'more_users': more_users,
+                        'form': form,
+                        'current_page': current_page,
+                        'max_pages': u_pages,
+                    }
+
+                    return render(self.request, "support/user_search.html", context)
+                else:
+                    try:
+                        user_objects = User.objects.filter(
+                            id=search_type)
+                        users = []
+                        for a_user in user_objects:
+                            the_user = UserInfo.objects.get(user=a_user)
+                            users.append({
+                                'id': a_user.id,
+                                'person': the_user})
+                    except ObjectDoesNotExist:
+                        message = get_message('error', 48)
+                        messages.warning(
+                            self.request, message)
+                        return redirect("support:search_users")
+
+                    # there is only one
+                    u_pages = 1
+                    more_users = [{'number': 1}]
+
+                    # set current page to 1
+                    current_page = 1
+
+                    # set a bool to check if we are showing one or multiple orders
+
+                    multiple = False
+
+                    # set the search type
+
+                    search_type = "userID"
+
+                    context = {
+                        'search_type': search_type,
+                        'multiple': multiple,
+                        'users': the_user,
+                        'more_users': more_users,
+                        'form': form,
+                        'current_page': current_page,
+                        'max_pages': u_pages,
+                    }
+
+                    return render(self.request, "support/user_search.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
-                search_type = self.request.POST['search']
+                search_type = self.request.POST['searched']
+                if search_type != None:
+                    try:
+                        search_type = int(search_type)
+                    except ValueError:
+                        messages.warning(
+                            self.request, "ID kan endast skrivas med siffror.")
+                        return redirect("support:search_users")
 
-                # check what kind of search
+                limit = default_pagination_values
                 if current_page > 2:
                     try:
                         if current_page > 1:
                             current_page -= 1
-                        offset = current_page * 20
+                        offset = current_page * limit
+                        o_and_l = offset + limit
                         users = User.objects.filter(
-                            groups__name='client')[20:offset]
+                            groups__name='client')[offset:o_and_l]
                         number_users = User.objects.filter(
                             groups__name='client').count()
 
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
 
                         u_pages = 1
 
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
+                        if number_users > limit:
+                            # if there are more we divide by the limit
+                            u_pages = number_users / limit
                             # see if there is a decimal
                             testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
+                            # if there isn't an even number make an extra page for the last group
                             if testU != u_pages:
                                 u_pages = int(u_pages)
                                 u_pages += 1
+                            if type(u_pages) != "int":
+                                u_pages = int(u_pages)
 
                         # create a list for a ul to work through
 
@@ -1411,25 +1471,29 @@ class Users(LoginRequiredMixin, View):
                     try:
                         if current_page > 1:
                             current_page -= 1
+                        if current_page < 1:
+                            current_page = 1
                         users = User.objects.filter(
-                            groups__name='client')[:20]
+                            groups__name='client')[:limit]
                         number_users = User.objects.filter(
                             groups__name='client').count()
 
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
 
                         u_pages = 1
 
-                        if number_users > 20:
-                            # if there are more we divide by ten
+                        if number_users > limit:
+                            # if there are more we divide by the limit
                             u_pages = number_users / 20
                             # see if there is a decimal
                             testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
+                            # if there isn't an even number make an extra page for the last group
                             if testU != u_pages:
                                 u_pages = int(u_pages)
                                 u_pages += 1
+                            if type(u_pages) != "int":
+                                u_pages = int(u_pages)
 
                         # create a list for a ul to work through
 
@@ -1476,31 +1540,53 @@ class Users(LoginRequiredMixin, View):
             elif 'page' in self.request.POST.keys():
                 # paging through the pagination using specific offset
                 # get what type of search
-                search_type = self.request.POST['search']
-                current_page = int(self.request.POST['page'])
-
-                if int(self.request.POST['page']) > 1:
+                search_type = self.request.POST['searched']
+                if search_type != None:
                     try:
-                        offset = int(self.request.POST['page']) * 20
-                        users = User.objects.filter(
-                            groups__name='client')[20:offset]
+                        search_type = int(search_type)
+                    except ValueError:
+                        messages.warning(
+                            self.request, "ID kan endast skrivas med siffror.")
+                        return redirect("support:search_users")
+                try:
+                    current_page = int(self.request.POST['page'])
+                except ValueError:
+                    messages.warning(
+                        self.request, "Något gick fel, om detta fortsätter kontakta it supporten.")
+                    return redirect("support:search_users")
+
+                if current_page > 1:
+                    limit = default_pagination_values
+                    try:
+                        offset = current_page * limit
+                        o_and_l = offset + limit
+                        user_objects = User.objects.filter(
+                            groups__name='client')[offset:o_and_l]
+                        users = []
+                        for a_user in user_objects:
+                            the_user = UserInfo.objects.get(user=a_user)
+                            users.append({
+                                'id': a_user.id,
+                                'person': the_user})
                         number_users = User.objects.filter(
                             groups__name='client').count()
 
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
 
                         u_pages = 1
 
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
+                        if number_users > limit:
+                            # if there are more we divide by the limit
+                            u_pages = number_users / limit
                             # see if there is a decimal
                             testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
+                            # if there isn't an even number make an extra page for the last group
                             if testU != u_pages:
                                 u_pages = int(u_pages)
                                 u_pages += 1
+                            if type(u_pages) != "int":
+                                u_pages = int(u_pages)
 
                         # create a list for a ul to work through
 
@@ -1545,26 +1631,36 @@ class Users(LoginRequiredMixin, View):
                         return redirect("support:search_users")
 
                 else:
+
+                    limit = default_pagination_values
                     try:
-                        users = User.objects.filter(
-                            groups__name='client')[:20]
+                        user_objects = User.objects.filter(
+                            groups__name='client')[:limit]
+                        users = []
+                        for a_user in user_objects:
+                            the_user = UserInfo.objects.get(user=a_user)
+                            users.append({
+                                'id': a_user.id,
+                                'person': the_user})
                         number_users = User.objects.filter(
                             groups__name='client').count()
 
-                        # figure out how many pages of 20 there are
-                        # if there are only 20 or fewer pages will be 1
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
 
                         u_pages = 1
 
-                        if number_users > 20:
-                            # if there are more we divide by ten
-                            u_pages = number_users / 20
+                        if number_users > limit:
+                            # if there are more we divide by the limit
+                            u_pages = number_users / limit
                             # see if there is a decimal
                             testU = int(u_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
+                            # if there isn't an even number make an extra page for the last group
                             if testU != u_pages:
                                 u_pages = int(u_pages)
                                 u_pages += 1
+                            if type(u_pages) != "int":
+                                u_pages = int(u_pages)
 
                         # create a list for a ul to work through
 
@@ -1607,6 +1703,10 @@ class Users(LoginRequiredMixin, View):
                         messages.warning(
                             self.request, message)
                         return redirect("support:search_users")
+
+            elif 'search' in self.request.POST.keys() and self.request.POST['search'] == "None":
+                # resetting form
+                return redirect("support:search_users")
             else:
                 message = get_message('error', 50)
                 messages.warning(

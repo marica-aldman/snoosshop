@@ -863,7 +863,6 @@ class SpecificProductsView(LoginRequiredMixin, View):
                 # get the form
                 form = editOrCreateProduct()
                 form.populate(product_id)
-                img_form = editProductImage()
 
                 old = product_id
 
@@ -874,7 +873,6 @@ class SpecificProductsView(LoginRequiredMixin, View):
 
                 context = {
                     'form': form,
-                    'img_form': img_form,
                     'old': old,
                     'category': category,
                     'categories': categories,
@@ -890,7 +888,6 @@ class SpecificProductsView(LoginRequiredMixin, View):
 
             # get the form
             form = editOrCreateProduct()
-            img_form = editProductImage()
 
             old = 'new'
 
@@ -901,7 +898,6 @@ class SpecificProductsView(LoginRequiredMixin, View):
             context = {
                 'form': form,
                 'old': old,
-                'img_form': img_form,
                 'category': category,
                 'categories': categories,
             }
@@ -2457,7 +2453,7 @@ class FreightView(LoginRequiredMixin, View):
                 new_current_page = current_page - f_only_pages
 
             offset = current_page * limit
-            o_and_l = offset + current_page
+            o_and_l = offset + limit
             lessThen = False
             stillSome = False
             if current_page <= f_only_pages:
