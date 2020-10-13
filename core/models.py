@@ -633,6 +633,17 @@ class PaymentType(models.Model):
         return self.code
 
 
+class TeamStaff(models.Model):
+    name = models.CharField(max_length=256)
+    position = models.CharField(max_length=256)
+    active = models.BooleanField(null=True)
+    description = models.TextField()
+    image = models.ImageField(upload_to="media_root/")
+
+    def __str__(self):
+        return self.name
+
+
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
     if created:
         userprofile = UserProfile.objects.create(user=instance)

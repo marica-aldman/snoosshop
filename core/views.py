@@ -1415,27 +1415,61 @@ class FAQView(View):
 
 class om_oss_view(View):
     def get(self, *args, **kwargs):
-        test = 1
+        return render(self.request, "omoss.html", {})
 
     def post(self, *args, **kwargs):
-        test = 1
+        return redirect("core:omoss")
 
 # teamet_view
 
 
 class teamet_view(View):
     def get(self, *args, **kwargs):
-        test = 1
+
+        try:
+
+            team_staff = TeamStaff.objects.all()
+            people = []
+            for ts in team_staff:
+                if ts.active:
+                    people.append(ts)
+
+        except ObjectDoesNotExist:
+
+            team_staff = [
+                {
+                    'image': "http://127.0.0.1:8000/media/media-root/89-896473_-strawberry-png-strawberry-clipart-strawberry-strawberry-clipart.png",
+                    'name': "Mr Strawberry",
+                    'position': "CEO",
+                    'discription': "Dumtidumtidum",
+                }
+            ]
+
+        context = {
+            "people": team_staff,
+        }
+
+        return render(self.request, "team.html", context)
 
     def post(self, *args, **kwargs):
-        test = 1
+        return redirect("core:team")
 
 # vision_view
 
 
 class vision_view(View):
     def get(self, *args, **kwargs):
-        test = 1
+        return render(self.request, "vision.html", {})
 
     def post(self, *args, **kwargs):
-        test = 1
+        return redirect("core:vision")
+
+# freight info
+
+
+class freight_view(View):
+    def get(self, *args, **kwargs):
+        return render(self.request, "freight.html", {})
+
+    def post(self, *args, **kwargs):
+        return redirect("core:freight")

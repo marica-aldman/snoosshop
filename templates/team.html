@@ -1,9 +1,25 @@
 {% extends "base.html" %}
 
-{% block content %}<div class="container">
-      <br>
-      <br>
-      <p>Something amasing! 2</p>
-
+{% block content %}
+<div class="container d-flex justify-content-center mt-5 flex-wrap">
+      {% for person in people %}
+      <!-- Card -->
+      <div class="d-flex justify-content-center m-2 border border-info rounded p-4">
+            <div class="mr-4">
+                  <img src="media/{{person.image}}" width="80px">
+            </div>
+            <div class="border-left border-dark pl-4" style="min-width: 150px;">
+                  <div>
+                        {{person.name}}
+                  </div>
+                  <div>
+                        {{person.position}}
+                  </div>
+                  <div>
+                        {{person.description}}
+                  </div>
+            </div>
+      </div>
+      {% endfor %}
 </div>
 {% endblock content %}

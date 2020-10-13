@@ -1,12 +1,12 @@
 <body>
 {% load cart_template_tags %}
 
-<nav class="navbar fixed-top navbar-expand-lg navbar-light white scrolling-navbar">
+<nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar">
     <div class="container">
 
       <!-- Brand -->
-      <a class="navbar-brand waves-effect" href="/">
-        <strong class="blue-text">Snoosshop</strong>
+      <a class="navbar-brand waves-effect" href="/" styles="min-width: 100px">
+        <strong class="blue-text" styles="max-width: 100px">Snoosshop</strong>
       </a>
 
       <!-- Collapse -->
@@ -17,149 +17,179 @@
 
       <!-- Links -->
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-
-        <!-- Left -->
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="/">Hem
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="/omoss">Om Oss</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="/team">Teamet</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="/vision">Vår Vision</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="/faq">Vanliga frågor</a>
-          </li>
-        </ul>
-
-        <!-- Right -->
-        <ul class="navbar-nav mr-auto">
-          {% if request.user.is_authenticated %}
-              {% comment %}
-                Menues logged in
-                Check user type
-              {% endcomment %}
-          {% for group in request.user.groups.values_list %}
-          {% if group.1 == 'moderator' %}
-              {% comment %}
-                Moderator menu
-              {% endcomment %}
-          <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-weight: bolder; font-size: 25px;">
-              M
+        
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <div id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-top: 18px"> Meny
             </div>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:overview' %}">
-                  Översikt
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:products' %}">
-                  Produkthantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:categories' %}">
-                  Kategorihantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:orderhandling' %}">
-                  Orderhantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:freights' %}">
-                  Frakthantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:coupons' %}">
-                  Kupponghantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:faqs' %}">
-                  FAQhantering
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:my_profile' %}">
-                  Min Profil
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:settings' %}">
-                  Mina inställningar
-              </a>
-            </div>
-          </li>
-          {% elif group.1 == 'support' %}
-              {% comment %}
-                Support menu
-              {% endcomment %}
-          <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-weight: bolder; font-size: 25px;">
-              S
-            </div>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:overview' %}">
-                  Översikt
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:orders' %}">
-                  Order Sökning
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:search_users' %}">
-                  Användarsökning
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:my_profile' %}">
-                  Min Profil
-              </a>
-              <a class="nav-link waves-effect dropdown-item" href="{% url 'support:settings' %}">
-                  Mina inställningar
-              </a>
-            </div>
-          </li>
-
-          {% elif group.1 == 'client' %}
-
-              {% comment %}
-                User menu
-              {% endcomment %}
-
-          <li class="nav-item dropdown" style="top: 10px">
-            <div class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-user"></i>
-            </div>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Min översikt
-                  </span>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <li class="nav-item">
+                <a class="nav-link waves-effect" href="/">Hem
                 </a>
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Mina ordrar
-                  </span>
-                </a>
+              </li>
+              <li class="nav-item" style="min-width:80px">
+                <a class="nav-link waves-effect" href="/omoss">Om Oss</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link waves-effect" href="/team">Teamet</a>
+              </li>
+              <li class="nav-item" style="min-width:90px">
+                <a class="nav-link waves-effect" href="/vision">Vår Vision</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link waves-effect" href="/freight">Fraktinformation</a>
+              </li>
+              <li class="nav-item" style="min-width:120px">
+                <a class="nav-link waves-effect" href="/faq">Vanliga frågor</a>
+              </li>
+              
+              {% if not request.user.is_authenticated %}
+                  {% comment %}
+                    User
+                  {% endcomment %}
 
-                {% comment %} <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_support' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Min support
-                  </span>
-                </a> {% endcomment %}
-                <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Min profil
-                  </span>
-                </a>
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
-                  <span class="clearfix d-none d-sm-inline-block">
-                    Mina inställningar
-                  </span>
-                </a>
-                <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
+                  <li class="nav-item" style="min-width:150px">
+                    <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Mina inställningar
+                        </span>
+                      </a>
+                  </li>
+
+                  {% comment %}
+                    Support
+                  {% endcomment %}
+
+              <li class="nav-item" style="min-width:150px">
+                <a class="nav-link waves-effect" href="{% url 'member:support' %}">
                   <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
                 </a>
-            </div>
+              </li>
+              {% endif %}
+
+            </ul>
           </li>
-          {% endif %}
-          {% endfor %}
+            <!-- Right -->
+              {% if request.user.is_authenticated %}
+                  {% comment %}
+                    Menues logged in
+                    Check user type
+                  {% endcomment %}
+                {% for group in request.user.groups.values_list %}
+                {% if group.1 == 'moderator' %}
+                    {% comment %}
+                      Moderator menu
+                    {% endcomment %}
+                <li class="nav-item dropdown" style="top: 10px">
+                  <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Modereringsmeny
+                  </div>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:overview' %}">
+                        Översikt
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:products' %}">
+                        Produkthantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:categories' %}">
+                        Kategorihantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:orderhandling' %}">
+                        Orderhantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:freights' %}">
+                        Frakthantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:coupons' %}">
+                        Kupponghantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:faqs' %}">
+                        FAQhantering
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:my_profile' %}">
+                        Min Profil
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'moderator:settings' %}">
+                        Mina inställningar
+                    </a>
+                  </div>
+                </li>
+                {% elif group.1 == 'support' %}
+                    {% comment %}
+                      Support menu
+                    {% endcomment %}
+                <li class="nav-item dropdown" style="top: 10px">
+                  <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Support meny
+                  </div>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'support:overview' %}">
+                        Översikt
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'support:orders' %}">
+                        Order Sökning
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'support:search_users' %}">
+                        Användarsökning
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'support:my_profile' %}">
+                        Min Profil
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'support:settings' %}">
+                        Mina inställningar
+                    </a>
+                  </div>
+                </li>
+
+                {% elif group.1 == 'client' %}
+
+                    {% comment %}
+                      User menu
+                    {% endcomment %}
+
+                <li class="nav-item dropdown pl-4 pb-4" style="top: 18px">
+                  <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 100px; max-width: 150px; min-height: 30px;">
+                    Mina Sidor
+                  </div>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Min översikt
+                        </span>
+                      </a>
+                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Mina ordrar
+                        </span>
+                      </a>
+
+                      {% comment %} <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_support' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Min support
+                        </span>
+                      </a> {% endcomment %}
+                      <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Min profil
+                        </span>
+                      </a>
+                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
+                        <span class="clearfix d-none d-sm-inline-block">
+                          Mina inställningar
+                        </span>
+                      </a>
+                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
+                        <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+                      </a>
+                  </div>
+                </li>
+                {% endif %}
+                {% endfor %}
               {% comment %}
                 Cart
               {% endcomment %}
 
-          <li class="nav-item">
+          <li class="nav-item" style="padding-top: 10px">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
               <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
@@ -171,13 +201,13 @@
                 Logout
               {% endcomment %}
 
-          <li class="nav-item">
+          <li class="nav-item" style="padding-top: 16px">
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
               {% endif %}
-              <button class='btn shadow-none' type="submit">Logga Ut</button>
+              <button class='btn shadow-none' style="padding: 0" type="submit">Logga Ut</button>
             </form>
           </li>
           {% else %}
@@ -195,28 +225,6 @@
               <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
               <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
-            </a>
-          </li>
-
-              {% comment %}
-                User
-              {% endcomment %}
-
-              <li class="nav-item">
-                <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
-                    <span class="clearfix d-none d-sm-inline-block">
-                      Mina inställningar
-                    </span>
-                  </a>
-              </li>
-
-              {% comment %}
-                Support
-              {% endcomment %}
-
-          <li class="nav-item">
-            <a class="nav-link waves-effect" href="{% url 'member:support' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
             </a>
           </li>
 

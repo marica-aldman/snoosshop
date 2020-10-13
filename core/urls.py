@@ -16,6 +16,7 @@ from .views import (
     om_oss_view,
     teamet_view,
     vision_view,
+    freight_view,
 )
 
 app_name = 'core'
@@ -37,4 +38,5 @@ urlpatterns = [
     path('omoss', om_oss_view.as_view(), name='om-oss'),
     path('team', teamet_view.as_view(), name='teamet'),
     path('vision', vision_view.as_view(), name='vision'),
+    path('freight', freight_view.as_view(), name='freight'),
 ]
