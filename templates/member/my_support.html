@@ -6,6 +6,10 @@
 <!--support errands-->
 <!--active-->
 <main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container">
         <div>
             <a href="{% url 'member:new_errand' %}">

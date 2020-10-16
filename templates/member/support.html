@@ -7,6 +7,10 @@
 <!--support errands-->
 <!--active-->
 <main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container">
     <!-- generic support form -->
         <div class="border rounded mb-3 pb-5">

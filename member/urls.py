@@ -17,9 +17,6 @@ from .views import (
     Newaddress,
     Settings,
     CookieSettingsView,
-    CancelOrder,
-    ReturnOrder,
-    ReturnItem,
     changePassword,
 )
 
@@ -41,12 +38,6 @@ urlpatterns = [
     path('new_address/', Newaddress.as_view(), name='new_address'),
     path('my_settings/', CookieSettingsView.as_view(), name='my_settings'),
     path('cookie_settings/', CookieSettingsView.as_view(), name='cookie_settings'),
-    path('cancelOrder',
-         CancelOrder.as_view(), name='cancelOrder'),
-    path('returnOrder',
-         ReturnOrder.as_view(), name='returnOrder'),
-    path('returnItem',
-         ReturnItem.as_view(), name='returnItem'),
     path('changePassword',
          changePassword.as_view(), name='changePassword'),
 ]

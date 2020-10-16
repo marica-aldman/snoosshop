@@ -5,6 +5,10 @@
 
 <main>
     <div class="container">
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <!--orders-->
     <!--active-->
         <div class="border rounded mb-3 p-1">

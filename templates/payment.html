@@ -102,6 +102,10 @@ button:hover {
 {% block content %}
 
   <main >
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container wow fadeIn">
 
       <h2 class="my-5 h2 text-center">Betalning</h2>

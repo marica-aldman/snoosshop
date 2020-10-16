@@ -22,6 +22,10 @@ from core.info_error_msg import *
 
 class Overview(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         try:
             # get the limit we are currently#
             limit = default_pagination_values
@@ -65,6 +69,7 @@ class Overview(LoginRequiredMixin, View):
             current_page_orders = 1
 
             context = {
+                'gdpr_check': gdpr_check,
                 'orders': orders,
                 'more_orders': more_orders,
                 'current_page_orders': current_page_orders,
@@ -79,6 +84,8 @@ class Overview(LoginRequiredMixin, View):
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get where we are
             current_page_orders = int(self.request.POST['current_page_orders'])
@@ -127,6 +134,7 @@ class Overview(LoginRequiredMixin, View):
                     more_orders.append({'number': i})
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
                     'current_page_orders': current_page_orders,
@@ -180,6 +188,7 @@ class Overview(LoginRequiredMixin, View):
                     more_orders.append({'number': i})
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
                     'current_page_orders': current_page_orders,
@@ -233,6 +242,7 @@ class Overview(LoginRequiredMixin, View):
                     more_orders.append({'number': i})
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
                     'current_page_orders': current_page_orders,
@@ -240,6 +250,10 @@ class Overview(LoginRequiredMixin, View):
 
                 return render(self.request, "moderator/mod_overview.html", context)
 
+            else:
+                messages.warning(
+                    self.request, "Något gick fel i hämtningen av sidan. Om detta upprepas vargod kontakta IT support")
+                return redirect("moderator:overview")
         except ObjectDoesNotExist:
             message = get_message('error', 42)
             messages.warning(
@@ -249,6 +263,10 @@ class Overview(LoginRequiredMixin, View):
 
 class ProfileView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         try:
             # get moderators own user info
             try:
@@ -260,6 +278,7 @@ class ProfileView(LoginRequiredMixin, View):
             # place info in context and render page
 
             context = {
+                'gdpr_check': gdpr_check,
                 'info': info,
             }
 
@@ -273,12 +292,17 @@ class ProfileView(LoginRequiredMixin, View):
 
 class InfoView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         try:
             # get form for this using the user id
 
             form = UserInformationForm(the_User=self.request.user)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
             }
 
@@ -290,12 +314,15 @@ class InfoView(LoginRequiredMixin, View):
             return redirect("moderator:my_profile")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             form = UserInformationForm(self.request.POST)
 
             if 'edit' in self.request.POST.keys():
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                 }
 
@@ -328,6 +355,7 @@ class InfoView(LoginRequiredMixin, View):
             else:
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                 }
 
@@ -346,6 +374,10 @@ class InfoView(LoginRequiredMixin, View):
 
 class ProductsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         try:
             # get the limit
             limit = default_pagination_values
@@ -399,6 +431,7 @@ class ProductsView(LoginRequiredMixin, View):
             onsubmit = get_message('warning', 6)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'search_type': search_type,
                 'search_value': search_value,
                 'multiple': multiple,
@@ -419,6 +452,8 @@ class ProductsView(LoginRequiredMixin, View):
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # where are we
             current_page = 1
@@ -512,6 +547,7 @@ class ProductsView(LoginRequiredMixin, View):
                             onsubmit = get_message('warning', 6)
 
                             context = {
+                                'gdpr_check': gdpr_check,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'multiple': multiple,
@@ -583,6 +619,7 @@ class ProductsView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 6)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -660,6 +697,7 @@ class ProductsView(LoginRequiredMixin, View):
                 onsubmit = get_message('warning', 6)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'search_type': search_type,
                     'search_value': search_value,
                     'multiple': multiple,
@@ -733,6 +771,7 @@ class ProductsView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 6)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -806,6 +845,7 @@ class ProductsView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 6)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -856,6 +896,8 @@ class SpecificProductsView(LoginRequiredMixin, View):
         return redirect("moderator:products")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'lookAtProduct' in self.request.POST.keys():
             try:
                 product_id = int(self.request.POST['lookAtProduct'])
@@ -872,6 +914,7 @@ class SpecificProductsView(LoginRequiredMixin, View):
                 categories = Category.objects.all()
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'old': old,
                     'category': category,
@@ -896,6 +939,7 @@ class SpecificProductsView(LoginRequiredMixin, View):
             categories = Category.objects.all()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'old': old,
                 'category': category,
@@ -976,18 +1020,26 @@ class SpecificProductsView(LoginRequiredMixin, View):
                 categories = Category.objects.all()
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
-                    'img_form': img_form,
                     'old': old,
                     'category': category,
                     'categories': categories,
                 }
 
                 return render(self.request, "moderator/mod_single_product.html", context)
+        else:
+            messages.warning(
+                self.request, "Produkt hittades inte. Om detta återupprepas kontakta IT support.")
+            return redirect("moderator:products")
 
 
 class CategoriesView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         try:
             # get the limit
             limit = default_pagination_values
@@ -1041,6 +1093,7 @@ class CategoriesView(LoginRequiredMixin, View):
             onsubmit = get_message('warning', 4)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'search_type': search_type,
                 'search_value': search_value,
                 'multiple': multiple,
@@ -1061,6 +1114,8 @@ class CategoriesView(LoginRequiredMixin, View):
             return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # where are we
             current_page = 1
@@ -1104,6 +1159,7 @@ class CategoriesView(LoginRequiredMixin, View):
                             onsubmit = get_message('warning', 4)
 
                             context = {
+                                'gdpr_check': gdpr_check,
                                 'search_type': search_type,
                                 'search_value': category_id,
                                 'multiple': multiple,
@@ -1153,6 +1209,7 @@ class CategoriesView(LoginRequiredMixin, View):
                             onsubmit = get_message('warning', 4)
 
                             context = {
+                                'gdpr_check': gdpr_check,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'multiple': multiple,
@@ -1227,6 +1284,7 @@ class CategoriesView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 4)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -1305,6 +1363,7 @@ class CategoriesView(LoginRequiredMixin, View):
                 onsubmit = get_message('warning', 4)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'search_type': search_type,
                     'search_value': search_value,
                     'multiple': multiple,
@@ -1377,6 +1436,7 @@ class CategoriesView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 4)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -1449,6 +1509,7 @@ class CategoriesView(LoginRequiredMixin, View):
                         onsubmit = get_message('warning', 4)
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
                             'multiple': multiple,
@@ -1500,6 +1561,8 @@ class SpecificCategoryView(LoginRequiredMixin, View):
         return redirect("moderator:categories")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'lookAtCategory' in self.request.POST.keys():
             category_id = int(self.request.POST['lookAtCategory'])
 
@@ -1511,6 +1574,7 @@ class SpecificCategoryView(LoginRequiredMixin, View):
             old = category_id
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'old': old,
             }
@@ -1524,6 +1588,7 @@ class SpecificCategoryView(LoginRequiredMixin, View):
             old = 'new'
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'old': old,
             }
@@ -1567,6 +1632,7 @@ class SpecificCategoryView(LoginRequiredMixin, View):
                 old = category_id
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'old': old,
                 }
@@ -1583,6 +1649,10 @@ class SpecificCategoryView(LoginRequiredMixin, View):
 
 class OrderHandlingView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         # get the limit
         limit = default_pagination_values
         # display all unsent orders, oldest first
@@ -1637,6 +1707,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
         search_value = "None"
 
         context = {
+            'gdpr_check': gdpr_check,
             'form': form,
             'search_type': search_type,
             'search_value': search_value,
@@ -1652,6 +1723,8 @@ class OrderHandlingView(LoginRequiredMixin, View):
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         # get the limit
         limit = default_pagination_values
         # set the search type and value here before we go into the rest
@@ -1716,6 +1789,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         search_type = "Reference"
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'form': form,
                             'search_type': search_type,
                             'search_value': search_value,
@@ -1752,6 +1826,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         search_type = "Reference"
 
                         context = {
+                            'gdpr_check': gdpr_check,
                             'form': form,
                             'search_type': search_type,
                             'search_value': search_value,
@@ -1767,9 +1842,15 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         messages.warning(
                             self.request, message)
                         return redirect("moderator:orderhandling")
+                else:
+                    messages.warning(
+                        self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                    redirect("moderator:orderhandling")
             else:
                 # this should never happen
-                return redirect("moderator:orderhandling")
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                redirect("moderator:orderhandling")
         elif 'previousPageRegOrder' in self.request.POST.keys():
             if r_current_page >= 2:
                 r_current_page -= 1
@@ -1782,7 +1863,9 @@ class OrderHandlingView(LoginRequiredMixin, View):
                 r_current_page = page
         else:
             # bugg handle this
-            test = ""
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+            redirect("moderator:orderhandling")
 
         # after all these we need display the page again but with the current pages set correctly this will differ if we or have paged.
 
@@ -1819,6 +1902,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
         form = searchOrderForm()
 
         context = {
+            'gdpr_check': gdpr_check,
             'form': form,
             'search_type': search_type,
             'search_value': search_value,
@@ -1843,6 +1927,8 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
         return redirect("moderator:orderhandling")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'lookAtOrder' in self.request.POST.keys():
             order_id = int(self.request.POST['lookAtOrder'])
             try:
@@ -1858,6 +1944,7 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
                     self.request, message)
                 return redirect("moderator:orderhandling")
             context = {
+                'gdpr_check': gdpr_check,
                 'path': path,
                 'order': order,
                 'orderItems': orderItems,
@@ -1925,6 +2012,10 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
 
 class FreightView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         # get the default_pagination_values of the current freights
         limit = default_pagination_values
         freights = Freight.objects.all().order_by('title')[:limit]
@@ -1982,6 +2073,7 @@ class FreightView(LoginRequiredMixin, View):
         emptyfreight = Freight()
 
         context = {
+            'gdpr_check': gdpr_check,
             'warning': False,
             'freights': freights,
             'oldfreights': oldfreights,
@@ -1999,6 +2091,8 @@ class FreightView(LoginRequiredMixin, View):
         return render(self.request, "moderator/mod_freights.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'delete' in self.request.POST.keys():
             # delete freight
             # get id
@@ -2092,6 +2186,7 @@ class FreightView(LoginRequiredMixin, View):
                 onSubmit = get_message('warning', 5)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'warning': False,
                     'freights': freights,
                     'oldfreights': oldfreights,
@@ -2195,6 +2290,7 @@ class FreightView(LoginRequiredMixin, View):
                     current_page -= 1
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'warning': False,
                     'freights': freights,
                     'oldfreights': oldfreights,
@@ -2211,7 +2307,8 @@ class FreightView(LoginRequiredMixin, View):
 
                 return render(self.request, "moderator/mod_freights.html", context)
             else:
-                print("oh dear")
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:freights")
         elif 'page' in self.request.POST.keys():
             search_type = self.request.POST['search']
@@ -2299,6 +2396,7 @@ class FreightView(LoginRequiredMixin, View):
                 onSubmit = get_message('warning', 5)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'warning': False,
                     'freights': freights,
                     'oldfreights': oldfreights,
@@ -2389,6 +2487,7 @@ class FreightView(LoginRequiredMixin, View):
             onSubmit = get_message('warning', 5)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'warning': False,
                 'freights': freights,
                 'oldfreights': oldfreights,
@@ -2516,6 +2615,7 @@ class FreightView(LoginRequiredMixin, View):
                 current_page += 1
 
             context = {
+                'gdpr_check': gdpr_check,
                 'warning': False,
                 'freights': freights,
                 'oldfreights': oldfreights,
@@ -2609,6 +2709,7 @@ class FreightView(LoginRequiredMixin, View):
                 freight = Freight()
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'warning': warning,
                     'freights': freights,
                     'oldfreights': oldfreights,
@@ -2679,6 +2780,7 @@ class FreightView(LoginRequiredMixin, View):
                 emptyfreight = Freight()
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'warning': warning,
                     'freights': freights,
                     'oldfreights': oldfreights,
@@ -2700,8 +2802,9 @@ class FreightView(LoginRequiredMixin, View):
             # resetting form
             return redirect("moderator:freights")
         else:
-            print("nope")
             # something wrong
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:freights")
 
 
@@ -2714,6 +2817,8 @@ class SpecificFreightView(LoginRequiredMixin, View):
         return redirect("moderator:freights")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'see' in self.request.POST.keys():
             # get the id
             freight_id = int(self.request.POST['see'])
@@ -2724,6 +2829,7 @@ class SpecificFreightView(LoginRequiredMixin, View):
                 form = freightForm(initial={
                     'title': freight.title, 'amount': freight.amount, 'description': freight.description}, instance=freight)
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'new': False,
                     'old': False,
@@ -2749,6 +2855,7 @@ class SpecificFreightView(LoginRequiredMixin, View):
             form = freightForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'new': True,
                 'old': False,
@@ -2792,6 +2899,7 @@ class SpecificFreightView(LoginRequiredMixin, View):
                 if inactive == "yes":
                     old = True
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'new': False,
                     'old': old,
@@ -2830,6 +2938,7 @@ class SpecificFreightView(LoginRequiredMixin, View):
                 return redirect("moderator:freights")
             else:
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'new': True,
                     'freight': '',
@@ -2868,11 +2977,17 @@ class SpecificFreightView(LoginRequiredMixin, View):
         elif "cancel" in self.request.POST.keys():
             return redirect("moderator:freights")
         else:
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:freights")
 
 
 class CouponsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         # get the 20 first current freights
         coupons = Coupon.objects.all().order_by('code')[:20]
         number_of_coupons = Coupon.objects.all().count()
@@ -2914,6 +3029,7 @@ class CouponsView(LoginRequiredMixin, View):
         onSubmit = get_message('warning', 7)
 
         context = {
+            'gdpr_check': gdpr_check,
             'coupons': coupons,
             'coupon': coupon,
             'form': form,
@@ -2928,6 +3044,8 @@ class CouponsView(LoginRequiredMixin, View):
         return render(self.request, "moderator/mod_coupons.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'delete' in self.request.POST.keys():
             # delete coupon
             # get id
@@ -2983,6 +3101,7 @@ class CouponsView(LoginRequiredMixin, View):
                     onSubmit = get_message('warning', 7)
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'coupons': coupons,
                         'coupon': coupon,
                         'form': form,
@@ -3032,6 +3151,7 @@ class CouponsView(LoginRequiredMixin, View):
                     onSubmit = get_message('warning', 7)
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'coupons': coupons,
                         'coupon': coupon,
                         'form': form,
@@ -3044,6 +3164,11 @@ class CouponsView(LoginRequiredMixin, View):
                     }
 
                     return render(self.request, "moderator/mod_coupons.html", context)
+
+            else:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                return redirect("moderator:overview")
         elif 'page' in self.request.POST.keys():
             if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
                 search_type = int(self.request.POST['search_type'])
@@ -3089,6 +3214,7 @@ class CouponsView(LoginRequiredMixin, View):
                     onSubmit = get_message('warning', 7)
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'coupons': coupons,
                         'coupon': coupon,
                         'form': form,
@@ -3128,6 +3254,7 @@ class CouponsView(LoginRequiredMixin, View):
                 onSubmit = get_message('warning', 7)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'coupons': coupons,
                     'coupon': coupon,
                     'form': form,
@@ -3141,8 +3268,13 @@ class CouponsView(LoginRequiredMixin, View):
 
                 return render(self.request, "moderator/mod_coupons.html", context)
 
+            else:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                return redirect("moderator:overview")
         elif 'nextPage' in self.request.POST.keys():
             if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+
                 search_type = int(self.request.POST['search_type'])
                 search_value = int(self.request.POST['search_value'])
                 current_page = int(self.request.POST['current_page'])
@@ -3191,6 +3323,7 @@ class CouponsView(LoginRequiredMixin, View):
                 onSubmit = get_message('warning', 7)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'coupons': coupons,
                     'coupon': coupon,
                     'form': form,
@@ -3203,6 +3336,10 @@ class CouponsView(LoginRequiredMixin, View):
                 }
 
                 return render(self.request, "moderator/mod_coupons.html", context)
+            else:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                return redirect("moderator:overview")
         elif 'search' in self.request.POST.keys():
             # get the 20 first current coupons
             if 'code' in self.request.POST.keys():
@@ -3222,6 +3359,7 @@ class CouponsView(LoginRequiredMixin, View):
                 onSubmit = get_message('warning', 7)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'coupons': coupons,
                     'coupon': coupon,
                     'form': form,
@@ -3233,7 +3371,15 @@ class CouponsView(LoginRequiredMixin, View):
                     'onSubmit': onSubmit,
                 }
 
-            return render(self.request, "moderator/mod_coupons.html", context)
+                return render(self.request, "moderator/mod_coupons.html", context)
+            else:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                return redirect("moderator:overview")
+        else:
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+            return redirect("moderator:overview")
 
 
 class SpecificCouponView(LoginRequiredMixin, View):
@@ -3245,6 +3391,8 @@ class SpecificCouponView(LoginRequiredMixin, View):
         return redirect("moderator:coupons")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'see' in self.request.POST.keys():
             # get the id
             coupon_id = int(self.request.POST['see'])
@@ -3252,6 +3400,7 @@ class SpecificCouponView(LoginRequiredMixin, View):
             form = couponForm()
             form.populate(coupon_id)
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'new': False,
                 'coupon': coupon_id,
@@ -3264,6 +3413,7 @@ class SpecificCouponView(LoginRequiredMixin, View):
             form = couponForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'new': True,
                 'coupon': '',
@@ -3307,6 +3457,7 @@ class SpecificCouponView(LoginRequiredMixin, View):
             else:
                 coupon_type = int(self.request.POST['coupon_type'])
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'new': False,
                     'coupon': coupon_id,
@@ -3316,7 +3467,6 @@ class SpecificCouponView(LoginRequiredMixin, View):
                 messages.warning(
                     self.request, message)
                 return render(self.request, "moderator/mod_single_coupon.html", context)
-
         elif 'saveNew' in self.request.POST.keys():
             # populate a form
             form = couponForm(self.request.POST)
@@ -3349,6 +3499,7 @@ class SpecificCouponView(LoginRequiredMixin, View):
             else:
                 coupon_type = int(self.request.POST['coupon_type'])
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'new': True,
                     'coupon': '',
@@ -3359,11 +3510,17 @@ class SpecificCouponView(LoginRequiredMixin, View):
                     self.request, message)
                 return render(self.request, "moderator/mod_single_coupon.html", context)
         else:
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:coupons")
 
 
 class FAQsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
         # get the limit
         limit = default_pagination_values
         # establish language first, this should later have a check
@@ -3432,6 +3589,7 @@ class FAQsView(LoginRequiredMixin, View):
             empty_faq = FAQ()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'searchform': searchForm,
                 'search': False,
                 'FAQS': faqs,
@@ -3454,6 +3612,8 @@ class FAQsView(LoginRequiredMixin, View):
             return redirect("moderator:my_profile")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if "search" in self.request.POST.keys():
             form = SearchFAQForm(self.request.POST)
             if form.is_valid():
@@ -3468,6 +3628,8 @@ class SpecificFAQView(LoginRequiredMixin, View):
         return redirect("moderator:faqs")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'lookAtFAQ' in self.request.POST.keys():
             # establish the users language first, this should later have a check
             theLang = "Svenska"
@@ -3489,6 +3651,7 @@ class SpecificFAQView(LoginRequiredMixin, View):
                         comment.append("No save Button found")
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'Title': faq.language.language,
                         'form': form,
                         'saveButton': saveButton,
@@ -3497,10 +3660,12 @@ class SpecificFAQView(LoginRequiredMixin, View):
 
                     return render(self.request, "moderator/mod_faq_update.html", context)
                 except ObjectDoesNotExist:
-                    print("no faq")
+                    messages.warning(
+                        self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
                     return redirect("moderator:faqs")
             except ObjectDoesNotExist:
-                print("no language")
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:faqs")
         elif 'saveFAQ' in self.request.POST.keys():
             # establish the users language first, this should later have a check
@@ -3522,8 +3687,13 @@ class SpecificFAQView(LoginRequiredMixin, View):
                 faq.save()
 
                 return redirect("moderator:faqs")
+            else:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                return redirect("moderator:faqs")
         else:
-            print("no lookat or save")
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:faqs")
 
 
@@ -3533,6 +3703,8 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
         return redirect("moderator:faqs")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'deleteFAQ' in self.request.POST.keys():
             # establish the users language first, this should later have a check
             theLang = "Svenska"
@@ -3624,6 +3796,7 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
                 print(comment)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'theTitle': title,
                 'description': description,
                 'language': language,
@@ -3654,6 +3827,8 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
         elif 'cancel' in self.request.POST.keys():
             return redirect("moderator:faqs")
         else:
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:faqs")
 
 
@@ -3663,6 +3838,8 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
         return redirect("moderator:faqs")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'createFAQ' in self.request.POST.keys():
             # establish the users language first, this should later have a check
             theLang = "Svenska"
@@ -3701,6 +3878,7 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     comment.append("No save Button found")
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'theTitle': title,
                     'form': form,
                     'formList': newForm,
@@ -3710,6 +3888,8 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
 
                 return render(self.request, "moderator/mod_faq_new.html", context)
             except ObjectDoesNotExist:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:faqs")
         elif 'saveFAQ' in self.request.POST.keys():
             # establish the users language first, this should later have a check
@@ -3728,8 +3908,15 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     #info_message = get_message('info', code)
                     messages.info(self.request, "FAQs sparad")
                     return redirect("moderator:faqs")
+                else:
+                    # rerender the form here
+                    test = "test"
 
             except ObjectDoesNotExist:
+                messages.warning(
+                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:faqs")
         else:
+            messages.warning(
+                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:faqs")

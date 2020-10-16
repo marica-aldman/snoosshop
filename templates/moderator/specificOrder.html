@@ -5,6 +5,10 @@
 <!--orders-->
 <!--active-->
 <div class="container">
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <form method="POST">
         {% csrf_token %}
         <div>

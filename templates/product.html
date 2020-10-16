@@ -3,6 +3,10 @@
 {% block content %}
 
   <main class="mt-5 pt-4">
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container dark-grey-text mt-5">
 
       <!--Menu Bar-->

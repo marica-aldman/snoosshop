@@ -21,6 +21,9 @@ from core.info_error_msg import *
 
 class Setup(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+
         theUser = self.request.user
         theUser = self.request.user
         if(theUser.is_authenticated):
@@ -44,6 +47,7 @@ class Setup(LoginRequiredMixin, View):
         form_address = SetupAddressForm()
 
         context = {
+            'gdpr_check': gdpr_check,
             'userForm': form_user,
             'companyForm': form_company,
             'addressForm': form_address,
@@ -52,6 +56,8 @@ class Setup(LoginRequiredMixin, View):
         return render(self.request, "member/setup.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
 
             # Sort out all the save functions and what kind of adress etc
@@ -161,6 +167,7 @@ class Setup(LoginRequiredMixin, View):
             else:
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'userForm': form_user,
                     'companyForm': form_company,
                     'addressForm': form_address,
@@ -178,6 +185,8 @@ class Setup(LoginRequiredMixin, View):
 
 class CompanyView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
         # get form
         theUser = self.request.user
@@ -193,6 +202,7 @@ class CompanyView(LoginRequiredMixin, View):
         compInfo = CompanyInfo.objects.get(user=theUser)
 
         context = {
+            'gdpr_check': gdpr_check,
             'form': form,
             'addresses': addresses,
             'addressID': compInfo.id,
@@ -201,6 +211,8 @@ class CompanyView(LoginRequiredMixin, View):
         return render(self.request, "member/company.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
         theUser = self.request.user
         form = CompanyInfoForm(self.request.POST)
@@ -239,6 +251,7 @@ class CompanyView(LoginRequiredMixin, View):
                 addresses = Address.objects.filter(user=theUser)
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'addresses': addresses
                 }
@@ -254,6 +267,7 @@ class CompanyView(LoginRequiredMixin, View):
             addresses = Address.objects.filter(user=theUser)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'addresses': addresses
             }
@@ -263,6 +277,8 @@ class CompanyView(LoginRequiredMixin, View):
 
 class Overview(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
 
             # get the active support errands and the resently ended support errands
@@ -335,6 +351,7 @@ class Overview(LoginRequiredMixin, View):
                     order1.append(order)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'support_a': errands1,
                 'support_r': errands2,
                 'order_a': order1,
@@ -360,6 +377,8 @@ class Overview(LoginRequiredMixin, View):
 
 class Orders(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
 
             # get the orders and sort out active ones
@@ -375,6 +394,7 @@ class Orders(LoginRequiredMixin, View):
             # get all the items and their discounts
 
             context = {
+                'gdpr_check': gdpr_check,
                 'orders_r': orders_r,
                 'orders_a': orders_a,
             }
@@ -396,6 +416,8 @@ class OrderView(LoginRequiredMixin, View):
         return redirect("member:my_orders")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             orderQuery = Order.objects.filter(
                 user=self.request.user, id=int(self.request.POST['lookAtOrder']))
@@ -457,6 +479,7 @@ class OrderView(LoginRequiredMixin, View):
                     theOrder = order
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'order': theOrder,
                     'all_order_items': theOrderItems,
                     'shipping_address': shipping_address,
@@ -477,6 +500,8 @@ class OrderView(LoginRequiredMixin, View):
 
 class SupportView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get all errands, sort out the active ones
 
@@ -493,6 +518,7 @@ class SupportView(LoginRequiredMixin, View):
                     errands_a.append(errand)
 
             context = {
+                'gdpr_check': gdpr_check,
                 'support': errands,
                 'errands_a': errands_a,
             }
@@ -507,12 +533,15 @@ class SupportView(LoginRequiredMixin, View):
 
 class NewErrandView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # new errand
 
             form = InitialSupportForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form
             }
 
@@ -527,6 +556,8 @@ class NewErrandView(LoginRequiredMixin, View):
 
 class ErrandView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # id check here
             slug = where_am_i(self)
@@ -545,6 +576,7 @@ class ErrandView(LoginRequiredMixin, View):
             # add form for further contact on this issue
 
             context = {
+                'gdpr_check': gdpr_check,
                 'errand': errand,
                 'responces': responces,
             }
@@ -560,6 +592,8 @@ class ErrandView(LoginRequiredMixin, View):
 
 class Profile(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get user info
             try:
@@ -584,6 +618,7 @@ class Profile(LoginRequiredMixin, View):
             # place info in context and render page
 
             context = {
+                'gdpr_check': gdpr_check,
                 'user': self.request.user,
                 'info': info,
                 'company': company,
@@ -644,6 +679,10 @@ class Profile(LoginRequiredMixin, View):
                 messages.info(
                     self.request, info_message)
                 return redirect("member:my_profile")
+        else:
+            messages.info(
+                self.request, "Något gick fel. Om detta återupprepas kontakta supporten för hjälp.")
+            return redirect("member:my_profile")
 
 
 class changePassword(LoginRequiredMixin, View):
@@ -654,6 +693,8 @@ class changePassword(LoginRequiredMixin, View):
         return redirect("member:my_profile")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if 'change' in self.request.POST.keys():
             userID = int(self.request.POST['change'])
             theUser = User.objects.get(id=userID)
@@ -662,6 +703,7 @@ class changePassword(LoginRequiredMixin, View):
             form = changePasswordForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'theUser': theUser,
             }
@@ -712,6 +754,7 @@ class changePassword(LoginRequiredMixin, View):
                 else:
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'form': form,
                         'theUser': theUser,
                     }
@@ -725,6 +768,7 @@ class changePassword(LoginRequiredMixin, View):
             else:
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'theUser': theUser,
                 }
@@ -740,6 +784,8 @@ class changePassword(LoginRequiredMixin, View):
 
 class InfoView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get form for this using the user id
 
@@ -752,6 +798,7 @@ class InfoView(LoginRequiredMixin, View):
                 info = UserInfo()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'info': info,
             }
@@ -764,6 +811,8 @@ class InfoView(LoginRequiredMixin, View):
             return redirect("member:my_profile")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         form = UserInformationForm(self.request.POST)
 
         if 'edit' in self.request.POST.keys():
@@ -775,6 +824,7 @@ class InfoView(LoginRequiredMixin, View):
                 info = UserInfo()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'info': info,
             }
@@ -814,6 +864,7 @@ class InfoView(LoginRequiredMixin, View):
                 info = UserInfo()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'info': info,
             }
@@ -829,6 +880,8 @@ class InfoView(LoginRequiredMixin, View):
 
 class Editaddress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # which adress
             page = where_am_i(self)
@@ -846,6 +899,7 @@ class Editaddress(LoginRequiredMixin, View):
                 ]
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'address': address,
                     'address_choices': ADDRESS_CHOICES_EXTENDED
@@ -859,7 +913,10 @@ class Editaddress(LoginRequiredMixin, View):
             return redirect("member:my_overview")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
+
             # which adress
             slug = where_am_i(self)
             # get the address
@@ -898,6 +955,7 @@ class Editaddress(LoginRequiredMixin, View):
                     ]
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'form': form,
                         'address': address,
                         'address_choices': ADDRESS_CHOICES_EXTENDED
@@ -930,6 +988,7 @@ class Editaddress(LoginRequiredMixin, View):
                 ]
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                     'address': address,
                     'address_choices': ADDRESS_CHOICES_EXTENDED
@@ -946,16 +1005,21 @@ class Editaddress(LoginRequiredMixin, View):
 
 class Newaddress(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         # get form for this using the user id
         form = NewAddressForm()
 
         context = {
+            'gdpr_check': gdpr_check,
             'form': form,
         }
 
         return render(self.request, "member/new_address.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             form = NewAddressForm(self.request.POST or None)
             theUser = self.request.user
@@ -1087,6 +1151,7 @@ class Newaddress(LoginRequiredMixin, View):
                 return redirect("member:my_profile")
             else:
                 context = {
+                    'gdpr_check': gdpr_check,
                     'form': form,
                 }
 
@@ -1100,6 +1165,8 @@ class Newaddress(LoginRequiredMixin, View):
 
 class Settings(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # obs make a form view for editing info and adding info
 
@@ -1109,6 +1176,7 @@ class Settings(LoginRequiredMixin, View):
                 cookieSettings = {}
 
             context = {
+                'gdpr_check': gdpr_check,
                 'cookies': cookieSettings,
             }
 
@@ -1123,6 +1191,8 @@ class Settings(LoginRequiredMixin, View):
 
 class CookieSettingsView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get cookie model, fill in with previous info if there is any
             user = self.request.user
@@ -1139,6 +1209,7 @@ class CookieSettingsView(View):
                 cookie_settings = Cookies()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'cookie_settings': cookie_settings,
                 'form': form,
             }
@@ -1151,6 +1222,8 @@ class CookieSettingsView(View):
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             user = self.request.user
             form = CookieSettingsForm(self.request.POST)
@@ -1186,6 +1259,7 @@ class CookieSettingsView(View):
                     cookie_settings = Cookies()
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'cookie_settings': cookie_settings,
                     'form': form,
                 }
@@ -1201,11 +1275,14 @@ class CookieSettingsView(View):
 
 class GenericSupportFormView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get a form
             form = GenericSupportForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
             }
 
@@ -1217,6 +1294,8 @@ class GenericSupportFormView(View):
             return redirect("core:home")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             # get a form
             form = GenericSupportForm(self.request.POST)
@@ -1270,6 +1349,7 @@ class GenericSupportFormView(View):
                         self.request, message)
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'form': form,
                     }
 
@@ -1298,6 +1378,7 @@ class GenericSupportFormView(View):
             # form isn't valid rerender
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
             }
 
@@ -1309,43 +1390,100 @@ class GenericSupportFormView(View):
             return redirect("core:home")
 
 
-class CancelOrder(LoginRequiredMixin, View):
+class GDPRInformationRequest(View):
     def get(self, *args, **kwargs):
-        # reroute
-        message = get_message('error', 133)
-        messages.warning(
-            self.request, message)
-        return redirect("support:orders")
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+
+        context = {
+            'gdpr_check': gdpr_check,
+        }
+
+        return render(self.request, "member/support.html", context)
 
     def post(self, *args, **kwargs):
-        try:
-            test = "test"
-        except ObjectDoesNotExist:
-            test = "test"
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
+        context = {
+            'gdpr_check': gdpr_check,
+        }
 
-class ReturnOrder(LoginRequiredMixin, View):
-    def get(self, *args, **kwargs):
-        # reroute
-        message = get_message('error', 134)
-        messages.warning(
-            self.request, message)
-        return redirect("support:orders")
+        if "display" in self.request.POST.keys():
 
-    def post(self, *args, **kwargs):
-        try:
-            test = "test"
-        except ObjectDoesNotExist:
-            test = "test"
+            the_user_lazy = self.request.user
+            # get stripe profile
+            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
+            # get user info
+            the_user = UserInfo.objects.get(user=the_user_lazy)
+            # get company info if company
+            if the_user["company"]:
+                company = CompanyInfo.objects.get(user=the_user_lazy)
+            else:
+                company = CompanyInfo()
+            # get addresses
+            addresses = Address.objects.filter(user=the_user_lazy)
+            # get orders
+            orders = Order.objects.filter(user=the_user_lazy)
+            # get orderitems
+            orderItems = OrderItem.objects.filter(user=the_user_lazy)
+            # payments
+            stripe_payments = Payment.objects.filter(user=the_user_lazy)
+            # get settings
+            cookie_settings = Cookies.objects.filter(user=the_user_lazy)
+            # get support the internal system isnt set up yet notify the user and add a request all support errand info button
 
+            # add all info to all_of_it
 
-class ReturnItem(LoginRequiredMixin, View):
-    def get(self, *args, **kwargs):
-        # reroute
-        message = get_message('error', 135)
-        messages.warning(
-            self.request, message)
-        return redirect("support:orders")
+            all_of_it = {
+                "User_Stripe_Profile": stripe_profile,
+                "User_Stripe_Payments": stripe_payments,
+                "User_information": the_user,
+                "Company": company,
+                "Addresses": addresses,
+                "Orders": orders,
+                "Items ordered": orderItems,
+                "Settings": cookie_settings,
+            }
 
-    def post(self, *args, **kwargs):
-        test = "test"
+            context.update(
+                {'user_info': all_of_it})
+
+        elif "download" in self.request.POST.keys():
+
+            the_user_lazy = self.request.user
+            # get stripe profile
+            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
+            # get user info
+            the_user = UserInfo.objects.get(user=the_user_lazy)
+            # get company info if company
+            if the_user["company"]:
+                company = CompanyInfo.objects.get(user=the_user_lazy)
+            # get addresses
+            addresses = Address.objects.filter(user=the_user_lazy)
+            # get orders
+            orders = Order.objects.filter(user=the_user_lazy)
+            # get orderitems
+            orderItems = OrderItem.objects.filter(user=the_user_lazy)
+            # payments
+            stripe_payments = Payment.objects.filter(user=the_user_lazy)
+            # get settings
+            cookie_settings = Cookies.objects.filter(user=the_user_lazy)
+            # get support the internal system isnt set up yet notify the user and add a request all support errand info button
+
+            # add all info to all_of_it
+
+            all_of_it = {
+                "User_Stripe_Profile": stripe_profile,
+                "User_Stripe_Payments": stripe_payments,
+                "User_information": the_user,
+                "Company": company,
+                "Addresses": addresses,
+                "Orders": orders,
+                "Items ordered": orderItems,
+                "Settings": cookie_settings,
+            }
+
+            # create a file with the all_of_it in it and then  send download request, display page as normal or redirect here
+
+        return render(self.request, "member/support.html", context)

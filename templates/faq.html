@@ -4,6 +4,10 @@
 {% block content %}
 
 <main class="container">
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="border rounded mb-3 d-flex justify-content-center">
         <form action="." method="POST" class="m-4">
             {% csrf_token %}

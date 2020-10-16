@@ -19,14 +19,6 @@ import stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-def products(request):
-    context = {
-        'items': Item.objects.all(),
-        'category_choices': Category.objects.all(),
-    }
-    return render(request, "products.html", context)
-
-
 def is_valid_form(values):
     valid = True
     for field in values:
@@ -38,11 +30,16 @@ def is_valid_form(values):
 class CheckoutView(View):
     def get(self, *args, **kwargs):
         try:
+            # GDPR check
+            gdpr_check = check_gdpr_cookies(self)
+            path = self.request.get_full_path()
+            is_post = False
             # get the content of the basket
             order = Order.objects.get(user=self.request.user, ordered=False)
             form = CheckoutForm()
 
             context = {
+                'gdpr_check': gdpr_check,
                 'form': form,
                 'couponform': CouponForm(),
                 'order': order,
@@ -86,9 +83,11 @@ class CheckoutView(View):
             return render(self.request, "checkout.html", context)
         except ObjectDoesNotExist:
             messages.info(self.request, "Varukorgen är tom.")
-            return redirect("core:checkout")
+            return redirect("core:order-summary")
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         form = CheckoutForm(self.request.POST or None)
         try:
             order = Order.objects.get(user=self.request.user, ordered=False)
@@ -264,6 +263,7 @@ class CheckoutView(View):
                                 {"chosen": False, "choice": p})
 
                     context = {
+                        'gdpr_check': gdpr_check,
                         'form': form,
                         'couponform': CouponForm(),
                         'order': order,
@@ -320,9 +320,12 @@ class CheckoutView(View):
 
 class PaymentView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         order = Order.objects.get(user=self.request.user, ordered=False)
         if order.billing_address:
             context = {
+                'gdpr_check': gdpr_check,
                 'order': order,
                 'DISPLAY_COUPON_FORM': False
             }
@@ -468,21 +471,10 @@ class PaymentView(View):
         return redirect("/payment/stripe/")
 
 
-class HomeView(ListView):
-    model = Item
-    paginate_by = 10
-    template_name = "home.html"
-
-    def get_context_data(self, **kwargs):
-
-        context = super().get_context_data(**kwargs)
-        categories = Category.objects.all()
-        context['category_choices'] = categories
-        return context
-
-
 class NewHomeView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
         categories = Category.objects.all()
         aquire_index = default_pagination_values
@@ -579,6 +571,7 @@ class NewHomeView(View):
             }
 
         context = {
+            'gdpr_check': gdpr_check,
             "category_choices": categories,
             "object_list": products,
             "is_paginated": is_paginated,
@@ -597,9 +590,12 @@ class NewHomeView(View):
 
 class OrderSummaryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             order = Order.objects.get(user=self.request.user, ordered=False)
             context = {
+                'gdpr_check': gdpr_check,
                 'object': order
             }
             return render(self.request, 'order_summary.html', context)
@@ -613,9 +609,14 @@ class ItemDetailView(DetailView):
     template_name = "product.html"
 
     def get_context_data(self, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         context = super().get_context_data(**kwargs)
         categories = Category.objects.all()
         context['category_choices'] = categories
+        context['gdpr_check'] = gdpr_check
+        context['path'] = path
+        context['is_post'] = is_post
         return context
 
 
@@ -749,7 +750,7 @@ class AddCouponView(View):
         message = get_message('error', 136)
         messages.warning(
             self.request, message)
-        return redirect("moderator:coupons")
+        return redirect("core:home")
 
     def post(self, *args, **kwargs):
         form = CouponForm(self.request.POST or None)
@@ -765,48 +766,17 @@ class AddCouponView(View):
             except ObjectDoesNotExist:
                 messages.info(self.request, "Din varukorg är tom.")
                 return redirect("core:checkout")
-
-
-class RequestRefundView(View):
-    def get(self, *args, **kwargs):
-        form = RefundForm()
-        context = {
-            'form': form
-        }
-        return render(self.request, "request_refund.html", context)
-
-    def post(self, *args, **kwargs):
-        form = RefundForm(self.request.POST)
-        if form.is_valid():
-            ref_code = form.cleaned_data.get('ref_code')
-            message = form.cleaned_data.get('message')
-            email = form.cleaned_data.get('email')
-            # edit the order
-            try:
-                order = Order.objects.get(ref_code=ref_code)
-                order.refund_requested = True
-                order.save()
-
-                # store the refund
-                refund = Refund()
-                refund.order = order
-                refund.reason = message
-                refund.email = email
-                refund.save()
-
-                messages.info(self.request, "Din begäran har mottagits.")
-                return redirect("core:request-refund")
-
-            except ObjectDoesNotExist:
-                messages.info(
-                    self.request, "Denna order finns inte i systemet.")
-                return redirect("core:request-refund")
+        else:
+            messages.info(self.request, "Denna rabattkod är ej giltig.")
+            return redirect("core:checkout")
 
 
 # Category views
 
 class CategoryView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         try:
             page, am_i = where_am_i_and_page(self)
             categoryquery = Category.objects.get(slug=am_i)
@@ -931,6 +901,7 @@ class CategoryView(View):
                     })
 
             context = {
+                'gdpr_check': gdpr_check,
                 'object_list': products,
                 'category_list': new_list,
                 'selected_cateogory': categoryquery,
@@ -951,6 +922,8 @@ class CategoryView(View):
 
 class FAQView(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
         try:
             # need to add language tests here at a later date
@@ -1042,6 +1015,7 @@ class FAQView(View):
         comment = ""
 
         context = {
+            'gdpr_check': gdpr_check,
             'search': False,
             'faqs': faqs,
             "searchTerms": "",
@@ -1057,6 +1031,8 @@ class FAQView(View):
         return render(self.request, "faq.html", context)
 
     def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
         if "searchTerm" in self.request.POST.keys():
             # check that the search field isnt empty, if empty redirect to get section
             searchTest = self.request.POST["searchTerm"]
@@ -1177,6 +1153,7 @@ class FAQView(View):
                         searchButton = {"buttonText": "Search"}
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'search': True,
                     'faqs': final_search_array,
                     "searchTerms": searchTest,
@@ -1346,6 +1323,7 @@ class FAQView(View):
                     searchButton = {"buttonText": "Search"}
 
                 context = {
+                    'gdpr_check': gdpr_check,
                     'search': True,
                     'faqs': final_search_array,
                     "searchTerms": search_terms,
@@ -1403,6 +1381,7 @@ class FAQView(View):
                 searchButton = {"buttonText": "Search"}
 
             context = {
+                'gdpr_check': gdpr_check,
                 'search': False,
                 'faqs': faqs,
                 'searchForm': searchForm,
@@ -1415,7 +1394,12 @@ class FAQView(View):
 
 class om_oss_view(View):
     def get(self, *args, **kwargs):
-        return render(self.request, "omoss.html", {})
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        context = {
+            'gdpr_check': gdpr_check,
+        }
+        return render(self.request, "omoss.html", context)
 
     def post(self, *args, **kwargs):
         return redirect("core:omoss")
@@ -1425,6 +1409,8 @@ class om_oss_view(View):
 
 class teamet_view(View):
     def get(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
 
         try:
 
@@ -1446,6 +1432,7 @@ class teamet_view(View):
             ]
 
         context = {
+            'gdpr_check': gdpr_check,
             "people": team_staff,
         }
 
@@ -1459,7 +1446,12 @@ class teamet_view(View):
 
 class vision_view(View):
     def get(self, *args, **kwargs):
-        return render(self.request, "vision.html", {})
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        context = {
+            'gdpr_check': gdpr_check,
+        }
+        return render(self.request, "vision.html", context)
 
     def post(self, *args, **kwargs):
         return redirect("core:vision")
@@ -1469,7 +1461,12 @@ class vision_view(View):
 
 class freight_view(View):
     def get(self, *args, **kwargs):
-        return render(self.request, "freight.html", {})
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        context = {
+            'gdpr_check': gdpr_check,
+        }
+        return render(self.request, "freight.html", context)
 
     def post(self, *args, **kwargs):
         return redirect("core:freight")

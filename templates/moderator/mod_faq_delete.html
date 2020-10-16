@@ -5,6 +5,10 @@
 
 <div class="container mt-3">
 
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
+
     <div class="border border-dark mb-3 p-2">
         <h3>{{theTitle}}</h3>
         <table class="table-striped table-hover w-100  mb-2 table-bordered">

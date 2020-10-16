@@ -4,6 +4,10 @@
 
 
 <main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container">
     <!--profile-->
         <div class="border rounded mb-3 p-2">

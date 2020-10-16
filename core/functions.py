@@ -330,3 +330,11 @@ def calculate_total_order(order):
         total = total + freight
 
     return total
+
+
+def check_gdpr_cookies(self):
+    if 'GDPR' in self.request.session:
+        return False
+    else:
+        self.request.session['GDPR'] = True
+        return True

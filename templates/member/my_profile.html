@@ -4,6 +4,10 @@
 
 
 <main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
     <div class="container">
                     {% comment %}
                          change password
