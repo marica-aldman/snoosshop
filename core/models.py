@@ -259,6 +259,9 @@ class OrderItem(models.Model):
     sent = models.BooleanField(default=False)
     returned_flag = models.BooleanField(default=False)
     returned = models.BooleanField(default=False)
+    return_handled = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
+    cancel_handled = models.BooleanField(default=False)
     refund_flag = models.BooleanField(default=False)
     refund = models.BooleanField(default=False)
 
@@ -294,11 +297,9 @@ class Order(models.Model):
     freight = models.ForeignKey('Freight',
                                 on_delete=models.SET_NULL, blank=True, null=True)
     freight_price = models.FloatField(blank=True, null=True)
-    sub_out_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)
-    subscription_order = models.BooleanField(default=False)
     being_read = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
@@ -306,11 +307,12 @@ class Order(models.Model):
         'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
     payment = models.ForeignKey(
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
-    paid = models.BooleanField(default=False)
     coupon = models.ForeignKey(
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
-    received = models.BooleanField(default=False)
+    return_handled = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
+    cancel_handled = models.BooleanField(default=False)
     returned_flag = models.BooleanField(default=False)
     returned = models.BooleanField(default=False)
     refund_requested = models.BooleanField(default=False)

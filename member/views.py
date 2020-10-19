@@ -160,6 +160,10 @@ class Setup(LoginRequiredMixin, View):
                     userInfo.company = False
                     userInfo.slug = slugify(theUser.username)
                     userInfo.save()
+                    settings = Cookies()
+                    settings.user = theUser
+                    # if we add settings it needs to be sorted here for now we only have functional so we dont need to do anything else
+                    settings.save()
                     info_message = get_message('info', 1)
                     messages.info(
                         self.request, info_message)
@@ -1399,7 +1403,62 @@ class GDPRInformationRequest(View):
             'gdpr_check': gdpr_check,
         }
 
-        return render(self.request, "member/support.html", context)
+        the_user_lazy = self.request.user
+        # get stripe profile
+        stripe_profile = UserProfile.objects.get(user=the_user_lazy)
+        # get user info
+        the_user = UserInfo.objects.get(user=the_user_lazy)
+        # get company info if company
+        if the_user.company:
+            company = CompanyInfo.objects.get(user=the_user_lazy)
+        else:
+            company = []
+        # get addresses
+        addresses = Address.objects.filter(user=the_user_lazy)
+        for address in addresses:
+            print(address.apartment_address)
+        # get orders
+        orders = Order.objects.filter(user=the_user_lazy)
+
+        all_orders = []
+
+        for order in orders:
+            orderItems = order.items.all()
+            all_orders.append({
+                'order': order,
+                'orderitems': orderItems,
+            })
+
+        # get orderitems
+        orderItems = OrderItem.objects.filter(user=the_user_lazy)
+        # payments
+        stripe_payments = Payment.objects.filter(user=the_user_lazy)
+        payment = False
+        if len(stripe_payments) > 0:
+            payment = True
+        # get settings
+        cookie_settings = Cookies.objects.filter(user=the_user_lazy)
+        # get support the internal system isnt set up yet notify the user and add a request all support errand info button
+
+        # add all info to all_of_it
+
+        all_of_it = {
+            "User_Stripe_Profile": stripe_profile,
+            "Payments": payment,
+            "User_Stripe_Payments": stripe_payments,
+            "User_information": the_user,
+            "Has_company": the_user.company,
+            "Company": company,
+            "Addresses": addresses,
+            "Orders": all_orders,
+            "Items_ordered": orderItems,
+            "Settings": cookie_settings,
+        }
+
+        context.update(
+            {'user_info': all_of_it})
+
+        return render(self.request, "member/information_request.html", context)
 
     def post(self, *args, **kwargs):
         # GDPR check
@@ -1409,7 +1468,8 @@ class GDPRInformationRequest(View):
             'gdpr_check': gdpr_check,
         }
 
-        if "display" in self.request.POST.keys():
+        if "download" in self.request.POST.keys():
+            download_type = self.request.POST["download"]
 
             the_user_lazy = self.request.user
             # get stripe profile
@@ -1417,18 +1477,33 @@ class GDPRInformationRequest(View):
             # get user info
             the_user = UserInfo.objects.get(user=the_user_lazy)
             # get company info if company
-            if the_user["company"]:
+            if the_user.company:
                 company = CompanyInfo.objects.get(user=the_user_lazy)
             else:
-                company = CompanyInfo()
+                company = []
             # get addresses
             addresses = Address.objects.filter(user=the_user_lazy)
+            for address in addresses:
+                print(address.apartment_address)
             # get orders
             orders = Order.objects.filter(user=the_user_lazy)
+
+            all_orders = []
+
+            for order in orders:
+                orderItems = order.items.all()
+                all_orders.append({
+                    'order': order,
+                    'orderitems': orderItems,
+                })
+
             # get orderitems
             orderItems = OrderItem.objects.filter(user=the_user_lazy)
             # payments
             stripe_payments = Payment.objects.filter(user=the_user_lazy)
+            payment = False
+            if len(stripe_payments) > 0:
+                payment = True
             # get settings
             cookie_settings = Cookies.objects.filter(user=the_user_lazy)
             # get support the internal system isnt set up yet notify the user and add a request all support errand info button
@@ -1437,53 +1512,29 @@ class GDPRInformationRequest(View):
 
             all_of_it = {
                 "User_Stripe_Profile": stripe_profile,
+                "Payments": payment,
                 "User_Stripe_Payments": stripe_payments,
                 "User_information": the_user,
+                "Has_company": the_user.company,
                 "Company": company,
                 "Addresses": addresses,
-                "Orders": orders,
-                "Items ordered": orderItems,
+                "Orders": all_orders,
+                "Items_ordered": orderItems,
                 "Settings": cookie_settings,
             }
 
-            context.update(
-                {'user_info': all_of_it})
+            # create the correct file type with the all_of_it in it and then  send download request, display page as normal or redirect here
 
-        elif "download" in self.request.POST.keys():
+            if download_type == "pdf":
+                test = "test"
+                messages.info(self.request, "pdf")
+                return redirect("member:request_info")
+            elif download_type == "json":
+                test = "test"
+                messages.info(self.request, "json")
+                return redirect("member:request_info")
+            else:
+                test = "test"
+                return redirect("member:request_info")
 
-            the_user_lazy = self.request.user
-            # get stripe profile
-            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
-            # get user info
-            the_user = UserInfo.objects.get(user=the_user_lazy)
-            # get company info if company
-            if the_user["company"]:
-                company = CompanyInfo.objects.get(user=the_user_lazy)
-            # get addresses
-            addresses = Address.objects.filter(user=the_user_lazy)
-            # get orders
-            orders = Order.objects.filter(user=the_user_lazy)
-            # get orderitems
-            orderItems = OrderItem.objects.filter(user=the_user_lazy)
-            # payments
-            stripe_payments = Payment.objects.filter(user=the_user_lazy)
-            # get settings
-            cookie_settings = Cookies.objects.filter(user=the_user_lazy)
-            # get support the internal system isnt set up yet notify the user and add a request all support errand info button
-
-            # add all info to all_of_it
-
-            all_of_it = {
-                "User_Stripe_Profile": stripe_profile,
-                "User_Stripe_Payments": stripe_payments,
-                "User_information": the_user,
-                "Company": company,
-                "Addresses": addresses,
-                "Orders": orders,
-                "Items ordered": orderItems,
-                "Settings": cookie_settings,
-            }
-
-            # create a file with the all_of_it in it and then  send download request, display page as normal or redirect here
-
-        return render(self.request, "member/support.html", context)
+        return render(self.request, "member/information_request.html", context)

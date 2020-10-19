@@ -625,6 +625,10 @@ def add_to_cart(request, slug):
     item = get_object_or_404(Item, slug=slug)
     order_item, created = OrderItem.objects.get_or_create(
         item=item,
+        title=item.title,
+        price=item.price,
+        discount_price=item.discount_price,
+        quantity=1,
         user=request.user,
         ordered=False
     )
@@ -634,17 +638,21 @@ def add_to_cart(request, slug):
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
-            order_item.total_price = order_item.quantity * order_item.price
+            if item.discount_price != null or item.discount_price > 0:
+                if order_item.discount_price != item.discount_price:
+                    messages.info(request, "Varans pris har uppdaterats.")
+                    order_item.discount_price = item.discount_price
+                order_item.total_price = order_item.quantity * order_item.discount_price
+            else:
+                order_item.total_price = order_item.quantity * order_item.price
             order_item.save()
             messages.info(request, "Varans mängd har uppdaterats.")
             return redirect("core:order-summary")
         else:
-            order_item.quantity = 1
             if item.discount_price:
-                order_item.price = item.discount_price
+                order_item.total_price = order_item.discount_price * order_item.quantity
             else:
-                order_item.price = item.price
-            order_item.total_price = order_item.price * order_item.quantity
+                order_item.total_price = order_item.price * order_item.quantity
             order_item.save()
             order.items.add(order_item)
             order.total_price = calculate_total_order(order)
@@ -658,11 +666,12 @@ def add_to_cart(request, slug):
         order = Order.objects.create(
             user=request.user, ordered_date=ordered_date, ref_code=rcode)
         order_item.quantity = 1
-        if item.discount_price:
-            order_item.price = item.discount_price
+        order_item.discount_price = item.discount_price
+        order_item.price = item.price
+        if item.discount_price != null or item.discount_price > 0:
+            order_item.total_price = order_item.discount_price * order_item.quantity
         else:
-            order_item.price = item.price
-        order_item.total_price = order_item.price * order_item.quantity
+            order_item.total_price = order_item.price * order_item.quantity
         order_item.save()
         order.items.add(order_item)
         order.total_price = calculate_total_order(order)
@@ -720,7 +729,12 @@ def remove_single_item_from_cart(request, slug):
             )[0]
             if order_item.quantity > 1:
                 order_item.quantity -= 1
-                order_item.total_price = order_item.quantity * order_item.price
+                if item.discount_price != null or item.discount_price > 0:
+                    if order_item.discount_price != item.discount_price:
+                        order_item.discount_price = item.discount_price
+                    order_item.total_price = order_item.quantity * order_item.discount_price
+                else:
+                    order_item.total_price = order_item.quantity * order_item.price
                 order_item.save()
             else:
                 order.items.remove(order_item)

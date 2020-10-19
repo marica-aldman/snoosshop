@@ -11,37 +11,513 @@
         <div class="border rounded mb-3">
             <form method="POST">
                 {% csrf_token %}
-                <table id="UserInfoTable" class="table-striped table-hover w-100  mb-2">
-                    <tbody>
+
+                <button type='submit' class='btn btn-primary' name="download" value="pdf">Download as pdf</button>
+
+                <button type='submit' class='btn btn-primary' name="download" value="json">Download as json</button>
+                
+                <h3>Stripe information</h3>
+                <table>
+                    <tr>
+                        <td>
+                            Profil
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Stripe ID
+                        </td>
+                        <td>
+                            {{user_info.User_Stripe_Profile.stripe_customer_id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            One Click activ
+                        </td>
+                        <td>
+                            {% if user_info.User_Stripe_Profile.one_click_purchasing %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Användarstatus
+                        </td>
+                        <td>
+                            {{user_info.User_Stripe_Profile.user_status}}
+                        </td>
+                    </tr>
+                    {% if payment %}
+                    <tr>
+                        <td>
+                            Stripe Betalningar
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    {% endif%}
+                    {% for payment in user_info.User_Stripe_Payments %}
+                    <tr>
+                        <td>
+                            Betalningsnr
+                        </td>
+                        <td>
+                            {{payment.stripe_charge_id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Belopp
+                        </td>
+                        <td>
+                            {{payment.amount}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Datum
+                        </td>
+                        <td>
+                            {{payment.timestamp}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% if user_info.Has_company %}
+                <h3>Kontaktinformation</h3>
+                {% else %}
+                <h3>Användarinformation</h3>
+                {% endif %}
+                <table>
+                    <tr>
+                        <td>
+                            Profil
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Förnamn
+                        </td>
+                        <td>
+                            {{user_info.User_information.first_name}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Efternamn
+                        </td>
+                        <td>
+                            {{user_info.User_information.last_name}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Emailaddress
+                        </td>
+                        <td>
+                            {{user_info.User_information.email}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Telefonnummer
+                        </td>
+                        <td>
+                            {{user_info.User_information.telephone}}
+                        </td>
+                    </tr>
+                    {% if user_info.Has_company%}
+                    <tr>
+                        <td>
+                            Företagetsnamn
+                        </td>
+                        <td>
+                            {{user_info.Company.company}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Organisationsnummer
+                        </td>
+                        <td>
+                            {{user_info.Company.organisation_number}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            AddressID
+                        </td>
+                        <td>
+                            {{user_info.Company.addressID}}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+                <h3>Saved Addresses</h3>
+                <table>
+                    {% for address in user_info.Addresses %}
+                    <tr>
+                        <td>
+                            Address ID
+                        </td>
+                        <td>
+                            {{address.Id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Gatuadress
+                        </td>
+                        <td>
+                            {{address.street_address}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Addressrad 2
+                        </td>
+                        <td>
+                            {{address.apartment_address}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Postkod
+                        </td>
+                        <td>
+                            {{address.zip}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Postadress
+                        </td>
+                        <td>
+                            {{address.post_town}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Land
+                        </td>
+                        <td>
+                            {{address.country}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Addresstyp
+                        </td>
+                        <td>
+                            {% if address.address_type == "B" %}
+                                Fakturaaddress
+                            {% else %}
+                                Leveransaddress
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Defaultaddress
+                        </td>
+                        <td>
+                            {% if address.default %}
+                                Ja
+                            {% else %}
+                                Nej
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                
+                <h3>All orders</h3>
+                <table>
+                    {% for o in user_info.Orders %}
+                    <tr>
+                        <td>
+                            Order Id
+                        </td>
+                        <td>
+                            {{o.order.id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Referensnummer
+                        </td>
+                        <td>
+                            {{o.order.ref_code}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Totalpris
+                        </td>
+                        <td>
+                            {{o.order.total_price}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Frakttyp
+                        </td>
+                        <td>
+                            {{o.order.freight}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Fraktpris
+                        </td>
+                        <td>
+                            {{o.order.freight_price}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Status
+                        </td>
+                        <td>
+                            {% if o.order.ordered %}
+                            Varukorg
+                            {% else %}
+                            Beställd
+                            {% endif %}
+                        </td>
+                    </tr>
+                        {% if o.order.ordered %}
+                    <tr>
+                        <td>
+                            Datum beställd
+                        </td>
+                        <td>
+                            {{o.order.ordered_date}}
+                        </td>
+                    </tr>
+                        {% endif %}
+                    <tr>
+                        <td>
+                            Leveransaddressid
+                        </td>
+                        <td>
+                            {{o.order.shipping_address.id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Faktureringsaddressid
+                        </td>
+                        <td>
+                            {{o.order.billing_address.id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Stripe Betalningsnr
+                        </td>
+                        <td>
+                            {{o.order.payment.stripe_charge_id}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Status
+                        </td>
+                        <td>
+                        
+                        {% if o.order.ordered %}
+                            {% if o.order.canceled%}
+                                {% if o.order.refund_handled %}
+                                    Avbeställd, återbetalas
+                                {% else %}
+                                    Avbeställd, återbetalning under process
+                                {% endif%}
+                            {% else %}
+                                {% if o.order.being_delivered %}
+                                    {% if o.order.returned %}
+                                        {% if o.order.returned_handled %}
+                                            {% if o.order.refund_requested %}
+                                                {% if o.order.refund_granted %}
+                                                    Order returnerad, Återbetalning begärd och beviljad
+                                                {% else %}
+                                                    Order returnerad, Återbetalning begärd men EJ beviljad
+                                                {% endif %}
+                                            {% else %}
+                                                {% if o.order.refund_granted %}
+                                                    Order returnerad, Återbetalning beviljad
+                                                {% else %}
+                                                    Order returnerad, Återbetalning EJ beviljad
+                                                {% endif %}
+                                            {% endif %}
+                                        {% else %}
+                                            Order returnerad, återbetalning ej behandlad
+                                        {% endif %}
+                                    {% else %}
+                                        {% if o.order.refund_requested %}
+                                            {% if o.order.refund_handled %}
+                                                {% if order.refund_granted %}
+                                                    Order ej returnerad, återbetalning begärd och beviljad
+                                                {% else %}
+                                                    Order ej returnerad, återbetalning begärd men avslagen
+                                                {% endif %}
+                                            {% else %}
+                                                Order ej returnerad, återbetalning begärd
+                                            {% endif%}
+                                        {% else %}
+                                            Skickad
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    Beställd
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            Order ligger i varukorgen
+                        {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Varor i beställning
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                        {% for orderitem in o.orderitems %}
                         <tr>
-                        </tr>
-                        <tr>
-                            <td>Företagetsnamn
-                            </td>
-                            <td>{{ form.company }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Företagetsorganisationsnummer
-                            </td>
-                            <td>{{ form.organisation_number }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Address
+                            <td>
+                                Varu id
                             </td>
                             <td>
-                                <select name="address">
-                                {% for address in addresses %}
-                                    <option value="{{address.id}}" {% if address.id == addressID %}selected {% endif %}>{{address.street_address}}
-                                    </option>
-                                {% endfor %}
-                                </select>
+                                {{orderitem.item.id}}
                             </td>
                         </tr>
-                    </tbody>
+                        <tr>
+                            <td>
+                                Varunamn
+                            </td>
+                            <td>
+                                {{orderitem.title}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Mängd
+                            </td>
+                            <td>
+                                {{orderitem.quantity}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Styckepris
+                            </td>
+                            <td>
+                                {{orderitem.price}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Rabbatterat Styckepris
+                            </td>
+                            <td>
+                                {{orderitem.discount_price}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Totalpris
+                            </td>
+                            <td>
+                                {{orderitem.total_price}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Status
+                            </td>
+                            <td>
+                                {% if orderitem.ordered %}
+                                    {% if orderitem.canceled %}
+                                        {% if orderitem.refund_handled %}
+                                            Avbeställd, Återbetalas
+                                        {% else %}
+                                            Avbeställd, återbetalning under bearbetning
+                                        {% endif %}
+                                    {% else %}
+                                        {% if order.being_delivered %}
+                                            {% if orderitem.returned %}
+                                                {% if orderitem.refund_flag %}
+                                                    {% if orderitem.refund %}
+                                                        Varan returnerad, återbetalning begärd och beviljad
+                                                    {% else%}
+                                                        Varan returnerad, återbetalning begärd men ej beviljad
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if orderitem.refund %}
+                                                        Varan returnerad, återbetalning ej begärd men beviljad
+                                                    {% else%}
+                                                        Varan returnerad, återbetalning ej begärd men beviljad
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% else %}
+                                                {% if orderitem.refund_flag %}
+                                                    {% if orderitem.refund %}
+                                                        Varan ej returnerad, återbetalning begärd och beviljad
+                                                    {% else%}
+                                                        Varan ej returnerad, återbetalning begärd men ej beviljad
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if orderitem.refund %}
+                                                        Varan ej returnerad, återbetalning begärd och beviljad
+                                                    {% else%}
+                                                        Skickad
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif%}
+                                        {% else %}
+                                            Beställd
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    Ligger i varukorgen
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
                 </table>
-                <button type='submit' class='btn btn-primary'>Spara</button>
+                
+                <h3>All settings</h3>
+                <table>
+                    {% for setting in user_info.Settings %}
+                    <tr>
+                        <td>
+                            Nödvändiga kakor
+                        </td>
+                        <td>
+                            {% if setting.functional %}
+                                Ja. (OBS Detta kan inte väljas bort.)
+                            {% else %}
+                                Inte satt.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
             </form>
         </div>
     </div>
