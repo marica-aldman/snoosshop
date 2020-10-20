@@ -64,6 +64,7 @@ BUTTON_TYPES = (
 )
 
 default_pagination_values = 2
+overview_number = 4
 
 
 class UserProfile(models.Model):

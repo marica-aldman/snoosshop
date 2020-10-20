@@ -17,6 +17,9 @@ from .forms import *
 from django.utils.dateparse import parse_datetime
 from core.functions import *
 from core.info_error_msg import *
+from django.core.files import File
+from django.core.files.base import ContentFile
+import json
 
 
 class Setup(LoginRequiredMixin, View):
@@ -285,90 +288,19 @@ class Overview(LoginRequiredMixin, View):
         gdpr_check = check_gdpr_cookies(self)
         try:
 
-            # get the active support errands and the resently ended support errands
+            # get the orders
 
             try:
-                errands = SupportThread.objects.filter(user=self.request.user,)
-            except ObjectDoesNotExist:
-                errands = {}
-
-            errands1 = []
-            errands2 = []
-            today = make_aware(datetime.now())
-
-            for errand in errands:
-                if errand.done:
-                    time_diff = errand.doneDate - today
-                    if time_diff.days < 8:
-                        errands2.append(errand)
-                else:
-                    errands1.append(errand)
-
-            # get the responces of open errand and see who last responded, user or support
-
-            responces_a = []
-
-            for errand in errands1:
-                responces = errand.responce
-                # get the last responce
-                maxIndex = len(responces) - 1
-                responce = responces[maxIndex]
-
-                lastUser = responce.user
-                if lastUser.status == 1:
-                    responces_a.append({'lastReply': 'customer'})
-                else:
-                    responces_a.append({'lastReply': 'support'})
-
-            responces_r = []
-
-            for errand in errands2:
-                responces = errand.responce
-                # get the last responce
-                maxIndex = len(responces) - 1
-                responce = responces[maxIndex]
-
-                lastUser = responce.user
-                if lastUser.status == 1:
-                    responces_r.append({'lastReply': 'customer'})
-                else:
-                    responces_r.append({'lastReply': 'support'})
-
-            # get the active orders and the resently sent orders
-
-            try:
+                aquire = overview_number
                 orders = Order.objects.filter(
-                    user=self.request.user, ordered=True)
+                    user=self.request.user, ordered=True)[:aquire]
             except ObjectDoesNotExist:
                 orders = {}
 
-            order1 = []
-            order2 = []
-            today = make_aware(datetime.now())
-
-            for order in orders:
-                if order.received:
-                    time_diff = order.updated_date - today
-                    if time_diff.days < 8:
-                        order2.append(order)
-                else:
-                    order1.append(order)
-
             context = {
                 'gdpr_check': gdpr_check,
-                'support_a': errands1,
-                'support_r': errands2,
-                'order_a': order1,
-                'order_r': order2,
-                'responces_a': {'lastReply': 'none'},
-                'responces_r': {'lastReply': 'none'},
+                'order_a': orders,
             }
-
-            if len(responces_a) < 0:
-                context.update({'responces_a': responces_a})
-
-            if len(responces_r) < 0:
-                context.update({'responces_r': responces_r})
 
             return render(self.request, "member/my_overview.html", context)
 
@@ -737,23 +669,19 @@ class changePassword(LoginRequiredMixin, View):
                         message = get_message('info', 81)
                         messages.info(
                             self.request, 83)
-                        print("herec")
                         return redirect("member:my_profile")
                     elif group == group2:
                         message = get_message('info', 84)
                         messages.info(
                             self.request, message)
-                        print("herem")
                         return redirect("moderator:my_profile")
                     elif group == group3:
                         message = get_message('error', 134)
                         messages.info(
                             self.request, message)
-                        print("heres")
                         return redirect("support:my_profile")
                     else:
                         # we have a user without a group despite being able to change password. Place it in client for now and notify IT
-                        print("herer")
                         return redirect("member:my_profile")
                 else:
 
@@ -1415,8 +1343,6 @@ class GDPRInformationRequest(View):
             company = []
         # get addresses
         addresses = Address.objects.filter(user=the_user_lazy)
-        for address in addresses:
-            print(address.apartment_address)
         # get orders
         orders = Order.objects.filter(user=the_user_lazy)
 
@@ -1469,72 +1395,195 @@ class GDPRInformationRequest(View):
         }
 
         if "download" in self.request.POST.keys():
-            download_type = self.request.POST["download"]
 
             the_user_lazy = self.request.user
             # get stripe profile
-            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
-            # get user info
-            the_user = UserInfo.objects.get(user=the_user_lazy)
-            # get company info if company
-            if the_user.company:
-                company = CompanyInfo.objects.get(user=the_user_lazy)
+            UP = UserProfile.objects.get(user=the_user_lazy)
+
+            if UP != None:
+                stripe_profile = {
+                    'user': UP.user.username,
+                    'stripe_customer_id': UP.stripe_customer_id,
+                    'one_click_purchasing': UP.one_click_purchasing,
+                    'user_status': UP.user_status,
+                }
             else:
+                stripe_profile = []
+            # get user info
+            UI = UserInfo.objects.get(user=the_user_lazy)
+            if UI != None:
+                if UI.company:
+                    CID = UI.companyID.id
+                else:
+                    CID = ""
+                the_user = {
+                    'user': UI.user.username,
+                    'first_name': UI.first_name,
+                    'last_name': UI.last_name,
+                    'email': UI.email,
+                    'telephone': UI.telephone,
+                    'company': UI.company,
+                    'companyID': CID,
+                }
+                # get company info if company
+                if UI.company:
+                    CI = CompanyInfo.objects.get(user=the_user_lazy)
+                    company = {
+                        'user': UI.user.username,
+                        'company': CI.company,
+                        'organisation_number': CI.organisation_number,
+                        'addressID': CI.addressID.id,
+                    }
+                else:
+                    company = []
+            else:
+                the_user = []
                 company = []
             # get addresses
-            addresses = Address.objects.filter(user=the_user_lazy)
-            for address in addresses:
-                print(address.apartment_address)
+            A = Address.objects.filter(user=the_user_lazy)
+            addresses = []
+            for a in A:
+                the_type = ""
+                if a.address_type == "B":
+                    the_type = 'Faktureringsaddress'
+                else:
+                    the_type = 'Leveransaddress'
+
+                address = {
+                    'id': a.id,
+                    'user': a.user.username,
+                    'street_address': a.street_address,
+                    'apartment_address': a.apartment_address,
+                    'post_town': a.post_town,
+                    'country': str(a.country),
+                    'zip': a.zip,
+                    'address_type': the_type,
+                    'default': a.default,
+                }
+                addresses.append(address)
             # get orders
-            orders = Order.objects.filter(user=the_user_lazy)
+            O = Order.objects.filter(user=the_user_lazy)
 
             all_orders = []
 
-            for order in orders:
-                orderItems = order.items.all()
+            for o in O:
+
+                o_I = o.items.all()
+                if o.freight != None:
+                    OFreight = o.freight.title
+                else:
+                    OFreight = ""
+                if o.payment != None:
+                    Opayment = o.payment.id
+                else:
+                    Opayment = ""
+                if o.coupon != None:
+                    Ocoupon = o.coupon.id
+                else:
+                    Ocoupon = ""
+
+                order = {
+                    'id': o.id,
+                    'user': o.user.username,
+                    'ref_code': o.ref_code,
+                    'total_price': o.total_price,
+                    'freight': OFreight,
+                    'freight_price': o.freight_price,
+                    'ordered_date': str(o.ordered_date),
+                    'ordered': o.ordered,
+                    'shipping_address_id': o.shipping_address.id,
+                    'billing_address_id': o.billing_address.id,
+                    'stripe_payment': Opayment,
+                    'coupon': o.coupon,
+                    'sent': o.being_delivered,
+                    'order_canceled': o.canceled,
+                    'returned': o.returned,
+                    'refund_requested': o.refund_requested,
+                    'refund_granted': o.refund_granted,
+                }
+
+                orderItems = []
+
+                for oI in o_I:
+                    orderItem = {
+                        'id': oI.id,
+                        'user': oI.user.username,
+                        'ordered': o.ordered,
+                        'item_id': oI.item.id,
+                        'title': oI.title,
+                        'quantity': oI.quantity,
+                        'price': oI.price,
+                        'discount_price': oI.discount_price,
+                        'total_price': oI.total_price,
+                        'sent': oI.sent,
+                        'returned': oI.returned,
+                        'canceled': oI.canceled,
+                        'refund_requested': oI.refund_flag,
+                        'refund_granted': oI.refund,
+                    }
+                    orderItems.append(orderItem)
+
                 all_orders.append({
                     'order': order,
                     'orderitems': orderItems,
                 })
 
-            # get orderitems
-            orderItems = OrderItem.objects.filter(user=the_user_lazy)
             # payments
-            stripe_payments = Payment.objects.filter(user=the_user_lazy)
-            payment = False
-            if len(stripe_payments) > 0:
-                payment = True
+            SP = Payment.objects.filter(user=the_user_lazy)
+            stripe_payments = []
+            for sp in SP:
+                stripe_payment = {
+                    'id': sp.id,
+                    'stripe_charge_id': sp.stripe_charge_id,
+                    'user': UI.user.username,
+                    'amount': sp.amount,
+                    'timestamp': sp.timestamp
+                }
+                stripe_payments.append(stripe_payment)
+
             # get settings
-            cookie_settings = Cookies.objects.filter(user=the_user_lazy)
+            CS = Cookies.objects.get(user=the_user_lazy)
+            if CS != None:
+                cookie_settings = {
+                    'user': CS.user.username,
+                    'functional': CS.functional,
+                }
+            else:
+                cookie_settings = []
             # get support the internal system isnt set up yet notify the user and add a request all support errand info button
 
             # add all info to all_of_it
 
             all_of_it = {
                 "User_Stripe_Profile": stripe_profile,
-                "Payments": payment,
                 "User_Stripe_Payments": stripe_payments,
                 "User_information": the_user,
-                "Has_company": the_user.company,
                 "Company": company,
                 "Addresses": addresses,
                 "Orders": all_orders,
-                "Items_ordered": orderItems,
                 "Settings": cookie_settings,
             }
 
-            # create the correct file type with the all_of_it in it and then  send download request, display page as normal or redirect here
+            # create the file with the all_of_it in it and then  send download request, display page as normal or redirect here
 
-            if download_type == "pdf":
-                test = "test"
-                messages.info(self.request, "pdf")
-                return redirect("member:request_info")
-            elif download_type == "json":
-                test = "test"
-                messages.info(self.request, "json")
-                return redirect("member:request_info")
-            else:
-                test = "test"
-                return redirect("member:request_info")
+            # make all of it JSON
+            content = json.dumps(all_of_it)
+            response = HttpResponse(content, content_type='application/json')
+            response['Content-Disposition'] = 'attachment; filename=myinfo.json'
+            return response
 
         return render(self.request, "member/information_request.html", context)
+
+
+class GDPRErraseRequest(View):
+    def get(self, *args, **kwargs):
+        # add a layer of are you sure here
+        test = "test"
+
+    def post(self, *args, **kwargs):
+        # test for delete or back
+
+        # back
+
+        # delete and anonymize data of the user
+        test = "test"
