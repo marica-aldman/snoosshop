@@ -16,7 +16,6 @@ from core.models import *
 from member.forms import *
 from .forms import *
 from core.functions import *
-from core.info_error_msg import *
 
 
 class Overview(LoginRequiredMixin, View):

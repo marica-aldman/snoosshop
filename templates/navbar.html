@@ -1,26 +1,34 @@
 <body>
 {% load cart_template_tags %}
 
-<nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar">
-    <div class="container">
+<nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar" style="height: 64px; ">
+    <div class="container" style="height: 40px;">
 
       <!-- Brand -->
-      <a class="navbar-brand waves-effect" href="/" styles="min-width: 100px">
+      <a class="navbar-brand waves-effect" href="/" styles="min-width: 100px;">
         <strong class="blue-text" styles="max-width: 100px">Snoosshop</strong>
       </a>
 
       <!-- Collapse -->
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      <button class="navbar-toggler" style="height: 40px;" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <!-- Links -->
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="collapse navbar-collapse" id="navbarSupportedContent" style="height: 40px;">
         
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item dropdown">
-            <div id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-top: 18px"> Meny
+        <ul class="navbar-nav ml-auto"  style="height: 40px;">
+              {% if request.user.is_authenticated %}
+                {% if group.1 == 'moderator' or group.1 == 'support' %}
+                <li class="nav-item dropdown" style="height: 40px;padding-top: 14px">
+                {% else %}
+                <li class="nav-item dropdown" style="height: 40px;padding-top: 10px">
+                {% endif %}
+              {% else %}
+                <li class="nav-item dropdown" style="height: 40px;padding-top: 10px">
+              {% endif %}
+            <div id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Meny
             </div>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
               <li class="nav-item">
@@ -80,7 +88,7 @@
                     {% comment %}
                       Moderator menu
                     {% endcomment %}
-                <li class="nav-item dropdown" style="top: 10px">
+                <li class="nav-item dropdown" style="padding-top: 14px; padding-left: 5px;">
                   <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Modereringsmeny
                   </div>
@@ -118,7 +126,7 @@
                     {% comment %}
                       Support menu
                     {% endcomment %}
-                <li class="nav-item dropdown" style="top: 10px">
+                <li class="nav-item dropdown" style="padding-top: 14px; padding-left: 5px;">
                   <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Support meny
                   </div>
@@ -147,34 +155,34 @@
                       User menu
                     {% endcomment %}
 
-                <li class="nav-item dropdown pl-4 pb-4" style="top: 18px">
-                  <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 100px; max-width: 150px; min-height: 30px;">
+                <li class="nav-item dropdown pb-4" style="padding-top: 10px;">
+                  <div class="pl-2" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 90px; max-width: 90px; min-height: 30px;">
                     Mina Sidor
                   </div>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
-                        <span class="clearfix d-none d-sm-inline-block">
-                          Min översikt
-                        </span>
-                      </a>
-                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
-                        <span class="clearfix d-none d-sm-inline-block">
-                          Mina ordrar
-                        </span>
-                      </a>
-                      <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
-                        <span class="clearfix d-none d-sm-inline-block">
-                          Min profil
-                        </span>
-                      </a>
-                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
-                        <span class="clearfix d-none d-sm-inline-block">
-                          Mina inställningar
-                        </span>
-                      </a>
-                      <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
-                        <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
-                      </a>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
+                      <span class="clearfix d-none d-sm-inline-block">
+                        Min översikt
+                      </span>
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
+                      <span class="clearfix d-none d-sm-inline-block">
+                        Mina ordrar
+                      </span>
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
+                      <span class="clearfix d-none d-sm-inline-block">
+                        Min profil
+                      </span>
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
+                      <span class="clearfix d-none d-sm-inline-block">
+                        Mina inställningar
+                      </span>
+                    </a>
+                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
+                      <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+                    </a>
                   </div>
                 </li>
                 {% endif %}
@@ -183,7 +191,12 @@
                 Cart
               {% endcomment %}
 
-          <li class="nav-item" style="padding-top: 10px">
+
+                {% if group.1 == 'moderator' or group.1 == 'support' %}
+          <li class="nav-item" style="padding-top: 6px;">
+                {% else %}
+          <li class="nav-item" style="padding-top: 2px;">
+                {% endif %}
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
               <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
@@ -195,13 +208,17 @@
                 Logout
               {% endcomment %}
 
-          <li class="nav-item" style="padding-top: 16px">
+                {% if group.1 == 'moderator' or group.1 == 'support' %}
+          <li class="nav-item" style="padding-top: 14px;">
+                {% else %}
+          <li class="nav-item" style="padding-top: 10px;">
+                {% endif %}
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
               {% endif %}
-              <button class='btn shadow-none' style="padding: 0" type="submit">Logga Ut</button>
+              <button class='nav-link waves-effect' style="padding: 0; border: none; background: none; font-weight: 300;" type="submit">Logga Ut</button>
             </form>
           </li>
           {% else %}

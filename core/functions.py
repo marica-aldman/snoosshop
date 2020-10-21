@@ -2,6 +2,7 @@ from slugify import slugify
 from datetime import datetime, timedelta
 from core.models import *
 from moderator.forms import *
+from django.http import HttpResponse
 
 import random
 import string
@@ -333,8 +334,11 @@ def calculate_total_order(order):
 
 
 def check_gdpr_cookies(self):
-    if 'GDPR' in self.request.session:
+    test = self.request.COOKIES.get('GDPR')
+    print(test)
+    if test:
         return False
     else:
-        self.request.session['GDPR'] = True
+        response = HttpResponse()
+        response.set_cookie('GDPR', "gdpr")
         return True

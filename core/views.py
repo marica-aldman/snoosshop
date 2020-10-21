@@ -474,7 +474,7 @@ class PaymentView(View):
 class NewHomeView(View):
     def get(self, *args, **kwargs):
         # GDPR check
-        gdpr_check = check_gdpr_cookies(self)
+        gdpr_check = True  # check_gdpr_cookies(self)
 
         categories = Category.objects.all()
         aquire_index = default_pagination_values
@@ -570,6 +570,11 @@ class NewHomeView(View):
                 "has_next": False,
             }
 
+        GDPR = self.request.COOKIES.get("GDPR")
+        gdpr_check = True
+        if GDPR == "GDPR":
+            gdpr_check = False
+
         context = {
             'gdpr_check': gdpr_check,
             "category_choices": categories,
@@ -581,8 +586,12 @@ class NewHomeView(View):
             "end_extras": end_extras,
             "max_page": int(max_page),
         }
+        response = render(self.request, 'home.html', context)
 
-        return render(self.request, 'home.html', context)
+        if GDPR != "GDPR":
+            response.set_cookie("GDPR", "GDPR")
+
+        return response
 
     def post(self, *args, **kwargs):
         return redirect("core:home")

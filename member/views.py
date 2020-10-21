@@ -16,7 +16,6 @@ from core.models import *
 from .forms import *
 from django.utils.dateparse import parse_datetime
 from core.functions import *
-from core.info_error_msg import *
 from django.core.files import File
 from django.core.files.base import ContentFile
 import json
