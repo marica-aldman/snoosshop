@@ -13,14 +13,14 @@ PAYMENT_CHOICES = (
 )
 
 ADDRESS_CHOICES = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
+    ('B', 'Fakturaaddress'),
+    ('S', 'Leveransaddress'),
 )
 
 ADDRESS_CHOICES_EXTENDED = (
-    ('B', 'Billing'),
-    ('S', 'Shipping'),
-    ('A', 'BOTH'),
+    ('B', 'Fakturaaddress'),
+    ('S', 'Leveransaddress'),
+    ('A', 'Båda'),
 )
 
 INTERVALL_CHOICES = (
@@ -435,26 +435,14 @@ class addressForm(forms.Form):
     def __init__(self, address, *args, **kwargs):
         super(addressForm, self).__init__(*args, **kwargs)
 
-        try:
-            self.fields['street_address'] = forms.CharField(
-                max_length=100, required=True, label='', initial=address.street_address)
-            self.fields['apartment_address'] = forms.CharField(
-                max_length=100, required=False, label='', initial=address.apartment_address)
-            self.fields['post_town'] = forms.CharField(
-                max_length=100, required=True, label='', initial=address.post_town)
-            self.fields['zip'] = forms.CharField(
-                max_length=100, required=True, label='', initial=address.zip)
-            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
-        except AttributeError(address):
-            self.fields['street_address'] = forms.CharField(
-                max_length=100, required=True, label='')
-            self.fields['apartment_address'] = forms.CharField(
-                max_length=100, required=False, label='')
-            self.fields['post_town'] = forms.CharField(
-                max_length=100, required=True, label='')
-            self.fields['zip'] = forms.CharField(
-                max_length=100, required=True, label='')
-            # self.country = CountryField(blank_label='(select country)').formfield(required = False,widget = CountrySelectWidget(attrs={   'class': 'custom-select d-block w-100',}))
+        self.fields['street_address'] = forms.CharField(
+            max_length=100, required=True, label='', initial=address.street_address)
+        self.fields['apartment_address'] = forms.CharField(
+            max_length=100, required=False, label='', initial=address.apartment_address)
+        self.fields['post_town'] = forms.CharField(
+            max_length=100, required=True, label='', initial=address.post_town)
+        self.fields['zip'] = forms.CharField(
+            max_length=100, required=True, label='', initial=address.zip)
 
 
 class CompanyInfoForm(forms.ModelForm):

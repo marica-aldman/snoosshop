@@ -11,9 +11,10 @@
         <div class="border rounded mb-3">
             <form method="POST">
                 {% csrf_token %}
-
-                <button type='submit' class='btn btn-primary' name="download" value="json">Download</button>
-                
+                <div>
+                    <button type='submit' class='btn btn-primary' name="download" value="json">Ladda ner</button>
+                    <button type='submit' class='btn btn-primary' name="back" value="back">Tillbaka</button>
+                </div>
                 <h3>Stripe information</h3>
                 <table>
                     <tr>

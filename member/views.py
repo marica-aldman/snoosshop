@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail, BadHeaderError
-from django.contrib.auth import authenticate, login, update_session_auth_hash
+from django.contrib.auth import authenticate, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
@@ -319,18 +319,14 @@ class Orders(LoginRequiredMixin, View):
             # get the orders and sort out active ones
             try:
                 orders_a = Order.objects.filter(
-                    user=self.request.user, ordered=True, received=False, subscription_order=False)
-                orders_r = Order.objects.filter(
-                    user=self.request.user, ordered=True, received=True)
+                    user=self.request.user, ordered=True)
             except ObjectDoesNotExist:
                 orders_a = {}
-                orders_r = {}
 
             # get all the items and their discounts
 
             context = {
                 'gdpr_check': gdpr_check,
-                'orders_r': orders_r,
                 'orders_a': orders_a,
             }
 
@@ -590,25 +586,7 @@ class Profile(LoginRequiredMixin, View):
                 except ObjectDoesNotExist:
                     # no companies with that address
                     addressUnconnected = True
-                # check that this address isn't connected to a subscription
-                try:
-                    numberOfSubscriptionsShipping = Subscription.objects.filter(
-                        shipping_address=theAddress).count()
-                    numberOfSubscriptionsBilling = Subscription.objects.filter(
-                        billing_address=theAddress).count()
-                    if numberOfSubscriptionsBilling >= 1 or numberOfSubscriptionsShipping >= 1:
-                        # a subscription is tied to this address
-                        message = get_message('error', 13)
-                        messages.warning(
-                            self.request, message)
-                        return redirect("member:my_profile")
-                    else:
-                        # no subsriptions with that address set conenction to true
-                        addressUnconnected = True
 
-                except ObjectDoesNotExist:
-                    # no subscriptions with that address
-                    addressUnconnected = True
                 info_message = get_message('info', 3)
                 theAddress.delete()
                 messages.info(
@@ -817,26 +795,26 @@ class Editaddress(LoginRequiredMixin, View):
             # which adress
             page = where_am_i(self)
             # get the address
-            addressQuery = Address.objects.filter(
+            address = Address.objects.get(
                 user=self.request.user, slug=page)
-            for address in addressQuery:
-                # get form
 
-                form = addressForm(address)
+            # get form
 
-                ADDRESS_CHOICES_EXTENDED = [
-                    {'key': 'B', 'name': 'Billing'},
-                    {'key': 'S', 'name': 'Shipping'},
-                ]
+            form = addressForm(address)
 
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'form': form,
-                    'address': address,
-                    'address_choices': ADDRESS_CHOICES_EXTENDED
-                }
+            ADDRESS_CHOICES_EXTENDED = [
+                {'key': 'B', 'name': 'Fakturaaddress'},
+                {'key': 'S', 'name': 'Leveransaddress'},
+            ]
 
-                return render(self.request, "member/edit_address.html", context)
+            context = {
+                'gdpr_check': gdpr_check,
+                'form': form,
+                'address': address,
+                'address_choices': ADDRESS_CHOICES_EXTENDED
+            }
+
+            return render(self.request, "member/edit_address.html", context)
         except ObjectDoesNotExist:
             message = get_message('error', 16)
             messages.warning(
@@ -852,6 +830,14 @@ class Editaddress(LoginRequiredMixin, View):
             slug = where_am_i(self)
             # get the address
             address = Address.objects.get(slug=slug)
+            print("original")
+            print(address.street_address)
+            print(address.apartment_address)
+            print(address.post_town)
+            print(address.zip)
+            print(address.country)
+            print(address.address_type)
+            print(address.default)
             # get the user
             theUser = self.request.user
             # get the form
@@ -865,13 +851,72 @@ class Editaddress(LoginRequiredMixin, View):
                     'apartment_address')
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
+                print("new")
+                print(address.street_address)
+                print(address.apartment_address)
+                print(address.post_town)
+                print(address.zip)
+
                 if 'address_type' in self.request.POST.keys():
                     address_type = self.request.POST['address_type']
+                    print(address_type)
                     if address_type == "B":
-                        address.address_type = "B"
+                        # check that we dont already have one
+                        addresses = Address.objects.filter(
+                            user=theUser, address_type="B")
+                        same = False
+                        for a in addresses:
+                            if a.street_address == address.street_address and a.post_town == address.post_town:
+                                same = True
+                        if same:
+                            # abort
+                            message = "Addressen finns redan som Faktureringsaddress"
+                            messages.warning(self.request, message)
+
+                            ADDRESS_CHOICES_EXTENDED = [
+                                {'key': 'B', 'name': 'Fakturaaddress'},
+                                {'key': 'S', 'name': 'Leveransaddress'},
+                            ]
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'form': form,
+                                'address': address,
+                                'address_choices': ADDRESS_CHOICES_EXTENDED
+                            }
+
+                            return render(self.request, "member/edit_address.html", context)
+                        else:
+                            address.address_type = "B"
+
                     elif address_type == "S":
-                        address.address_type = "B"
+                        # check that we dont already have one
+                        addresses = Address.objects.filter(
+                            user=theUser, address_type="S")
+                        same = False
+                        for a in addresses:
+                            if a.street_address == address.street_address and a.post_town == address.post_town:
+                                same = True
+                        if same:
+                            # abort
+                            message = "Addressen finns redan som Leveransaddress"
+                            messages.warning(self.request, message)
+
+                            ADDRESS_CHOICES_EXTENDED = [
+                                {'key': 'B', 'name': 'Fakturaaddress'},
+                                {'key': 'S', 'name': 'Leveransaddress'},
+                            ]
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'form': form,
+                                'address': address,
+                                'address_choices': ADDRESS_CHOICES_EXTENDED
+                            }
+
+                            return render(self.request, "member/edit_address.html", context)
+                        else:
+                            address.address_type = "S"
                     else:
                         # someone is manipulating the code
                         message = get_message('error', 17)
@@ -881,8 +926,8 @@ class Editaddress(LoginRequiredMixin, View):
                 else:
                     # rerender form
                     ADDRESS_CHOICES_EXTENDED = [
-                        {'key': 'B', 'name': 'Billing'},
-                        {'key': 'S', 'name': 'Shipping'},
+                        {'key': 'B', 'name': 'Fakturaaddress'},
+                        {'key': 'S', 'name': 'Leveransaddress'},
                     ]
 
                     context = {
@@ -893,29 +938,44 @@ class Editaddress(LoginRequiredMixin, View):
                     }
 
                     return render(self.request, "member/edit_address.html", context)
-                if address.default is True:
-                    if 'default_address' in self.request.POST.keys():
-                        address.default = True
-                        new_address_default(address)
 
-                testString = address.street_address + \
-                    address.address_type + str(address.user.id)
-                toSlug = slugify(testString)
-                if toSlug != address.slug:
-                    # street address has changed. Create new slug
+                if 'default_address' in self.request.POST.keys():
+                    new_address_default(address)
+                else:
+                    if address.default:
+                        address.default = False
 
-                    address.slug = create_slug_address(address)
+                print(address.address_type)
+                print(address.default)
+                newSlug = create_slug_address(address)
+                address.slug = newSlug
 
                 # save the address and return to list
                 address.save()
+                print("end")
                 info_message = get_message('info', 5)
                 messages.info(self.request, info_message)
-                return redirect("member:my_profile")
+                ADDRESS_CHOICES_EXTENDED = [
+                    {'key': 'B', 'name': 'Fakturaaddress'},
+                    {'key': 'S', 'name': 'Leveransaddress'},
+                    {'key': 'BOTH', 'name': 'Båda'},
+                ]
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'form': form,
+                    'address': address,
+                    'address_choices': ADDRESS_CHOICES_EXTENDED
+                }
+
+                return render(self.request, "member/edit_address.html", context)
             else:
                 # rerender form
+
                 ADDRESS_CHOICES_EXTENDED = [
-                    {'key': 'B', 'name': 'Billing'},
-                    {'key': 'S', 'name': 'Shipping'},
+                    {'key': 'B', 'name': 'Fakturaaddress'},
+                    {'key': 'S', 'name': 'Leveransaddress'},
+                    {'key': 'BOTH', 'name': 'Båda'},
                 ]
 
                 context = {
@@ -957,41 +1017,117 @@ class Newaddress(LoginRequiredMixin, View):
 
             if form.is_valid():
                 # start by checking that we dont already have this address
-                sameBilling = 0
-                sameShipping = 0
                 addresses = Address.objects.filter(user=theUser)
+                # check each address to compare to the new one
                 for anAddress in addresses:
+                    # check the street
                     if form.cleaned_data.get(
                             'street_address') == anAddress.street_address:
+                        # as streets can occur in more than one town check town
                         if form.cleaned_data.get(
                                 'post_town') == anAddress.post_town:
+                            # if we are here we have the address already but it might be that we also want it as the other type, so check for that
                             if form.cleaned_data.get('address_type') == "A":
+                                # we want this address to occur as both types, check that it doesnt already occur as the other though
                                 if anAddress.address_type == "S":
-                                    sameShipping = anAddress.id
+                                    check_same = False
+                                    secondary_check_addresses = Address.objects.filter(
+                                        user=theUser, address_type="B")
+                                    for s_c_address in secondary_check_addresses:
+                                        if form.cleaned_data.get('street_address') == anAddress.street_address:
+                                            if form.cleaned_data.get(
+                                                    'post_town') == anAddress.post_town:
+                                                # we already have both types of this address
+                                                check_same = True
+                                                check_same_object = s_c_address
+                                    # check if the address was default but is/isnt now
+                                    if 'default_address' in self.request.POST.keys() and not anAddress.default:
+                                        new_address_default(anAddress)
+                                    # check if we found a second address
+                                    if check_same:
+                                        # we already have the address check if we asked for default
+                                        if 'default_address' in self.request.POST.keys() and not check_same_object.default:
+                                            new_address_default(
+                                                check_same_object)
+                                        messages.info(
+                                            self.request, "Addressinformation uppdaterad")
+                                        return redirect("member:my_profile")
+                                    else:
+                                        # we want both but only have one, create a new address
+                                        new_address = Address()
+                                        new_address.user = anAddress.user
+                                        new_address.street_address = anAddress.user
+                                        new_address.apartment_address = anAddress.user
+                                        new_address.post_town = anAddress.user
+                                        new_address.country = anAddress.user
+                                        new_address.zip = anAddress.user
+                                        new_address.address_type = anAddress.user
+                                        new_address.save()
+                                        new_slug = create_slug_address(
+                                            new_address)
+                                        new_address.slug = new_slug
+                                        new_address.save()
+                                        # correct for default
+                                        if 'default_address' in self.request.POST.keys():
+                                            new_address_default(new_address)
+                                        messages.info(
+                                            self.request, "Addressinformation uppdaterad")
+                                        return redirect("member:my_profile")
                                 elif anAddress.address_type == "B":
-                                    sameBilling = anAddress.id
+                                    check_same = False
+                                    secondary_check_addresses = Address.objects.filter(
+                                        user=theUser, address_type="S")
+                                    for s_c_address in secondary_check_addresses:
+                                        if form.cleaned_data.get('street_address') == anAddress.street_address:
+                                            if form.cleaned_data.get(
+                                                    'post_town') == anAddress.post_town:
+                                                # we already have both types of this address
+                                                check_same = True
+                                                check_same_object = s_c_address
+                                    # check if the address was default but is/isnt now
+                                    if 'default_address' in self.request.POST.keys() and not anAddress.default:
+                                        new_address_default(anAddress)
+                                    # check if we found a second address
+                                    if check_same:
+                                        # we already have the address check if we asked for default
+                                        if 'default_address' in self.request.POST.keys() and not check_same_object.default:
+                                            new_address_default(
+                                                check_same_object)
+                                        messages.info(
+                                            self.request, "Addressinformation uppdaterad")
+                                        return redirect("member:my_profile")
+                                    else:
+                                        # we want both but only have one, create a new address
+                                        new_address = Address()
+                                        new_address.user = anAddress.user
+                                        new_address.street_address = anAddress.user
+                                        new_address.apartment_address = anAddress.user
+                                        new_address.post_town = anAddress.user
+                                        new_address.country = anAddress.user
+                                        new_address.zip = anAddress.user
+                                        new_address.address_type = anAddress.user
+                                        new_address.save()
+                                        new_slug = create_slug_address(
+                                            new_address)
+                                        new_address.slug = new_slug
+                                        new_address.save()
+                                        # correct for default
+                                        if 'default_address' in self.request.POST.keys():
+                                            new_address_default(new_address)
+                                        messages.info(
+                                            self.request, "Addressinformation uppdaterad")
+                                        return redirect("member:my_profile")
                             elif anAddress.address_type == form.cleaned_data.get('address_type'):
-                                message = get_message('info', 6)
+                                info_message = get_message('info', 6)
                                 if 'default_address' in self.request.POST.keys() and not anAddress.default:
                                     # remove default from other addresses of same type
-
-                                    compAddresses = Address.objects.filter(
-                                        user=theUser, address_type=anAddress.address_type)
-                                    for sameAddress in compAddresses:
-                                        if sameAddress.default:
-                                            sameAddress.default = False
-                                            sameAddress.save()
-                                            testAddress = Address.objects.get(
-                                                id=sameAddress.id)
-                                    # add default to this address
-                                    anAddress.default = True
-                                    anAddress.save()
+                                    new_address_default(anAddress)
                                     info_message = get_message(
                                         'info', 7)
                                 messages.info(
                                     self.request, info_message)
                                 return redirect("member:my_profile")
-                # get values
+                # we dont have an address else we would have already been rerouted
                 address = Address()
 
                 address.user = theUser
@@ -1006,46 +1142,6 @@ class Newaddress(LoginRequiredMixin, View):
                 # check what kind of address we have
                 address_type = form.cleaned_data.get('address_type')
 
-                # confirm that it isn't the same type as we already have (this only happens when we save both) set the values to the one we don't already have unless we have both saved
-                if sameBilling > 0 and sameShipping > 0:
-                    # test for defaulting
-                    testShipping = Address.objects.get(id=sameShipping)
-                    testBilling = Address.objects.get(id=sameBilling)
-                    message = get_message('info', 8)
-                    if 'default_address' in self.request.POST.keys():
-                        addresses = Address.objects.filter(user=theUser)
-                        if not testShipping.default:
-                            # remove default from other addresses of same type
-                            for sameAddress in addresses:
-                                if sameAddress.address_type == 'S':
-                                    if sameAddress.default:
-                                        sameAddress.default = False
-                                        sameAddress.save()
-                            # change the test one to true here
-                            testShipping.default = True
-                            testShipping.save()
-                        if not testBilling.default:
-                            testBilling.default = True
-                            testBilling.save()
-                            # remove default from other addresses of same type
-                            for sameAddress in addresses:
-                                if sameAddress.address_type == 'B':
-                                    if sameAddress.default:
-                                        sameAddress.default = False
-                                        sameAddress.save()
-                            # change the thest one to true here
-                            testBilling.default = True
-                            testBilling.save()
-                        message = get_message('info', 9)
-
-                    messages.info(
-                        self.request, message)
-                    return redirect("member:my_profile")
-                elif sameBilling > 0:
-                    address_type = "S"
-                elif sameShipping > 0:
-                    address_type = "B"
-
                 if address_type == "A":
                     # we want two copies of this address
                     address2 = Address()
@@ -1057,26 +1153,28 @@ class Newaddress(LoginRequiredMixin, View):
                     address2.post_town = form.cleaned_data.get('post_town')
                     address2.zip = form.cleaned_data.get('zip')
                     address2.country = "Sverige"
-                    if 'default_address' in self.request.POST.keys():
-                        address2.default = True
-                        new_address_default(address2)
 
                     address2.address_type = "S"
-                    address2.slug = create_slug_address(address2)
 
                     # save the second copy of the address
                     address2.save()
+                    # create a unique slug
+                    address2.slug = create_slug_address(address2)
+                    address2.save()
+                    if 'default_address' in self.request.POST.keys():
+                        new_address_default(address2)
                     address.address_type = "B"
                 else:
                     address.address_type = address_type
-
-                if 'default_address' in self.request.POST.keys():
-                    address.default = True
-                    new_address_default(address)
-                # create a slug
-                address.slug = create_slug_address(address)
                 # save the address and return to list
                 address.save()
+                # create a unique slug
+                address.slug = create_slug_address(address)
+                print(address.slug)
+                address.save()
+
+                if 'default_address' in self.request.POST.keys():
+                    new_address_default(address)
                 info_message = get_message('info', 10)
                 messages.info(self.request, info_message)
                 return redirect("member:my_profile")
@@ -1321,7 +1419,7 @@ class GenericSupportFormView(View):
             return redirect("core:home")
 
 
-class GDPRInformationRequest(View):
+class GDPRInformationRequest(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
@@ -1392,6 +1490,9 @@ class GDPRInformationRequest(View):
         context = {
             'gdpr_check': gdpr_check,
         }
+
+        if 'back' in self.request.POST.keys():
+            return redirect("member:my_profile")
 
         if "download" in self.request.POST.keys():
 
@@ -1574,15 +1675,73 @@ class GDPRInformationRequest(View):
         return render(self.request, "member/information_request.html", context)
 
 
-class GDPRErraseRequest(View):
+class GDPRErraseRequest(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
-        # add a layer of are you sure here
-        test = "test"
+
+        return render(self.request, "member/deletion_request.html")
 
     def post(self, *args, **kwargs):
         # test for delete or back
 
         # back
+        if 'back' in self.request.POST.keys():
+
+            return redirect("member:my_profile")
 
         # delete and anonymize data of the user
-        test = "test"
+        elif 'delete' in self.request.POST.keys():
+            # get all information that is connected to the user
+            # user object
+            the_user_lazy = self.request.user
+            # get stripe profile
+            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
+            # get user info
+            the_user = UserInfo.objects.get(user=the_user_lazy)
+            # get company info if company
+            if the_user.company:
+                company = CompanyInfo.objects.get(user=the_user_lazy)
+            else:
+                company = []
+            # get addresses
+            addresses = Address.objects.filter(user=the_user_lazy)
+
+            # get settings
+            cookie_settings = Cookies.objects.filter(user=the_user_lazy)
+
+            # anonymise where necessary
+            # user object
+
+            the_user_lazy.username = get_anonymous_user()
+            the_user_lazy.email = ""
+            the_user_lazy.is_active = False
+
+            groups = the_user_lazy.groups.all()
+            for group in groups:
+                the_user_lazy.groups.remove(group)
+
+            the_user_lazy.save()
+            the_user_lazy.groups
+
+            # user addresses
+
+            for address in addresses:
+                address.delete()
+
+            # user company
+
+            if the_user.company:
+                company.delete()
+
+            # user info
+
+            the_user.delete()
+
+            # orders anonymous due to user anonymous and addresses being deleted
+            # cookies
+
+            cookie_settings.delete()
+
+            return redirect("core:home")
+        else:
+
+            return render(self.request, "member/deletion_request.html")

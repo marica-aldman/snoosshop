@@ -19,6 +19,7 @@ from .views import (
     CookieSettingsView,
     changePassword,
     GDPRInformationRequest,
+    GDPRErraseRequest,
 )
 
 app_name = 'member'
@@ -43,6 +44,8 @@ urlpatterns = [
          changePassword.as_view(), name='changePassword'),
     path('request_info',
          GDPRInformationRequest.as_view(), name='request_info'),
+    path('delete',
+         GDPRErraseRequest.as_view(), name='delete'),
 ]
 
 # move cookies for general use to base

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
+    <div class="container">
+        <div class="border rounded mb-3">
+            <form method="POST">
+                {% csrf_token %}
+                <div>
+                    <h1>
+                        Radera mitt konto
+                    </h1>
+                    <p>
+                        Genom att klicka på radera konto knappen nedan kommer ditt konto tas bort från hemsidan, all information som leder till dig kommer raderas eller anonymiseras. Information som leder till dig som krävs av skatteverket enligt bokföringslagen kommer behållas utanför hemsidan.
+                    </p>
+                </div>
+                <div>
+                    <button type='submit' class='btn btn-primary' name="delete" value="delete">Radera konto</button>
+                </div>
+                <div>
+                    <button type='submit' class='btn btn-primary' name="back" value="back">Tillbaka</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+{% endblock content %}

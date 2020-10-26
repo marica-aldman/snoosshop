@@ -624,8 +624,7 @@ class ItemDetailView(DetailView):
         categories = Category.objects.all()
         context['category_choices'] = categories
         context['gdpr_check'] = gdpr_check
-        context['path'] = path
-        context['is_post'] = is_post
+        context['path'] = self.object.get_absolute_url()
         return context
 
 
@@ -644,14 +643,16 @@ def add_to_cart(request, slug):
     order_qs = Order.objects.filter(user=request.user, ordered=False)
     if order_qs.exists():
         order = order_qs[0]
+        print(order.items.all())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
-            if item.discount_price != null or item.discount_price > 0:
-                if order_item.discount_price != item.discount_price:
-                    messages.info(request, "Varans pris har uppdaterats.")
-                    order_item.discount_price = item.discount_price
-                order_item.total_price = order_item.quantity * order_item.discount_price
+            if item.discount_price != None:
+                if item.discount_price > 0:
+                    if order_item.discount_price != item.discount_price:
+                        messages.info(request, "Varans pris har uppdaterats.")
+                        order_item.discount_price = item.discount_price
+                    order_item.total_price = order_item.quantity * order_item.discount_price
             else:
                 order_item.total_price = order_item.quantity * order_item.price
             order_item.save()
@@ -677,7 +678,7 @@ def add_to_cart(request, slug):
         order_item.quantity = 1
         order_item.discount_price = item.discount_price
         order_item.price = item.price
-        if item.discount_price != null or item.discount_price > 0:
+        if item.discount_price != None and item.discount_price > 0:
             order_item.total_price = order_item.discount_price * order_item.quantity
         else:
             order_item.total_price = order_item.price * order_item.quantity
@@ -706,10 +707,11 @@ def remove_from_cart(request, slug):
                 ordered=False
             )[0]
             order.items.remove(order_item)
+            order.save()
             order_item.delete()
             messages.info(request, "Varan borttagen ur varukorgen.")
             all_items = order.items.all()
-            if all_items == None:
+            if len(all_items) == 0:
                 order.delete()
             return redirect("core:order-summary")
         else:
@@ -731,23 +733,26 @@ def remove_single_item_from_cart(request, slug):
         order = order_qs[0]
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
-            order_item = OrderItem.objects.filter(
+            order_item = OrderItem.objects.get(
                 item=item,
                 user=request.user,
                 ordered=False
-            )[0]
+            )
             if order_item.quantity > 1:
                 order_item.quantity -= 1
-                if item.discount_price != null or item.discount_price > 0:
-                    if order_item.discount_price != item.discount_price:
-                        order_item.discount_price = item.discount_price
-                    order_item.total_price = order_item.quantity * order_item.discount_price
+                if item.discount_price != None:
+                    if item.discount_price > 0:
+                        if order_item.discount_price != item.discount_price:
+                            order_item.discount_price = item.discount_price
+                        order_item.total_price = order_item.quantity * order_item.discount_price
                 else:
                     order_item.total_price = order_item.quantity * order_item.price
                 order_item.save()
             else:
                 order.items.remove(order_item)
                 order_item.delete()
+                if len(order.items.all()) == 0:
+                    order.delete()
             messages.info(request, "Varans mängd har uppdaterats.")
             return redirect("core:order-summary")
         else:

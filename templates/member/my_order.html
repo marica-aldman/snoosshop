@@ -9,39 +9,14 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="container">
-    {{test}}
 <!-- specific orders -->
         <div>
-            <a href="{% url 'member:new_errand' %}">
+            <a href="{% url 'member:my_orders' %}">
                 <button type="submit" class="btn btn-primary float-right">
-                    Skapa nytt supportärende
+                    Tillbaka till alla ordrar
                 </button>
             </a>
         </div>
-        {% if order.received %}
-        <div>
-            <form method="POST" action="../../member/returnOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
-                {% csrf_token %}
-                <input type="hidden" name="delete" value='yes'>
-                <input type="hidden" name="id" value={{order.id}}>
-                <button type="submit" class="btn btn-primary float-right">
-                    Returnera hela ordern
-                </button>
-            </form>
-        </div>
-        {% endif %}
-        {% if not order.being_delivered and not order.received %}
-        <div>
-            <form method="POST" action="../../member/cancelOrder" onSubmit="return confirm('Är du säker på att du vill avbeställa din order?.');">
-                {% csrf_token %}
-                <input type="hidden" name="delete" value='yes'>
-                <input type="hidden" name="id" value={{order.id}}>
-                <button type="submit" class="btn btn-primary float-right">
-                    Avbeställ
-                </button>
-            </form>
-        </div>
-        {% endif %}
         <div class="border rounded mb-3">
             <table class="table-striped table-hover w-100  mb-2">
                 <tbody>

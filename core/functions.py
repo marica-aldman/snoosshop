@@ -1,4 +1,5 @@
-from slugify import slugify
+#from slugify import slugify
+from django.template.defaultfilters import slugify
 from datetime import datetime, timedelta
 from core.models import *
 from moderator.forms import *
@@ -61,14 +62,24 @@ def test_slug_company(slug):
 
 def create_slug_address(address):
     toSlug = address.street_address + \
-        "B" + str(address.user.id)
-    testSlug = slugify(toSlug)
+        address.address_type + str(address.user.id)
+    preTestSlug = slugify(toSlug)
+    # we dont want anything besides a-z and 1-0 as well as -
+    testSlugA = preTestSlug.replace("ä", "a")
+    testSlugAa = preTestSlug.replace("å", "a")
+    testSlugO = preTestSlug.replace("ö", "a")
+    testSlug = testSlugO
     existingSlug = test_slug_address(testSlug)
     i = 1
     while existingSlug:
         toSlug = address.street_address + \
-            "B" + str(address.user.id) + "_" + str(i)
-        testSlug = slugify(toSlug)
+            address.address_type + str(address.user.id) + "_" + str(i)
+        preTestSlug = slugify(toSlug)
+        # we dont want anything besides a-z and 1-0 as well as - slugify removes unwanted special characters but not non a-z letters
+        testSlugA = preTestSlug.replace("ä", "a")
+        testSlugAa = preTestSlug.replace("å", "a")
+        testSlugO = preTestSlug.replace("ö", "a")
+        testSlug = testSlugO
         existingSlug = test_slug_address(testSlug)
         i += 1
 
@@ -98,6 +109,8 @@ def new_address_default(address):
     for otherAddress in otherAddresses:
         otherAddress.default = False
         otherAddress.save()
+    address.default = True
+    address.save()
 
 
 def sameAddress_support(theUser, form_street_address, form_post_town, form_address_type, default):
@@ -335,10 +348,27 @@ def calculate_total_order(order):
 
 def check_gdpr_cookies(self):
     test = self.request.COOKIES.get('GDPR')
-    print(test)
     if test:
         return False
     else:
         response = HttpResponse()
         response.set_cookie('GDPR', "gdpr")
         return True
+
+
+def get_anonymous_user():
+    user_new_id = 1
+
+    users = User.objects.all()
+
+    same = True
+    while(same):
+        test_same = False
+        for user in users:
+            if str(user_new_id) == user.username:
+                user_new_id += 1
+                test_same = True
+        if not test_same:
+            same = False
+
+    return user_new_id
