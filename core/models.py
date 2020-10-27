@@ -290,7 +290,7 @@ class OrderItem(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owner",
                              on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     items = models.ManyToManyField(OrderItem)
@@ -301,6 +301,8 @@ class Order(models.Model):
     ordered_date = models.DateTimeField()
     updated_date = models.DateTimeField(default=datetime.now, blank=True)
     ordered = models.BooleanField(default=False)
+    who = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="packer",
+                            on_delete=models.SET_NULL, blank=True, null=True)
     being_read = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)

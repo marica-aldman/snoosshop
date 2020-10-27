@@ -13,6 +13,7 @@
         {% csrf_token %}
         <div>
             <div>
+                <input type="hidden" name="reader" value="{{the_user}}">
                 <button type="submit" class='btn btn-primary' name="back" value="{{order.id}}">
                     Tillbaka
                 </button>
@@ -37,6 +38,9 @@
                             Status
                         </th>
                         <th>
+                            Kommentar
+                        </th>
+                        <th>
                             Ändra
                         </th>
                     </tr>
@@ -57,7 +61,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary'>
+                            {{ comment }}
+                        </td>
+                        <td>
+                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary' {% if not_same_person %}disabled{%endif%}>
                                 Markera som skickad
                             </button>
                         </td>

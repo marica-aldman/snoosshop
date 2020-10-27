@@ -11,7 +11,7 @@
     <div class="row border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
             {% csrf_token %}
-            <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+            <input type="hidden" value="{{current_page}}" name="current_page">
             <input type="hidden" name="search" value="{{search_type}}">
             <div class="d-flex justify-content-around">
                 <div>
@@ -41,25 +41,40 @@
                     <th>
                         Titta på ordern
                     </th>
+                    <th>
+                        &nbsp;
+                    </th>
                 </tr>
             </thead>
             <tbody>
-        {% for reg_order in reg_orders %}
+        {% for order in orders %}
                 <tr style="text-align: center;">
                     <td>
-                        {{ reg_order.id }}
+                        {{ order.id }}
                     </td>
                     <td>
-                        {{ reg_order.ref_code }}
+                        {{ order.ref_code }}
                     </td>
                     <td>
-                        <form method="POST" action="{{ reg_order.get_absolute_url_moderator }}">
+                        <form method="POST" action="{{ order.get_absolute_url_moderator }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{reg_order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
                                 Se order
                             </button>
                         </form>
                     </td>
+                    {% if order.being_read %}
+                    <td>
+                        <button name="packing" class='btn btn-warning'>
+                            Packas
+                        </button>
+                    </td>
+                    {% else %}
+                    <td>
+                        &nbsp;
+                    </td>
+                    {% endif %}
+
                 </tr>
         {% endfor %}
             </tbody>
@@ -72,21 +87,21 @@
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="True" name="previousPageRegOrder" class="page-link" {% if r_current_page == 1 %}disabled{% endif %}>
+                    <button type="submit" value="True" name="previousPageOrder" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
                 </form>
             </li>
-            {% for r_order in more_reg_orders %}
+            {% for order in more_orders %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="{{ r_order.number }}" name="r_page" {% if r_current_page == r_order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{r_order.number}}
+                    <button type="submit" value="{{ order.number }}" name="page" {% if current_page == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{order.number}}
                     </button>
                 </form>
             </li>
@@ -94,9 +109,9 @@
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" value="{{r_current_page}}" name="r_current_page">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="True" name="nextPageRegOrder" class="page-link" {% if rmax == r_current_page %} disabled{% endif %}>
+                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max == current_page %} disabled{% endif %}>
                         >
                     </button>
                 </form>

@@ -31,15 +31,16 @@ class Overview(LoginRequiredMixin, View):
             # get the orders and the count of all unsent orders
 
             try:
-                orders = Order.objects.filter(being_delivered=False)[:10]
+                orders = Order.objects.filter(
+                    being_delivered=False, ordered=True)[:limit]
                 number_orders = Order.objects.filter(
-                    being_delivered=False).count()
+                    being_delivered=False, ordered=True).count()
             except ObjectDoesNotExist:
                 orders = {}
                 number_orders = 0
 
-            # figure out how many pages of 10 there are
-            # if there are only 10 or fewer pages will be 1
+            # figure out how many pages there are
+            # if there are only the limit  or fewer the number of pages will be 1
 
             o_pages = 1
 
@@ -97,11 +98,16 @@ class Overview(LoginRequiredMixin, View):
                 # get the first orders and the count of all unsent orders
 
                 try:
-                    offset = whichPageOrder * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
+                    if whichPageOrder > 1:
+                        offset = (whichPageOrder - 1) * limit
+                        o_l = offset + limit
+                        orders = Order.objects.filter(
+                            being_delivered=False, ordered=True)[offset:o_l]
+                    else:
+                        orders = Order.objects.filter(
+                            being_delivered=False, ordered=True)[:limit]
                     number_orders = Order.objects.filter(
-                        being_delivered=False).count()
+                        being_delivered=False, ordered=True).count()
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
@@ -111,9 +117,9 @@ class Overview(LoginRequiredMixin, View):
 
                 o_pages = 1
 
-                if number_support > limit:
+                if number_orders > limit:
                     # if there are more we divide by the limit
-                    o_pages = number_support / limit
+                    o_pages = number_orders / limit
                     # see if there is a decimal
                     testO = int(o_pages)
                     if testO != o_pages:
@@ -149,19 +155,20 @@ class Overview(LoginRequiredMixin, View):
 
                 try:
                     number_orders = Order.objects.filter(
-                        being_delivered=False).count()
+                        being_delivered=False, ordered=True).count()
                     whichPageOrder = 1
-                    if current_page_orders < (number_orders / 10):
+                    if current_page_orders < (number_orders / limit):
                         whichPageOrder = current_page_orders + 1
-                    offset = whichPageOrder * 10
+                    offset = (whichPageOrder - 1) * limit
+                    o_l = offset + limit
                     orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
+                        being_delivered=False, ordered=True)[offset:o_l]
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
 
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
+                # figure out how many pages of there are
+                # if there are only the limit or fewer the number of pages will be 1
 
                 o_pages = 1
 
@@ -205,11 +212,16 @@ class Overview(LoginRequiredMixin, View):
                     whichPageOrder = 1
                     if current_page_orders > 1:
                         whichPageOrder = current_page_orders - 1
-                    offset = whichPageOrder * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
+                    if whichPageOrder == 1:
+                        orders = Order.objects.filter(
+                            being_delivered=False, ordered=True)[:limit]
+                    else:
+                        offset = (whichPageOrder - 1) * limit
+                        o_l = offset + limit
+                        orders = Order.objects.filter(
+                            being_delivered=False, ordered=True)[offset:o_l]
                     number_orders = Order.objects.filter(
-                        being_delivered=False).count()
+                        being_delivered=False, ordered=True).count()
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
@@ -381,7 +393,7 @@ class ProductsView(LoginRequiredMixin, View):
             # get the limit
             limit = default_pagination_values
             # get the first products and a count of all products
-            products = Item.objects.all()[:20]
+            products = Item.objects.all()[:limit]
             number_products = Item.objects.all().count()
             # figure out how many pages  there are
             # if there are only the limit or fewer number of pages will be 1
@@ -458,6 +470,9 @@ class ProductsView(LoginRequiredMixin, View):
             current_page = 1
             if 'current_page' in self.request.POST.keys():
                 current_page = int(self.request.POST['current_page'])
+            page = 1
+            if 'page' in self.request.POST.keys():
+                page = int(self.request.POST['page'])
 
             # what button did we press
 
@@ -644,11 +659,12 @@ class ProductsView(LoginRequiredMixin, View):
                 try:
                     number_products = Item.objects.all(
                     ).count()
-                    number_pages = number_products / 20
-                    if current_page < number_pages:
+                    numbepages = number_products / limit
+                    if current_page < numbepages:
                         current_page += 1
-                    offset = current_page * 20
-                    products = Item.objects.all()[20:offset]
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    products = Item.objects.all()[offset:o_l]
                 except ObjectDoesNotExist:
                     products = {}
                     number_products = 0
@@ -722,10 +738,16 @@ class ProductsView(LoginRequiredMixin, View):
                     try:
                         if current_page > 1:
                             current_page -= 1
-                        offset = current_page * 20
-                        products = Item.objects.all()[20:offset]
-                        number_products = Item.objects.all(
-                        ).count()
+                        if current_page == 1:
+                            products = Item.objects.all()[:limit]
+                            number_products = Item.objects.all(
+                            ).count()
+                        else:
+                            offset = (current_page - 1) * limit
+                            o_l = offset + limit
+                            products = Item.objects.all()[offset:o_l]
+                            number_products = Item.objects.all(
+                            ).count()
 
                         # figure out how many pages there are
                         # if there are only the limit or fewer number of pages will be 1
@@ -797,7 +819,7 @@ class ProductsView(LoginRequiredMixin, View):
                         limit = default_pagination_values
                         if current_page > 1:
                             current_page -= 1
-                        products = Item.objects.all()[:20]
+                        products = Item.objects.all()[:limit]
                         number_products = Item.objects.all(
                         ).count()
 
@@ -878,7 +900,80 @@ class ProductsView(LoginRequiredMixin, View):
                 else:
                     return redirect("moderator:products")
             else:
-                return redirect("moderator:categories")
+                # we are paging through without search
+                # GDPR check
+                gdpr_check = check_gdpr_cookies(self)
+                path = self.request.get_full_path()
+                is_post = False
+
+                # get the limit
+                limit = default_pagination_values
+                # check if we are on page 1
+                if page == 1:
+                    products = Item.objects.all()[:limit]
+                    number_products = Item.objects.all().count()
+                else:
+                    offset = page * limit
+                    o_l = offset + limit
+                    products = Item.objects.all()[offset:o_l]
+                    number_products = Item.objects.all().count()
+                # figure out how many pages  there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                p_pages = 1
+
+                if number_products > limit:
+                    # if there are more we divide by the limit
+                    p_pages = number_products / limit
+                    # see if there is a decimal
+                    testP = int(p_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testP != p_pages:
+                        p_pages = int(p_pages)
+                        p_pages += 1
+                    if type(p_pages) != "int":
+                        p_pages = int(p_pages)
+
+                # create a list for a ul to work through
+
+                more_products = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(p_pages):
+                    i += 1
+                    more_products.append({'number': i})
+
+                # make search for specific order or customer
+
+                form = searchProductForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_type = "None"
+                search_value = "None"
+
+                # onsubmit warning
+                onsubmit = get_message('warning', 6)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'products': products,
+                    'more_products': more_products,
+                    'form': form,
+                    'current_page': page,
+                    'max_pages': p_pages,
+                    'onsubmit': onsubmit,
+                }
+
+                return render(self.request, "moderator/mod_products.html", context)
 
         except ObjectDoesNotExist:
             message = get_message('error', 89)
@@ -961,7 +1056,8 @@ class SpecificProductsView(LoginRequiredMixin, View):
                     product.discount_price = form.cleaned_data.get(
                         'discount_price')
                     product.description = form.cleaned_data.get('description')
-                    product.image = form.cleaned_data['image']
+                    if len(self.request.FILES) > 0:
+                        product.image = form.cleaned_data['image']
 
                     if 'category' in self.request.POST.keys():
                         category_id = int(self.request.POST['category'])
@@ -987,11 +1083,12 @@ class SpecificProductsView(LoginRequiredMixin, View):
                     product.discount_price = form.cleaned_data.get(
                         'discount_price')
                     product.description = form.cleaned_data.get('description')
-                    img_file = self.request.FILES['image'].read()
-                    img_name = str(self.request.FILES['image'])
-                    file_data = {'img': SimpleUploadedFile(
-                        img_name, img_file)}
-                    product.image = form.cleaned_data['image']
+                    if len(self.request.FILES) > 0:
+                        img_file = self.request.FILES['image'].read()
+                        img_name = str(self.request.FILES['image'])
+                        file_data = {'img': SimpleUploadedFile(
+                            img_name, img_file)}
+                        product.image = form.cleaned_data['image']
                     if 'category' in self.request.POST.keys():
                         category_id = int(self.request.POST['category'])
                         category = Category.objects.get(id=category_id)
@@ -1043,7 +1140,7 @@ class CategoriesView(LoginRequiredMixin, View):
             # get the limit
             limit = default_pagination_values
             # get the first categories and a count of all products
-            categories = Category.objects.all()[:20]
+            categories = Category.objects.all()[:limit]
             number_categories = Category.objects.all().count()
             # figure out how many pages there are
             # if there are only the limit or fewer number of pages will be 1
@@ -1122,8 +1219,8 @@ class CategoriesView(LoginRequiredMixin, View):
                 current_page = int(self.request.POST['current_page'])
 
             # what button did we press
-
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+            print(self.request.POST['search'])
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
                 # make a form and populate so we can clean the data
                 if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
                     # we only have one type of search for this we can only get one page.
@@ -1300,7 +1397,9 @@ class CategoriesView(LoginRequiredMixin, View):
                             messages.warning(
                                 self.request, message)
                         return render(self.request, "moderator/mod_categories.html", context)
-
+            elif 'search' in self.request.POST.keys() and self.request.POST['search'] == "":
+                # empty search means resetting form
+                return redirect("moderator:categories")
             elif 'nextPage' in self.request.POST.keys():
                 # get what type of search
                 search_type = self.request.POST['search']
@@ -1310,11 +1409,12 @@ class CategoriesView(LoginRequiredMixin, View):
                 try:
                     number_categories = Category.objects.all(
                     ).count()
-                    number_pages = number_categories / 20
-                    if current_page < number_pages:
+                    numbepages = number_categories / limit
+                    if current_page < numbepages:
                         current_page += 1
-                    offset = current_page * 20
-                    categories = Category.objects.all()[20:offset]
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    categories = Category.objects.all()[offset:o_l]
                 except ObjectDoesNotExist:
                     categories = {}
                     number_categories = 0
@@ -1388,8 +1488,13 @@ class CategoriesView(LoginRequiredMixin, View):
                     try:
                         if current_page > 1:
                             current_page -= 1
-                        offset = current_page * 20
-                        categories = Category.objects.all()[20:offset]
+                        if current_page == 1:
+                            categories = Category.objects.all()[:limit]
+                        else:
+                            offset = (current_page - 1) * limit
+                            o_l = offset + limit
+                            categories = Category.objects.all()[offset:o_l]
+
                         number_categories = Category.objects.all(
                         ).count()
 
@@ -1462,7 +1567,7 @@ class CategoriesView(LoginRequiredMixin, View):
                         limit = default_pagination_values
                         if current_page > 1:
                             current_page -= 1
-                        categories = Category.objects.all()[:20]
+                        categories = Category.objects.all()[:limit]
                         number_categories = Category.objects.all(
                         ).count()
 
@@ -1542,6 +1647,78 @@ class CategoriesView(LoginRequiredMixin, View):
                     # might want to change this to rerender the page where we left off
                 else:
                     return redirect("moderator:categories")
+            elif 'page' in self.request.POST.keys():
+                # get the page
+                page = int(self.request.POST['page'])
+                # get the limit
+                limit = default_pagination_values
+
+                if page == 1:
+                    categories = Category.objects.all()[:limit]
+                else:
+                    offset = (page - 1) * limit
+                    o_l = offset + limit
+                    categories = Category.objects.all()[offset:o_l]
+
+                number_categories = Category.objects.all(
+                ).count()
+
+                # figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                c_pages = 1
+
+                if number_categories > limit:
+                    # if there are more we divide by the limit
+                    c_pages = number_categories / limit
+                    # see if there is a decimal
+                    testC = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testC != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+                    if type(c_pages) != "int":
+                        c_pages = int(c_pages)
+
+                # create a list for a ul to work through
+
+                more_categories = []
+
+                i = 0
+                # populate the list with the amount of pages there are
+                for i in range(c_pages):
+                    i += 1
+                    more_categories.append({'number': i})
+
+                # make search for specific order or customer
+
+                form = searchCategoryForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_type = "None"
+                search_value = "None"
+                onsubmit = get_message('warning', 4)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_type': search_type,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'categories': categories,
+                    'more_categories': more_categories,
+                    'form': form,
+                    'current_page': page,
+                    'max_pages': c_pages,
+                    'onsubmit': onsubmit,
+                }
+
+                return render(self.request, "moderator/mod_categories.html", context)
+
             else:
                 return redirect("moderator:categories")
 
@@ -1657,44 +1834,43 @@ class OrderHandlingView(LoginRequiredMixin, View):
         # display all unsent orders, oldest first
         # first get the constants
         # get max pages regular orders
-        r_pages = 1
-        reg_orders = Order.objects.filter(
-            ordered=True, being_delivered=False).order_by('id')
-        number_reg_orders = reg_orders.count()
-
-        if number_reg_orders > limit:
-            # if there are more we divide by the limit
-            r_pages = number_reg_orders / limit
-            # see if there is a decimal
-            testR = int(r_pages)
-            # if there isn't an even number of ten make an extra page for the last group
-            if testR != r_pages:
-                r_pages = int(r_pages)
-                r_pages += 1
-            if type(r_pages) != "int":
-                r_pages = int(r_pages)
-
+        o_pages = 1
         try:
-            reg_orders = Order.objects.filter(
-                ordered=True, being_delivered=False).order_by('id')[:10]
+            orders = Order.objects.filter(
+                ordered=True, being_delivered=False).order_by('id')[:limit]
             info1 = ""
         except ObjectDoesNotExist:
-            reg_orders = {}
+            orders = []
             info1 = get_message('info', 49)
+
+        number_orders = Order.objects.filter(
+            ordered=True, being_delivered=False).count()
+
+        if number_orders > limit:
+            # if there are more we divide by the limit
+            o_pages = number_orders / limit
+            # see if there is a decimal
+            testO = int(o_pages)
+            # if there isn't an even number of ten make an extra page for the last group
+            if testO != o_pages:
+                o_pages = int(o_pages)
+                o_pages += 1
+            if type(o_pages) != "int":
+                o_pages = int(o_pages)
 
         # create a list for a ul to work through
 
-        more_reg_orders = []
+        more_orders = []
 
         i = 0
         # populate the list with the amount of pages there are
-        for i in range(r_pages):
+        for i in range(o_pages):
             i += 1
-            more_reg_orders.append({'number': i})
+            more_orders.append({'number': i})
 
         # current page for regular
 
-        r_current_page = 1
+        current_page = 1
 
         # make search form for specific order or customer
 
@@ -1710,10 +1886,10 @@ class OrderHandlingView(LoginRequiredMixin, View):
             'form': form,
             'search_type': search_type,
             'search_value': search_value,
-            'reg_orders': reg_orders,
-            'rmax': r_pages,
-            'r_current_page': r_current_page,
-            'more_reg_orders': more_reg_orders,
+            'orders': orders,
+            'max': o_pages,
+            'current_page': current_page,
+            'more_orders': more_orders,
         }
 
         if info1 != "":
@@ -1734,27 +1910,12 @@ class OrderHandlingView(LoginRequiredMixin, View):
         if 'search_value' in self.request.POST.keys():
             search_value = int(self.request.POST['search_value'])
         # handle status change and pagination
-        r_current_page = int(self.request.POST['r_current_page'])
+        current_page = int(self.request.POST['current_page'])
 
-        # get max pages regurlar orders
-        r_pages = 1
-        number_reg_orders = Order.objects.filter(
-            ordered=True, being_delivered=False).count()
+        if 'search' in self.request.POST.keys():
+            if self.request.POST['order_ref'] != "" or self.request.POST['order_id'] != "":
+                # order id and order ref only retrievs a single item
 
-        if number_reg_orders > limit:
-            # if there are more we divide by the limit
-            r_pages = number_reg_orders / limit
-            # see if there is a decimal
-            testR = int(r_pages)
-            # if there isn't an even number of ten make an extra page for the last group
-            if testR != r_pages:
-                r_pages = int(r_pages)
-                r_pages += 1
-            if type(r_pages) != "int":
-                r_pages = int(r_pages)
-
-        if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-            if not 'previousPageRegOrder' in self.request.POST.keys() or not 'nextPageRegOrder' in self.request.POST.keys() or not 'r_page' in self.request.POST.keys():
                 # make a form and populate so we can clean the data
                 form = searchOrderForm(self.request.POST)
 
@@ -1769,19 +1930,22 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         # display all unsent orders, oldest first
                         # first get the constants
                         # get max pages regular orders
-                        r_pages = 1
-                        reg_orders = Order.objects.filter(
-                            ref_code=search_value).order_by('id')
-                        number_reg_orders = 1
-                        r_pages = 1
+                        o_pages = 1
+                        orders = Order.objects.filter(
+                            ref_code=search_value)
+                        if len(orders) == 0:
+                            messages.info(
+                                self.request, "Ordern med det referensnummret saknas.")
+                            return redirect("moderator:orderhandling")
+                        number_orders = 1
 
                         # create a list for a ul to work through
 
-                        more_reg_orders = [{'number': 1}]
+                        more_orders = [{'number': 1}]
 
                         # current page for regular
 
-                        r_current_page = 1
+                        current_page = 1
 
                         # set the search type
 
@@ -1792,10 +1956,10 @@ class OrderHandlingView(LoginRequiredMixin, View):
                             'form': form,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'reg_orders': reg_orders,
-                            'rmax': r_pages,
-                            'r_current_page': r_current_page,
-                            'more_reg_orders': more_reg_orders,
+                            'orders': orders,
+                            'max': o_pages,
+                            'current_page': current_page,
+                            'more_orders': more_orders,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
@@ -1806,19 +1970,22 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         # display all unsent orders, oldest first
                         # first get the constants
                         # get max pages regular orders
-                        r_pages = 1
-                        reg_orders = Order.objects.filter(
-                            id=search_value).order_by('id')
-                        number_reg_orders = 1
-                        r_pages = 1
+                        o_pages = 1
+                        orders = Order.objects.filter(
+                            id=search_value)
+                        if len(orders) == 0:
+                            messages.info(
+                                self.request, "Ordern med det id:t saknas.")
+                            return redirect("moderator:orderhandling")
+                        number_orders = 1
 
                         # create a list for a ul to work through
 
-                        more_reg_orders = [{'number': 1}]
+                        more_orders = [{'number': 1}]
 
                         # current page for regular
 
-                        r_current_page = 1
+                        current_page = 1
 
                         # set the search type
 
@@ -1829,72 +1996,90 @@ class OrderHandlingView(LoginRequiredMixin, View):
                             'form': form,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'reg_orders': reg_orders,
-                            'rmax': r_pages,
-                            'r_current_page': r_current_page,
-                            'more_reg_orders': more_reg_orders,
+                            'orders': orders,
+                            'max': o_pages,
+                            'current_page': current_page,
+                            'more_orders': more_orders,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
                     else:
-                        message = get_message('error', 117)
                         messages.warning(
-                            self.request, message)
+                            self.request, "Vargod fyll i sökformuläret korrekt. ID är endast siffror och referens nummer är alltid 20 tecken långt.")
                         return redirect("moderator:orderhandling")
                 else:
                     messages.warning(
-                        self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        self.request, "Vargod fyll i sökformuläret korrekt. ID är endast siffror och referens nummer är alltid 20 tecken långt.")
                     redirect("moderator:orderhandling")
             else:
-                # this should never happen
-                messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
-                redirect("moderator:orderhandling")
-        elif 'previousPageRegOrder' in self.request.POST.keys():
-            if r_current_page >= 2:
-                r_current_page -= 1
-        elif 'nextPageRegOrder' in self.request.POST.keys():
-            if r_current_page < r_pages:
-                r_current_page += 1
-        elif 'r_page' in self.request.POST.keys():
-            page = int(self.request.POST['r_page'])
-            if page <= r_pages:
-                r_current_page = page
+                # reset page
+                return redirect("moderator:orderhandling")
+        elif 'previousPageOrder' in self.request.POST.keys():
+            if current_page >= 2:
+                current_page -= 1
+        elif 'nextPageOrder' in self.request.POST.keys():
+            if current_page < pages:
+                current_page += 1
+        elif 'page' in self.request.POST.keys():
+            page = int(self.request.POST['page'])
+            if page <= pages:
+                current_page = page
         else:
             # bugg handle this
             messages.warning(
                 self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             redirect("moderator:orderhandling")
 
-        # after all these we need display the page again but with the current pages set correctly this will differ if we or have paged.
+        # calculations
 
-        reg_orders = {}
-        info1 = ""
-        if r_current_page > 1:
-            try:
-                offset = r_current_page * 10
-                reg_orders = Order.objects.filter(
-                    ordered=True, being_delivered=False).order_by('id')[10:offset]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info1 = get_message('info', 49)
-        else:
-            try:
-                reg_orders = Order.objects.filter(
-                    ordered=True, being_delivered=False).order_by('id')[:10]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info1 = get_message('info', 49)
+        # get max pages
+        o_pages = 1
+        number_orders = Order.objects.filter(
+            ordered=True, being_delivered=False).count()
+
+        if number_orders > limit:
+            # if there are more we divide by the limit
+            o_pages = number_orders / limit
+            # see if there is a decimal
+            testO = int(o_pages)
+            # if there isn't an even number of ten make an extra page for the last group
+            if testO != o_pages:
+                o_pages = int(o_pages)
+                o_pages += 1
+            if type(o_pages) != "int":
+                o_pages = int(o_pages)
 
         # create a list for a ul to work through
 
-        more_reg_orders = []
+        more_orders = []
 
         i = 0
         # populate the list with the amount of pages there are
-        for i in range(r_pages):
+        for i in range(o_pages):
             i += 1
-            more_reg_orders.append({'number': i})
+            more_orders.append({'number': i})
+
+        # after all these we need display the page again but with the current pages set correctly this will differ if we or have paged.
+
+        info1 = ""
+        if current_page > 1:
+            try:
+                offset = (current_page - 1) * limit
+                o_l = offset + limit
+                orders = Order.objects.filter(
+                    ordered=True, being_delivered=False).order_by('id')[offset:o_l]
+            except ObjectDoesNotExist:
+                # no orders left to complete
+                info1 = get_message('info', 49)
+                orders = []
+        else:
+            try:
+                orders = Order.objects.filter(
+                    ordered=True, being_delivered=False).order_by('id')[:limit]
+            except ObjectDoesNotExist:
+                # no orders left to complete
+                info1 = get_message('info', 49)
+                orders = []
 
         # make search form for specific order or customer
 
@@ -1905,10 +2090,10 @@ class OrderHandlingView(LoginRequiredMixin, View):
             'form': form,
             'search_type': search_type,
             'search_value': search_value,
-            'reg_orders': reg_orders,
-            'rmax': r_pages,
-            'r_current_page': r_current_page,
-            'more_reg_orders': more_reg_orders,
+            'orders': orders,
+            'max': o_pages,
+            'current_page': current_page,
+            'more_orders': more_orders,
         }
 
         if info1 != "":
@@ -1930,9 +2115,16 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
         gdpr_check = check_gdpr_cookies(self)
         if 'lookAtOrder' in self.request.POST.keys():
             order_id = int(self.request.POST['lookAtOrder'])
+            not_same_person = False
             try:
                 order = Order.objects.get(id=order_id)
-                order.being_read = True
+                if order.being_read:
+                    print(order.who)
+                    if order.who and order.who != self.request.user:
+                        not_same_person = True
+                else:
+                    order.being_read = True
+                    order.who = self.request.user
                 order.updated_date = make_aware(datetime.now())
                 order.save()
                 orderItems = order.items.all()
@@ -1942,21 +2134,40 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
                 messages.warning(
                     self.request, message)
                 return redirect("moderator:orderhandling")
+
+            if order.comment == "Nothing":
+                comment = "Inga varor packade"
+            elif order.comment == "Partial":
+                comment = "Vissa varor packade"
+            else:
+                comment = ""
+
             context = {
+                'not_same_person': not_same_person,
                 'gdpr_check': gdpr_check,
                 'path': path,
                 'order': order,
                 'orderItems': orderItems,
+                'comment': comment,
             }
 
             return render(self.request, "moderator/specificOrder.html", context)
         if 'send' in self.request.POST.keys():
             order_id = int(self.request.POST['send'])
-
+            path = self.request.get_full_path()
             try:
                 order = Order.objects.get(id=order_id)
                 order.being_delivered = True
-                order.being_read = False
+                if order.who == self.request.user:
+                    order.being_read = False
+                    not_same_person = False
+                else:
+                    # halt this isnt supposed to happen
+                    message = "Endast den som först flaggade ordern för packning kan skicka ordern."
+                    messages.warning(
+                        self.request, message)
+                    return redirect("moderator:orderhandling")
+
                 order.updated_date = make_aware(datetime.now())
                 orderItems = order.items.all()
 
@@ -1985,21 +2196,51 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
                     info_message = get_message('info', 51)
                     messages.info(
                         self.request, info_message)
-                else:
-                    message = get_message('error', 108)
-                    messages.warning(
-                        self.request, message)
 
-                return redirect("moderator:orderhandling")
+                    return redirect("moderator:orderhandling")
+                else:
+                    if order.comment == "Nothing":
+                        message = get_message('error', 108)
+                        messages.warning(
+                            self.request, message)
+                    elif order.comment == "Partial":
+                        message = "Order ej markerad som skickad, hela ordern är inte packad."
+                        messages.warning(
+                            self.request, message)
+
+                    if order.comment == "Nothing":
+                        comment = "Inga varor packade"
+                    elif order.comment == "Partial":
+                        comment = "Vissa varor packade"
+                        order.save()
+                    else:
+                        comment = ""
+                        order.save()
+
+                    context = {
+                        'not_same_person': not_same_person,
+                        'gdpr_check': gdpr_check,
+                        'path': path,
+                        'order': order,
+                        'orderItems': orderItems,
+                        'comment': comment,
+                    }
+
+                    return render(self.request, "moderator/specificOrder.html", context)
             except ObjectDoesNotExist:
                 message = get_message('error', 106)
                 messages.warning(
                     self.request, message)
+
                 return redirect("moderator:orderhandling")
         elif 'back' in self.request.POST.keys():
             order = Order.objects.get(id=int(self.request.POST['back']))
-            order.being_read = False
-            order.save()
+            if order.being_read and not order.who:
+                order.being_read = False
+                order.save()
+            if order.who == self.request.user:
+                order.being_read = False
+                order.save()
             return redirect("moderator:orderhandling")
         else:
             # something wrong redirect
