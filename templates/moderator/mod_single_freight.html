@@ -8,6 +8,13 @@
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
+    <div>
+        <a href="{% url 'moderator:freights' %}">
+            <button type="submit" class="btn btn-primary float-right">
+                Tillbaka till frakter
+            </button>
+        </a>
+    </div>
 
     <div class="border border-dark mb-3 p-2">
         <h3>Frakt</h3>
@@ -48,14 +55,11 @@
             {% endif %}
             {% if old %} 
                 <input type="hidden" name="inactive" value="yes">
-                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt</button>
                 <button type='submit' class='btn btn-primary'  name="reactivate" value="yes">Återaktivera</button>
             {% else %}
                 <input type="hidden" name="inactive" value="yes">
                 {% if new %}
-                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt utan att spara</button>
                 {% else %}
-                <button type='submit' class='btn btn-primary'  name="cancel" value="back">Tillbaka till frakt utan att spara</button>
                 <button type='submit' class='btn btn-primary'  name="reactivate" value="no">Avaktivera</button>
                 {% endif %}
             {% endif %}

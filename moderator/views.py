@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
@@ -341,12 +342,15 @@ class InfoView(LoginRequiredMixin, View):
 
             if form.is_valid():
                 try:
-                    info = UserInfo.objects.get(user=self.request.user)
+                    theUser = self.request.user
+                    info = UserInfo.objects.get(user=theUser)
                     info.first_name = form.cleaned_data.get('first_name')
                     info.last_name = form.cleaned_data.get('last_name')
                     info.email = form.cleaned_data.get('email')
+                    theUser.email = form.cleaned_data.get('email')
                     info.telephone = form.cleaned_data.get('telephone')
 
+                    theUser.save()
                     info.save()
                     info_message = get_message('info', 38)
                     messages.info(
@@ -354,12 +358,15 @@ class InfoView(LoginRequiredMixin, View):
                     return redirect("moderator:my_profile")
                 except ObjectDoesNotExist:
                     info = UserInfo()
-                    info.user = self.request.user
+                    theUser = self.request.user
+                    info.user = theUser
                     info.first_name = form.cleaned_data.get('first_name')
                     info.last_name = form.cleaned_data.get('last_name')
                     info.email = form.cleaned_data.get('email')
+                    theUser.email = form.cleaned_data.get('email')
                     info.telephone = form.cleaned_data.get('telephone')
 
+                    theUser.save()
                     info.save()
                     info_message = get_message('info', 39)
                     return redirect("moderator:my_profile")
@@ -3589,9 +3596,12 @@ class CouponsView(LoginRequiredMixin, View):
         elif 'search' in self.request.POST.keys():
             # get the 20 first current coupons
             if 'code' in self.request.POST.keys():
-                code = int(self.request.POST['code'])
+                code = self.request.POST['code']
+                if code == "":
+                    # resetting form
+                    return redirect("moderator:coupons")
                 coupons = Coupon.objects.filter(code=code)
-                C_pages = 1
+                c_pages = 1
                 more_coupons = [{'number': 1}]
 
                 # make an empty coupon for the new form
@@ -3781,7 +3791,7 @@ class FAQsView(LoginRequiredMixin, View):
             except ObjectDoesNotExist:
                 searchForm = SearchFAQForm()
             try:
-                faqs = FAQ.objects.all()
+                faqs = FAQ.objects.all()[:limit]
             except ObjectDoesNotExist:
                 comment = "No FAQs found"
             try:
@@ -3856,10 +3866,10 @@ class FAQsView(LoginRequiredMixin, View):
             return render(self.request, "moderator/mod_faqs.html", context)
         except ObjectDoesNotExist:
             # we dont either dont have a chosen language or the language chosen doesnt exist, this is bad. You cant get error messages correctly here. Send to settings.
-            message = "We can not find the language object, please contact IT support imidiately. This is a serious problem."
+            message = "Vi kan inte hitta språket som är valt. Kontakta IT support för hjälp."
             messages.warning(
                 self.request, message)
-            return redirect("moderator:my_profile")
+            return redirect("moderator:overview")
 
     def post(self, *args, **kwargs):
         # GDPR check
@@ -3898,88 +3908,349 @@ class FAQsView(LoginRequiredMixin, View):
         empty_faq = FAQ()
 
         if "search" in self.request.POST.keys():
-            search_type = self.request.POST['search']
+            search = self.request.POST['search']
             form = SearchFAQForm(self.request.POST)
-            print(self.request.POST)
             current_page = 1
             more_faqs = [{'number': 1}]
             d_faqs = 1
-            if search = "None":
-                # we're using the form
-                if form.is_valid():
-                    searchID = form.cleaned_data.get('searchID')
-                    searchTerm = form.cleaned_data.get('searchTerm')
-                    language = form.cleaned_data.get('languages')
-                    print("searchID")
-                    print(searchID)
-                    print("searchTerm")
-                    print(searchTerm)
-                    print("language")
-                    print(language)
-                    if searchID:
+            if search == "None":
+                if 'paging' in self.request.POST.keys():
+                    search_type = "None"
+                    search_value = "None"
+                    # we're paging not searching
+                    previous_page = int(self.request.POST['current_page'])
+                    # GDPR check
+                    gdpr_check = check_gdpr_cookies(self)
+                    path = self.request.get_full_path()
+                    is_post = False
+                    # get the limit
+                    limit = default_pagination_values
+                    # establish language first, this should later have a check
+                    theLang = "swe"
+                    comment = []
+                    try:
+                        theLanguage = LanguageChoices.objects.get(
+                            language_short=theLang)
 
-                        search_type = "searchID"
-                        search_value = searchID
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'searchform': form,
-                            'search': True,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'FAQS': faqs,
-                            'searchButton': searchButton,
-                            'addButton': addButton,
-                            'deleteButton': deleteButton,
-                            'comment': comment,
-                            'current_page': current_page,
-                            'more_faqs': more_faqs,
-                            'max': d_faqs,
-                            'empty_faq': empty_faq,
-                        }
-                    elif searchTerm:
-
-                        search_type = "searchTerm"
-                        search_value = searchTerm
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'searchform': form,
-                            'search': True,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'FAQS': faqs,
-                            'searchButton': searchButton,
-                            'addButton': addButton,
-                            'deleteButton': deleteButton,
-                            'comment': comment,
-                            'current_page': current_page,
-                            'more_faqs': more_faqs,
-                            'max': d_faqs,
-                            'empty_faq': empty_faq,
-                        }
-                    else:
+                        try:
+                            aButtonType = ButtonType.objects.get(
+                                buttonType="search")
+                            searchButton = ButtonText.objects.filter(
+                                language=theLanguage, theButtonType=aButtonType)
+                        except ObjectDoesNotExist:
+                            searchButton = {"buttonText": "Search"}
+                            comment.append("No search Button found")
+                        try:
+                            bButtonType = ButtonType.objects.get(
+                                buttonType="add new")
+                            addButton = ButtonText.objects.filter(
+                                language=theLanguage, theButtonType=bButtonType)
+                        except ObjectDoesNotExist:
+                            addButton = {"buttonText": "Add"}
+                            comment.append("No add Button found")
+                        try:
+                            cButtonType = ButtonType.objects.get(
+                                buttonType="delete")
+                            deleteButton = ButtonText.objects.filter(
+                                language=theLanguage, theButtonType=cButtonType)
+                        except ObjectDoesNotExist:
+                            deleteButton = {"buttonText": "Delete"}
+                            comment.append("No add Button found")
+                    except ObjectDoesNotExist:
+                        # we dont either dont have a chosen language or the language chosen doesnt exist, this is bad. You cant get error messages correctly here. Send to settings.
+                        message = "Vi kan inte hitta språket som är valt. Kontakta IT support för hjälp."
+                        messages.warning(
+                            self.request, message)
                         return redirect("moderator:faqs")
+                    all_faqs = FAQ.objects.all()
+                    more_faqs = []
+                    c_faqs = len(all_faqs)
+                    d_faqs = 1
+                    if c_faqs > limit:
+                        # if there are more we divide by the limit
+                        d_faqs = c_faqs/limit
+                        # see if there is a decimal
+                        testF = int(d_faqs)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testF != d_faqs:
+                            d_faqs += 1
+                        if type(testF) != type(d_faqs):
+                            d_faqs = int(d_faqs)
+
+                    i = 0
+                    # populate the list with the amount of pages there are
+
+                    for i in range(d_faqs):
+                        i += 1
+                        more_faqs.append({'number': i})
+
+                    if 'nextPage' in self.request.POST.keys():
+                        if previous_page < d_faqs and previous_page > 0:
+                            current_page = previous_page + 1
+                            offset = previous_page * limit
+                            o_l = offset + limit
+                            faqs = FAQ.objects.all()[offset:o_l]
+                        elif precious_page == d_faqs:
+                            current_page = d_faqs
+                            offset = (current_page - 1) * limit
+                            o_l = offset + limit
+                            faqs = FAQ.objects.all()[offset:o_l]
+                        else:
+                            # something is off redirect
+                            return redirect("moderator:faqs")
+                    elif 'previousPage' in self.request.POST.keys():
+                        if previous_page < 2:
+                            # preventing paging down under 1
+                            # just return page 1
+                            faqs = FAQ.objects.all()[:limit]
+                            current_page = 1
+
+                        elif previous_page == 2:
+                            # just return page 1
+                            faqs = FAQ.objects.all()[:limit]
+                            current_page = 1
+                        else:
+                            # not page 1
+                            current_page = previous_page - 1
+                            offset = (current_page - 1) * limit
+                            o_l = offset + limit
+                            faqs = FAQ.objects.all()[offset:o_l]
+                    elif 'page' in self.request.POST.keys():
+                        chosen_page = int(self.request.POST['page'])
+                        if chosen_page > 0 and chosen_page <= d_faqs:
+                            if chosen_page == 1:
+                                faqs = FAQ.objects.all()[:limit]
+                            else:
+                                current_page = chosen_page
+                                offset = (current_page - 1) * limit
+                                o_l = offset + limit
+                                faqs = FAQ.objects.all()[offset:o_l]
+                        else:
+                            # something is off redirect
+                            return redirect("moderator:faqs")
+
+                    else:
+                        # something is off redirect
+                        return redirect("moderator:faqs")
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'searchform': form,
+                        'search': True,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'FAQS': faqs,
+                        'searchButton': searchButton,
+                        'addButton': addButton,
+                        'deleteButton': deleteButton,
+                        'comment': comment,
+                        'current_page': current_page,
+                        'more_faqs': more_faqs,
+                        'max': d_faqs,
+                        'empty_faq': empty_faq,
+                    }
                     return render(self.request, "moderator/mod_faqs.html", context)
                 else:
-                    # form invalid, not possible but for safeties sake
-                    return redirect("moderator:faqs")
+                    # we're using the form
+                    if form.is_valid():
+                        searchID = form.cleaned_data.get('searchID')
+                        searchTerm = form.cleaned_data.get('searchTerm')
+                        language = form.cleaned_data.get('languages')
+                        form.language(theLanguage)
+                        if searchID != None:
+                            searchID = int(searchID)
+                            try:
+                                faqs = FAQ.objects.filter(id=searchID)
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchID"
+                            search_value = searchID
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        elif searchTerm != None:
+                            try:
+                                faqs = FAQ.objects.filter(
+                                    Q(subject__contains=searchTerm) | Q(content__contains=searchTerm))
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchTerm"
+                            search_value = searchTerm
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        else:
+                            return redirect("moderator:faqs")
+                        return render(self.request, "moderator/mod_faqs.html", context)
+                    else:
+                        # form invalid, not possible but for safeties sake
+                        return redirect("moderator:faqs")
             elif search == "searchID":
                 # check if we are paging
                 if 'paging' in self.request.POST.keys():
-                    if searchTerm in self.request.POST.keys():
-                        searchTerm = self.request.POST['searchTerm']
-
+                    # this hasnt been implemented
+                    return redirect("moderator:faqs")
+                elif 'newSearch' in self.request.POST.keys():
+                    # we are doing a new search from the form
+                    if form.is_valid():
+                        searchID = form.cleaned_data.get('searchID')
+                        searchTerm = form.cleaned_data.get('searchTerm')
+                        language = form.cleaned_data.get('languages')
+                        form.language(theLanguage)
+                        if searchID != None:
+                            searchID = int(searchID)
+                            try:
+                                faqs = FAQ.objects.filter(id=searchID)
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchID"
+                            search_value = searchID
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        elif searchTerm != None:
+                            try:
+                                faqs = FAQ.objects.filter(
+                                    Q(subject__contains=searchTerm) | Q(content__contains=searchTerm))
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchTerm"
+                            search_value = searchTerm
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        else:
+                            return redirect("moderator:faqs")
+                        return render(self.request, "moderator/mod_faqs.html", context)
+                    else:
+                        # form invalid, not possible but for safeties sake
+                        return redirect("moderator:faqs")
                 else:
                     # something is off redirect
                     return redirect("moderator:faqs")
             elif search == "searchTerm":
                 # check if we are paging
                 if 'paging' in self.request.POST.keys():
-
+                    # this hasnt been implemented
+                    return redirect("moderator:faqs")
+                elif 'newSearch' in self.request.POST.keys():
+                    # we are doing a new search from the form
+                    if form.is_valid():
+                        searchID = form.cleaned_data.get('searchID')
+                        searchTerm = form.cleaned_data.get('searchTerm')
+                        language = form.cleaned_data.get('languages')
+                        form.language(theLanguage)
+                        if searchID != None:
+                            searchID = int(searchID)
+                            try:
+                                faqs = FAQ.objects.filter(id=searchID)
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchID"
+                            search_value = searchID
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        elif searchTerm != None:
+                            try:
+                                faqs = FAQ.objects.filter(
+                                    Q(subject__contains=searchTerm) | Q(content__contains=searchTerm))
+                            except ObjectDoesNotExist:
+                                faqs = []
+                            search_type = "searchTerm"
+                            search_value = searchTerm
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'searchform': form,
+                                'search': True,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'FAQS': faqs,
+                                'searchButton': searchButton,
+                                'addButton': addButton,
+                                'deleteButton': deleteButton,
+                                'comment': comment,
+                                'current_page': current_page,
+                                'more_faqs': more_faqs,
+                                'max': d_faqs,
+                                'empty_faq': empty_faq,
+                            }
+                        else:
+                            return redirect("moderator:faqs")
+                        return render(self.request, "moderator/mod_faqs.html", context)
+                    else:
+                        # form invalid, not possible but for safeties sake
+                        return redirect("moderator:faqs")
                 else:
                     # something is off redirect
                     return redirect("moderator:faqs")
             else:
-
+                # something is off redirect
+                return redirect("moderator:faqs")
         else:
             return redirect("moderator:faqs")
 
@@ -4225,13 +4496,6 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     comment.append("Form issue")
 
                 try:
-                    newForm = NewFAQPerLanguage()
-                    newForm.language(aLanguage=theLanguage)
-                except ObjectDoesNotExist:
-                    form = NewFAQPerLanguage()
-                    comment.append("Language specific Form issue")
-
-                try:
                     aButtonType = ButtonType.objects.get(buttonType="save")
                     saveButton = ButtonText.objects.filter(
                         language=theLanguage, theButtonType=aButtonType)
@@ -4243,7 +4507,6 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     'gdpr_check': gdpr_check,
                     'theTitle': title,
                     'form': form,
-                    'formList': newForm,
                     'saveButton': saveButton,
                     'comment': comment,
                 }
@@ -4257,22 +4520,57 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
             # establish the users language first, this should later have a check
             theLang = "Svenska"
             comment = []
+            theLanguage = LanguageChoices.objects.get(
+                language=theLang)
             try:
                 theLanguage = LanguageChoices.objects.get(
                     language=theLang)
-                form1 = NewFAQForm(self.request.POST)
-                if form1.is_valid():
-                    description = form1.cleaned_data.get('description')
-                    form2 = NewFAQPerLanguage()
-                    form2.language(theLanguage)
-                    post = self.request.POST
-                    form2.saveForm(post, description)
+                form = NewFAQForm(self.request.POST)
+                if form.is_valid():
+                    faq = FAQ()
+                    faq.description = form.cleaned_data.get('description')
+                    faq.language = theLanguage
+                    faq.subject = form.cleaned_data.get('subject')
+                    faq.content = form.cleaned_data.get('content')
+                    faq.save()
                     #info_message = get_message('info', code)
                     messages.info(self.request, "FAQs sparad")
                     return redirect("moderator:faqs")
                 else:
-                    # rerender the form here
-                    test = "test"
+
+                    try:
+                        textType = TextTypeChoices.objects.get(
+                            textType="title")
+                        title = TextField.objects.filter(
+                            language=theLanguage, textType=textType, short_hand="NewFAQ")
+                    except ObjectDoesNotExist:
+                        title = {"text": "Title"}
+                        comment.append("No title found")
+
+                    try:
+                        form = NewFAQForm()
+                        form.language(aLanguage=theLanguage)
+                    except ObjectDoesNotExist:
+                        form = NewFAQForm()
+                        comment.append("Form issue")
+
+                    try:
+                        aButtonType = ButtonType.objects.get(buttonType="save")
+                        saveButton = ButtonText.objects.filter(
+                            language=theLanguage, theButtonType=aButtonType)
+                    except ObjectDoesNotExist:
+                        searchButton = {"buttonText": "Save"}
+                        comment.append("No save Button found")
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'theTitle': title,
+                        'form': form,
+                        'saveButton': saveButton,
+                        'comment': comment,
+                    }
+
+                    return render(self.request, "moderator/mod_faq_new.html", context)
 
             except ObjectDoesNotExist:
                 messages.warning(

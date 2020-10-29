@@ -8,6 +8,13 @@
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
+    <div>
+        <a href="{% url 'moderator:faqs' %}">
+            <button type="submit" class="btn btn-primary float-right">
+                Tillbaka till faqs
+            </button>
+        </a>
+    </div>
 
     <div class="border border-dark mb-3 p-2">
         <h3>{{Title}}</h3>

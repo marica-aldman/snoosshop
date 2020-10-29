@@ -11,6 +11,7 @@
     <div class="row border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
             {% csrf_token %}
+            <input type="hidden" value="search" name="newSearch">
             <input type="hidden" value="{{current_page}}" name="current_page">
             <input type="hidden" name="search" value="{{search_type}}">
             <div class="d-flex justify-content-around">

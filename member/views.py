@@ -89,6 +89,7 @@ class Setup(LoginRequiredMixin, View):
                 userInfo.last_name = form_user.cleaned_data.get('last_name')
                 theUser.last_name = form_user.cleaned_data.get('last_name')
                 userInfo.email = form_user.cleaned_data.get('email')
+                theUser.email = form_user.cleaned_data.get('email')
                 userInfo.telephone = form_user.cleaned_data.get('telephone')
                 if hasCompany:
                     # check that we dont already have company info on this user
@@ -723,12 +724,13 @@ class InfoView(LoginRequiredMixin, View):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
         form = UserInformationForm(self.request.POST)
+        theUser = self.request.user
 
         if 'edit' in self.request.POST.keys():
 
             # check if there is a company connected
             try:
-                info = UserInfo.objects.get(user=self.request.user)
+                info = UserInfo.objects.get(user=theUser)
             except ObjectDoesNotExist:
                 info = UserInfo()
 
@@ -745,10 +747,13 @@ class InfoView(LoginRequiredMixin, View):
             try:
                 info = UserInfo.objects.get(user=self.request.user)
                 info.first_name = form.cleaned_data.get('first_name')
+                theUser.first_name = form.cleaned_data.get('first_name')
                 info.last_name = form.cleaned_data.get('last_name')
+                theUser.last_name = form.cleaned_data.get('last_name')
                 info.email = form.cleaned_data.get('email')
+                theUser.email = form.cleaned_data.get('email')
                 info.telephone = form.cleaned_data.get('telephone')
-
+                theUser.save()
                 info.save()
                 messages.info(
                     self.request, info_message)
