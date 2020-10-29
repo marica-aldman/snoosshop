@@ -11,8 +11,7 @@
     <div class="row border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
             {% csrf_token %}
-            <input type="hidden" value="{{r_current_page}}" name="r_current_page">
-            <input type="hidden" value="{{s_current_page}}" name="s_current_page">
+            <input type="hidden" value="{{current_page}}" name="current_page">
             <input type="hidden" name="search" value="{{search_type}}">
             <div class="d-flex justify-content-around">
                 <div>
@@ -94,8 +93,10 @@
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
                     <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
                         <
                     </button>
@@ -105,6 +106,7 @@
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <button type="submit" value="{{ faq.number }}" name="page" {% if current_page == faq.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
@@ -116,8 +118,10 @@
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchTerm" value="{{search_value}}">
                     <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
                         >
                     </button>

@@ -180,7 +180,7 @@ class editOrCreateCategory(forms.ModelForm):
 
 
 class SearchFAQForm(forms.Form):
-    searchID = forms.IntegerField()
+    searchID = forms.IntegerField(required=False)
     searchTerm = forms.CharField(required=False)
 
     def language(self, theLanguage, *args, **kwargs):
@@ -208,7 +208,8 @@ class SearchFAQForm(forms.Form):
         # we need to be able to sort by language, so make a choice field with all languages
 
         languages = LanguageChoices.objects.all()
-        lang_list = [("---", "---")]
+        # temporarily make this impossible to choose anything but the only language in the list, when more langugages are implemented add ("---", "---") to the original list
+        lang_list = []
         for lang in languages:
             lang_list.append((lang.language_short, lang.language))
         lang_tuple = tuple(lang_list)
@@ -229,11 +230,13 @@ class NewFAQForm(forms.ModelForm):
 
     class Meta:
         model = FAQ
-        fields = ['description']
+        fields = ['description', 'subject', 'content']
 
     def __init__(self, *args, **kwargs):
         super(NewFAQForm, self).__init__(*args, **kwargs)
         self.fields['description'].label = "Description"
+        self.fields['subject'].label = "subject"
+        self.fields['content'].label = "content"
 
     def language(self, aLanguage, *args, **kwargs):
 

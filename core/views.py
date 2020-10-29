@@ -224,6 +224,7 @@ class CheckoutView(View):
                 # recalculate order total
 
                 order.total_price = calculate_total_order(order)
+                order.ordered_date = make_aware(datetime.now())
                 order.save()
 
                 payment_option = form.cleaned_data.get('payment_option')
@@ -402,11 +403,12 @@ class PaymentView(View):
                 # assign the payment to the order
 
                 order_items = order.items.all()
-                order_items.update(ordered=True)
                 for item in order_items:
+                    item.ordered = True
                     item.save()
 
                 order.ordered = True
+                order.ordered_date = make_aware(datetime.now())
                 order.payment = payment
 
                 # create a reference code and check that there isnt already one before setting the orders ref code to the code
@@ -643,7 +645,7 @@ def add_to_cart(request, slug):
     order_qs = Order.objects.filter(user=request.user, ordered=False)
     if order_qs.exists():
         order = order_qs[0]
-        print(order.items.all())
+        order.ordered_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
@@ -699,6 +701,7 @@ def remove_from_cart(request, slug):
     )
     if order_qs.exists():
         order = order_qs[0]
+        order.ordered_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item = OrderItem.objects.filter(
@@ -731,6 +734,7 @@ def remove_single_item_from_cart(request, slug):
     )
     if order_qs.exists():
         order = order_qs[0]
+        order.ordered_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item = OrderItem.objects.get(
@@ -787,6 +791,7 @@ class AddCouponView(View):
                 code = form.cleaned_data.get('code')
                 order = Order.objects.get(
                     user=self.request.user, ordered=False)
+                order.updated_date = make_aware(datetime.now())
                 order.coupon = get_coupon(self.request, code)
                 order.save()
                 messages.success(self.request, "Rabattkod tillagd.")

@@ -1219,7 +1219,6 @@ class CategoriesView(LoginRequiredMixin, View):
                 current_page = int(self.request.POST['current_page'])
 
             # what button did we press
-            print(self.request.POST['search'])
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
                 # make a form and populate so we can clean the data
                 if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
@@ -1912,8 +1911,25 @@ class OrderHandlingView(LoginRequiredMixin, View):
         # handle status change and pagination
         current_page = int(self.request.POST['current_page'])
 
-        if 'search' in self.request.POST.keys():
-            if self.request.POST['order_ref'] != "" or self.request.POST['order_id'] != "":
+        # get max pages
+        o_pages = 1
+        number_orders = Order.objects.filter(
+            ordered=True, being_delivered=False).count()
+
+        if number_orders > limit:
+            # if there are more we divide by the limit
+            o_pages = number_orders / limit
+            # see if there is a decimal
+            testO = int(o_pages)
+            # if there isn't an even number of ten make an extra page for the last group
+            if testO != o_pages:
+                o_pages = int(o_pages)
+                o_pages += 1
+            if type(o_pages) != "int":
+                o_pages = int(o_pages)
+
+        if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+            if 'order_ref' in self.request.POST.keys() and self.request.POST['order_ref'] != "" or 'order_id' in self.request.POST.keys() and self.request.POST['order_id'] != "":
                 # order id and order ref only retrievs a single item
 
                 # make a form and populate so we can clean the data
@@ -2022,7 +2038,8 @@ class OrderHandlingView(LoginRequiredMixin, View):
                 current_page += 1
         elif 'page' in self.request.POST.keys():
             page = int(self.request.POST['page'])
-            if page <= pages:
+            # just to make sure
+            if page <= o_pages and page > 1:
                 current_page = page
         else:
             # bugg handle this
@@ -2031,23 +2048,6 @@ class OrderHandlingView(LoginRequiredMixin, View):
             redirect("moderator:orderhandling")
 
         # calculations
-
-        # get max pages
-        o_pages = 1
-        number_orders = Order.objects.filter(
-            ordered=True, being_delivered=False).count()
-
-        if number_orders > limit:
-            # if there are more we divide by the limit
-            o_pages = number_orders / limit
-            # see if there is a decimal
-            testO = int(o_pages)
-            # if there isn't an even number of ten make an extra page for the last group
-            if testO != o_pages:
-                o_pages = int(o_pages)
-                o_pages += 1
-            if type(o_pages) != "int":
-                o_pages = int(o_pages)
 
         # create a list for a ul to work through
 
@@ -2119,7 +2119,6 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
             try:
                 order = Order.objects.get(id=order_id)
                 if order.being_read:
-                    print(order.who)
                     if order.who and order.who != self.request.user:
                         not_same_person = True
                 else:
@@ -2180,6 +2179,8 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
                         some_sent = True
                         item.save()
                     else:
+                        item.sent = False
+                        item.save()
                         not_filled = True
 
                 if not_filled:
@@ -2193,6 +2194,7 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
                         order.being_delivered = False
 
                 if order.being_delivered:
+                    order.save()
                     info_message = get_message('info', 51)
                     messages.info(
                         self.request, info_message)
@@ -2210,13 +2212,14 @@ class SpecificOrderHandlingView(LoginRequiredMixin, View):
 
                     if order.comment == "Nothing":
                         comment = "Inga varor packade"
+                        order.comment = ""
+                        order.save()
                     elif order.comment == "Partial":
                         comment = "Vissa varor packade"
                         order.save()
                     else:
                         comment = ""
                         order.save()
-
                     context = {
                         'not_same_person': not_same_person,
                         'gdpr_check': gdpr_check,
@@ -2265,7 +2268,7 @@ class FreightView(LoginRequiredMixin, View):
             number_of_old_freights = OldFreight.objects.all().count()
             if freights.count() < limit:
                 lessThen = True
-                left = limit - number_of_freights
+                left = limit - freights.count()
                 oldfreights = OldFreight.objects.all().order_by('title')[:left]
             else:
                 oldfreights = []
@@ -2599,6 +2602,8 @@ class FreightView(LoginRequiredMixin, View):
             new_current_page = 0
             if current_page > f_only_pages:
                 new_current_page = current_page - f_only_pages
+            else:
+                new_current_page = current_page
 
             if page == 1:
                 freights = Freight.objects.all().order_by('title')[:limit]
@@ -2606,7 +2611,7 @@ class FreightView(LoginRequiredMixin, View):
                 try:
                     if freights.count() <= limit:
                         lessThen = True
-                        left = limit - number_of_freights
+                        left = limit - freights.count()
                         if left > 0:
                             oldfreights = OldFreight.objects.all().order_by('title')[
                                 :left]
@@ -2661,7 +2666,8 @@ class FreightView(LoginRequiredMixin, View):
                     try:
                         freights = Freight.objects.all().order_by('title')[
                             offset:number_of_freights]
-                        stillSome = True
+                        if freights.count() > 0:
+                            stillSome = True
                     except ObjectDoesNotExist:
                         # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
                         freights = []
@@ -2669,7 +2675,8 @@ class FreightView(LoginRequiredMixin, View):
                     try:
                         freights = Freight.objects.all().order_by('title')[
                             offset:o_and_l]
-                        stillSome = True
+                        if freights.count() > 0:
+                            stillSome = True
                     except ObjectDoesNotExist:
                         # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
                         freights = []
@@ -2680,7 +2687,7 @@ class FreightView(LoginRequiredMixin, View):
                     if stillSome:
                         if freights.count() < limit:
                             lessThen = True
-                            left = offset - number_of_freights
+                            left = offset - freights.count()
                             if left > 0:
                                 oldfreights = OldFreight.objects.all().order_by('title')[
                                     :left]
@@ -2698,7 +2705,6 @@ class FreightView(LoginRequiredMixin, View):
                                 :limit]
                         else:
                             oldfreights = []
-                    number_of_freights = number_of_freights + number_of_old_freights
                 except ObjectDoesNotExist:
                     # there are no old freights
                     oldfreights = []
@@ -2804,7 +2810,7 @@ class FreightView(LoginRequiredMixin, View):
                     if stillSome:
                         if freights.count() < offset:
                             lessThen = True
-                            left = offset - number_of_freights
+                            left = offset - freights.count()
                             if left > 0:
                                 oldfreights = OldFreight.objects.all().order_by('title')[
                                     :left]
@@ -3816,11 +3822,13 @@ class FAQsView(LoginRequiredMixin, View):
                 testF = int(d_faqs)
                 # if there isn't an even number of ten make an extra page for the last group
                 if testF != d_faqs:
-                    d_faqs = int(d_faqs)
                     d_faqs += 1
+                if type(testF) != type(d_faqs):
+                    d_faqs = int(d_faqs)
 
             i = 0
             # populate the list with the amount of pages there are
+
             for i in range(d_faqs):
                 i += 1
                 more_faqs.append({'number': i})
@@ -3832,6 +3840,8 @@ class FAQsView(LoginRequiredMixin, View):
                 'gdpr_check': gdpr_check,
                 'searchform': searchForm,
                 'search': False,
+                'search_type': search_type,
+                'search_value': search_value,
                 'FAQS': faqs,
                 'searchButton': searchButton,
                 'addButton': addButton,
@@ -3854,12 +3864,124 @@ class FAQsView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        path = self.request.get_full_path()
+        is_post = False
+        # get the limit
+        limit = default_pagination_values
+        # establish language first, this should later have a check
+        theLang = "swe"
+        comment = []
+        theLanguage = LanguageChoices.objects.get(language_short=theLang)
+        try:
+            aButtonType = ButtonType.objects.get(buttonType="search")
+            searchButton = ButtonText.objects.filter(
+                language=theLanguage, theButtonType=aButtonType)
+        except ObjectDoesNotExist:
+            searchButton = {"buttonText": "Search"}
+            comment.append("No search Button found")
+        try:
+            bButtonType = ButtonType.objects.get(buttonType="add new")
+            addButton = ButtonText.objects.filter(
+                language=theLanguage, theButtonType=bButtonType)
+        except ObjectDoesNotExist:
+            addButton = {"buttonText": "Add"}
+            comment.append("No add Button found")
+        try:
+            cButtonType = ButtonType.objects.get(buttonType="delete")
+            deleteButton = ButtonText.objects.filter(
+                language=theLanguage, theButtonType=cButtonType)
+        except ObjectDoesNotExist:
+            deleteButton = {"buttonText": "Delete"}
+            comment.append("No add Button found")
+
+        # for the new button
+        empty_faq = FAQ()
+
         if "search" in self.request.POST.keys():
+            search_type = self.request.POST['search']
             form = SearchFAQForm(self.request.POST)
-            if form.is_valid():
-                test = "test"
+            print(self.request.POST)
+            current_page = 1
+            more_faqs = [{'number': 1}]
+            d_faqs = 1
+            if search = "None":
+                # we're using the form
+                if form.is_valid():
+                    searchID = form.cleaned_data.get('searchID')
+                    searchTerm = form.cleaned_data.get('searchTerm')
+                    language = form.cleaned_data.get('languages')
+                    print("searchID")
+                    print(searchID)
+                    print("searchTerm")
+                    print(searchTerm)
+                    print("language")
+                    print(language)
+                    if searchID:
+
+                        search_type = "searchID"
+                        search_value = searchID
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'searchform': form,
+                            'search': True,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'FAQS': faqs,
+                            'searchButton': searchButton,
+                            'addButton': addButton,
+                            'deleteButton': deleteButton,
+                            'comment': comment,
+                            'current_page': current_page,
+                            'more_faqs': more_faqs,
+                            'max': d_faqs,
+                            'empty_faq': empty_faq,
+                        }
+                    elif searchTerm:
+
+                        search_type = "searchTerm"
+                        search_value = searchTerm
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'searchform': form,
+                            'search': True,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'FAQS': faqs,
+                            'searchButton': searchButton,
+                            'addButton': addButton,
+                            'deleteButton': deleteButton,
+                            'comment': comment,
+                            'current_page': current_page,
+                            'more_faqs': more_faqs,
+                            'max': d_faqs,
+                            'empty_faq': empty_faq,
+                        }
+                    else:
+                        return redirect("moderator:faqs")
+                    return render(self.request, "moderator/mod_faqs.html", context)
+                else:
+                    # form invalid, not possible but for safeties sake
+                    return redirect("moderator:faqs")
+            elif search == "searchID":
+                # check if we are paging
+                if 'paging' in self.request.POST.keys():
+                    if searchTerm in self.request.POST.keys():
+                        searchTerm = self.request.POST['searchTerm']
+
+                else:
+                    # something is off redirect
+                    return redirect("moderator:faqs")
+            elif search == "searchTerm":
+                # check if we are paging
+                if 'paging' in self.request.POST.keys():
+
+                else:
+                    # something is off redirect
+                    return redirect("moderator:faqs")
             else:
-                test = "test"
+
+        else:
+            return redirect("moderator:faqs")
 
 
 class SpecificFAQView(LoginRequiredMixin, View):
