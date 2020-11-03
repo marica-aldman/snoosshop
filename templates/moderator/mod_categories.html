@@ -75,7 +75,7 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:category' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{category.id}}" name="lookAtCategory" class='btn btn-primary'>
+                            <button type="submit" value="{{category.id}}" name="lookAtCategory" class='btn btn-primary' style="padding: 5px">
                                 Se
                             </button>
                         </form>
@@ -85,7 +85,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="delete" value='yes'>
                             <input type="hidden" name="id" value={{category.id}}>
-                            <button type="submit" class="btn btn-primary float-right">
+                            <button type="submit" class="btn btn-primary float-right" style="padding: 5px">
                                 Ta bort
                             </button>
                         </form>

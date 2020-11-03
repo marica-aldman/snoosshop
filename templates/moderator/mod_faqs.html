@@ -91,6 +91,7 @@
 
     <div class="d-flex w-100 justify-content-around">
         <ul class="pagination">
+            {% if previous_page %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
@@ -98,24 +99,72 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
-                        <
+                    <button type="submit" value="True" name="previousPage" class="page-link">
+                        &laquo;
                     </button>
                 </form>
             </li>
-            {% for faq in more_faqs %}
-            <li class="page-item">
+            {% endif %}
+            {% if start %}
                 <form method="POST">
                 {% csrf_token %}
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
-                    <button type="submit" value="{{ faq.number }}" name="page" {% if current_page == faq.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{faq.number}}
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link">
+                        1
+                    </button>
+                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                        ...
+                    </button>
+                </form>
+            {% endif %}
+            {% if current_page == 4 %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link">
+                        1
+                    </button>
+                </form>
+            {% endif %}
+            {% for faq in more_faqs %}
+            {%if current_page == faq %}
+            <li class="page-item active">
+            {% else %}
+            <li class="page-item">
+            {% endif %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <button type="submit" value="{{ faq }}" name="page" {% if current_page == faq %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{faq}}<span class="sr-only">(current)</span>
                     </button>
                 </form>
             </li>
             {% endfor %}
+            {% if end %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                        ...
+                    </button>
+                    <button type="submit" value="{{max}}" name="page" class="page-link">
+                        {{max}}
+                    </button>
+                </form>
+            {% endif %}
+            {% if next_page %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
@@ -124,10 +173,11 @@
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchTerm" value="{{search_value}}">
                     <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
-                        >
+                    &raquo;
                     </button>
                 </form>
             </li>
+            {% endif %}
         </ul>
 
     </div>

@@ -32,8 +32,12 @@
           {% include "socialaccount/snippets/login_extra.html" %}
 
           {% else %}
-          <p>{% blocktrans %}Om du inte har ett konto ännu, vargod och
-          <a href="{{ signup_url }}"> skapa ett konto</a> först.{% endblocktrans %}</p>
+          
+          {% if redirect_field_value %}
+          <p>För att kunna göra detta måste du logga in. Vargod logga in nedan.</p>
+          {% endif %}
+          <p>Om du inte har ett konto ännu, vargod och
+          <a href="{{ signup_url }}"> skapa ett konto</a> först.</p>
           {% endif %}
 
           <form class="login" method="POST" action="{% url 'account_login' %}">

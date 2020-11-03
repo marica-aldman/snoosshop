@@ -11,15 +11,15 @@
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <div class="container">
+    <div class="container p-2">
     <!-- generic support form -->
         <div class="border rounded mb-3 pb-5">
-            <h3>Kontakta vår support</h3>
+            <h3 class="pl-2 pt-2">Kontakta vår support</h3>
             <form action="." method="POST">
                 {% csrf_token %}
                 <table class="table-striped table-hover w-100  mb-0">
                     <tr>
-                        <td>
+                        <td class="pl-2">
                             Emailadress:
                         </td>
                         <td>
@@ -27,7 +27,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td class="pl-2">
                             Ämne:
                         </td>
                         <td>
@@ -37,7 +37,7 @@
                 </table>
                 <table class="table-striped table-hover w-100  mb-0">
                     <tr>
-                        <td class="pt-3 pb-3">
+                        <td class="pt-3 pl-2 pb-3">
                             Meddelande:
                         </td>
                     </tr>

@@ -9,6 +9,7 @@ from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.db.models import Q
+from django.contrib.sites.models import Site
 from itertools import combinations
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm, SearchFAQForm
 from .models import *
@@ -397,6 +398,7 @@ class PaymentView(View):
                 payment = Payment()
                 payment.stripe_charge_id = charge['id']
                 payment.user = self.request.user
+                payment.timestamp = make_aware(datetime.now())
                 payment.amount = order.get_total()
                 payment.save()
 
@@ -601,6 +603,9 @@ class NewHomeView(View):
 
 class OrderSummaryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
+        login_url = '/accounts/login/'
+        redirect_field_name = 'from'
+        redirect_field_value = 'to'
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
         try:
@@ -812,6 +817,8 @@ class CategoryView(View):
         gdpr_check = check_gdpr_cookies(self)
         try:
             page, am_i = where_am_i_and_page(self)
+            print(page)
+            print(am_i)
             categoryquery = Category.objects.get(slug=am_i)
 
             # alter this to a set number of products and add pagination
@@ -848,7 +855,6 @@ class CategoryView(View):
                     if where != "no extras":
                         end_extras = True
                 else:
-                    page = int(page)
 
                     # query[offset:offset + limit]
                     start_point = (int(page) - 1) * aquire_index
@@ -864,37 +870,20 @@ class CategoryView(View):
                     if page < number_of_pages:
                         next_page = page + 1
                         previous_page = page - 1
-                        if(page_list[-1] == max_page):
-                            hasNext = False
-                        else:
-                            hasNext = True
-
-                        if(len(page_list) == max_page):
-                            hasPreivous = False
-                        else:
-                            hasPreivous = True
-
-                        pagination = {
-                            "has_previous": hasPreivous,
-                            "previous_page_number": previous_page,
-                            "number": page,
-                            "has_next": hasNext,
-                            "next_page_number": next_page
-                        }
+                        hasNext = True
                     else:
+                        next_page = page
+                        previous_page = page - 1
+                        hasNext = False
+                    hasPreivous = True
 
-                        if(len(page_list) == max_page):
-                            hasPreivous = False
-                        else:
-                            hasPreivous = True
-
-                        pagination = {
-                            "has_previous": hasPreivous,
-                            "previous_page_number": page - 1,
-                            "number": page,
-                            "has_next": False,
-                            "next_page_number": page
-                        }
+                    pagination = {
+                        "has_previous": hasPreivous,
+                        "previous_page_number": previous_page,
+                        "number": page,
+                        "has_next": hasNext,
+                        "next_page_number": next_page
+                    }
 
                 if where == "start":
                     end_extras = True
@@ -971,11 +960,10 @@ class FAQView(View):
             max_page = 0
             if(number_faqs > aquire_index):
                 # we only land here if we are on page one without a search and we have more FAQs than fit on one page
-                max_page = number_faqs/aquire_index
+                max_page = number_faqs / aquire_index
                 testM = int(max_page)
                 if(testM != max_page):
                     max_page = testM + 1
-
                 page_list, where = get_list_of_pages(1, int(max_page))
 
                 if(1 != max_page):
@@ -1206,7 +1194,7 @@ class FAQView(View):
         elif "SearchTerms" in self.request.POST.keys():
             # we are paginating a search this didnt start in the form
             search_terms = self.request.POST['SearchTerms']
-            page = self.request.POST['page']
+            page = int(self.request.POST['page'])
 
             # need to add language tests here at a later date
             theLanguage = LanguageChoices.objects.get(
@@ -1371,11 +1359,141 @@ class FAQView(View):
                 }
                 return render(self.request, "faq.html", context)
             else:
-                # put in searchless pagination
-                test = "test"
+                # GDPR check
+                gdpr_check = check_gdpr_cookies(self)
+
+                try:
+                    # need to add language tests here at a later date
+                    theLanguage = LanguageChoices.objects.get(
+                        language_short="swe")
+                    aquire_index = default_pagination_values
+                    number_faqs = FAQ.objects.filter(
+                        language=theLanguage).count()
+                    pagination = {}
+                    page_list = []
+                    is_paginated = False
+                    start_extras = False
+                    end_extras = False
+                    max_page = 0
+                    if(number_faqs > aquire_index):
+                        # we only land here if we are on page one without a search and we have more FAQs than fit on one page
+                        max_page = number_faqs / aquire_index
+                        testM = int(max_page)
+                        if(testM != max_page):
+                            max_page = testM + 1
+                        page_list, where = get_list_of_pages(1, int(max_page))
+
+                        if(1 != max_page):
+                            hasNext = False
+                        else:
+                            hasNext = True
+
+                        if page - 1 >= 1:
+                            previous = page - 1
+                        else:
+                            previous = page
+                        if page > 1:
+                            has_previous = True
+                        else:
+                            has_previous = False
+                        if page + 1 <= max_page:
+                            next = page + 1
+                        else:
+                            next = page
+                        pagination = {
+                            "has_previous": has_previous,
+                            "previous_page_number": previous,
+                            "number": page,
+                            "has_next": hasNext,
+                            "next_page_number": next
+                        }
+                        is_paginated = True
+                        try:
+                            if page - 1 < 1:
+                                faqs = FAQ.objects.filter(language=theLanguage)[
+                                    :aquire_index]
+                            else:
+                                offset = aquire_index * (page - 1)
+                                o_l = offset + aquire_index
+                                faqs = FAQ.objects.filter(language=theLanguage)[
+                                    offset:o_l]
+                        except ObjectDoesNotExist:
+                            message = get_message('error', 135)
+                            faqs = [
+                                {
+                                    "question": "Ett FAQ fel har uppstått:",
+                                    "answer": message,
+                                }
+                            ]
+
+                        if where != "no extras":
+                            end_extras = True
+
+                        if where == "start" or where == "mid":
+                            start_extras = True
+
+                        if max_page > 5 and where == "end":
+                            start_extras = True
+
+                    else:
+                        # we have less FAQs then we want from aquire index, so no pagination here and no need to do a specialised search
+                        try:
+                            faqs = FAQ.objects.filter(language=theLanguage)
+                        except ObjectDoesNotExist:
+                            message = get_message('error', 135)
+                            faqs = [
+                                {
+                                    "question": "Ett FAQ fel har uppstått:",
+                                    "answer": message,
+                                }
+                            ]
+
+                    try:
+                        searchForm = SearchFAQForm()
+                        aButtonType = ButtonType.objects.get(
+                            buttonType="search")
+                        searchButton = ButtonText.objects.filter(
+                            language=theLanguage, theButtonType=aButtonType)
+                    except ObjectDoesNotExist:
+                        message = get_message('error', 135)
+                        # flag it support
+                        searchForm = SearchFAQForm()
+                        searchButton = {"buttonText": "Search"}
+
+                except ObjectDoesNotExist:
+                    pagination = {}
+                    page_list = []
+                    is_paginated = False
+                    start_extras = False
+                    end_extras = False
+                    max_page = 0
+                    faqs = [
+                        {
+                            "question": "Ett språk fel har uppstått:",
+                            "answer": message,
+                        }
+                    ]
+                    searchForm = SearchFAQForm()
+                    searchButton = {"buttonText": "Search"}
+                comment = ""
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search': False,
+                    'faqs': faqs,
+                    "searchTerms": "",
+                    'searchForm': searchForm,
+                    "searchButton": searchButton,
+                    'is_paginated': is_paginated,
+                    'start_page': start_extras,
+                    'end_page': end_extras,
+                    'page_list': page_list,
+                    'max_page': max_page,
+                    'page_obj': pagination,
+                }
+                return render(self.request, "faq.html", context)
 
         else:
-
             try:
                 # need to add language tests here at a later date
                 theLanguage = LanguageChoices.objects.get(language_short="swe")

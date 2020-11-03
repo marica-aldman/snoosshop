@@ -1,8 +1,7 @@
-{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Hej,Detta email kommer från {{ site_name }}!
+{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Hej,Detta email kommer från Snoosshop!
 
-Du har fått detta email då en användare ({{ user_display }}) angivit denna emailadress på deras konto.
+Du har fått detta email då en användare angivit denna emailadress på deras konto.
 
 För att verifiera att detta är ditt konto klicka på följande länk {{ activate_url }}
 {% endblocktrans %}{% endautoescape %}
-{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Stort tack från {{ site_name }}!
-{{ site_domain }}{% endblocktrans %}
+Stort tack från Snoosshop!{% endblocktrans %}

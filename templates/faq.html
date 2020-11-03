@@ -47,6 +47,9 @@
             <form action="." method="POST" class="m-4">
                 {% csrf_token %}
                 <input type="hidden" name="SearchTerms" value="{{ searchTerms }}">
+                {% if has_previous %}
+                    <button type="submit" value="{{page_obj.previous_page_number}}" name="page" class="page-link"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></button>
+                {% endif %}
                 {% if start_page %}
                     <button type="submit" value="1" name="page" class="page-link"><span aria-hidden="true">1</span><span class="sr-only">1</span></button>
                     <button type="submit" value="previous" name="page" class="page-link" disabled><span aria-hidden="true">...</span><span class="sr-only">...</span></button>
@@ -68,7 +71,7 @@
                     <button type="submit" value="{{max_page}}" name="page" class="page-link"><span aria-hidden="true">{{max_page}}</span><span class="sr-only">{{max_page}}</span></button>
                 {% endif %}
                 {% if next_page %}
-                    <button type="submit" value="{{next}}" name="page" class="page-link"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></button>
+                    <button type="submit" value="{{page_obj.next_page_number}}" name="page" class="page-link"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></button>
                 {% endif %}
             </form>
         </div>

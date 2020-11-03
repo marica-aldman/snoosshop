@@ -233,62 +233,62 @@ def get_message(theType, theCode):
 
 
 def get_list_of_pages(selected_page, max_page):
-
     i = 1
-    max_number = default_pagination_values
     page_list = []
     where = "unset"
-
+    # if we are on the first page list the first 5 if there are that many and note if there are that many or more
     if(selected_page == 1):
-        if (selected_page + max_number > max_page):
-            max_number = max_page
-
-        while i <= max_number:
+        end = 5
+        if max_page < 5:
+            end = max_page
+        while i <= end:
             page_list.append(i)
             i += 1
 
-        if (max_number <= 5):
+        if (max_page <= end):
             where = "no extras"
         else:
             where = "start"
-
         return page_list, where
-
+    # if selected page is the end page make a list from 5 less up and mark it as end if 5 less isnt 1 or lower
     elif (selected_page == max_page):
+        i = max_page - 5
 
-        i = max_page - (max_number - 1)
-        if (i >= 1):
-            while i <= max_page:
-                page_list.append(i)
-                i += 1
+        if i < 1:
+            i = 1
 
             where = "no extras"
         else:
-            i = 1
-            while i <= max_page:
-                page_list.append(i)
-                i += 1
             where = "end"
 
+        while i <= max_page:
+            page_list.append(i)
+            i += 1
+
         return page_list, where
 
-    elif (selected_page - 2 <= 1):
-        # here we have less than 5 pages but still pagination or we are situated close to the start (ex page 2)
+    # if  we are close to 1 but not far enough away to make a 1 ..  n n n n n n .. max
+    elif (selected_page - 3 <= 1):
+        # basically we have pagination and selected page is nr 2 3 or 4
 
-        if (max_page <= max_number):
+        if (max_page <= 5):
             # 5 pages or less
-            max_number = max_page
 
-            while i <= max_number:
+            while i <= max_page:
                 page_list.append(i)
                 i += 1
 
             where = "no extras"
+            # this creates maximum 1 2 3 4 5
 
         else:
-            # max pages more than max_number but close to the edge
+            # more pages than 5 ( 1 2 3 4 5 or 2 3 4 5 6 )
+            end = 5
+            if selected_page == 4:
+                i = 2
+                end = 6
 
-            while i <= max_number:
+            while i <= end:
                 page_list.append(i)
                 i += 1
 
@@ -296,12 +296,12 @@ def get_list_of_pages(selected_page, max_page):
 
         return page_list, where
 
-    elif (selected_page + 2 >= max_page):
-        # if we have less than 5 pages we wont be here  just create and edge list
+    # if max pages is more than 5 and we are close to max but not far enough away to make a 1 ..  n n n n n n .. max
+    elif (selected_page + 3 >= max_page):
 
         where = "end"
 
-        i = max_page - (max_number - 1)
+        i = max_page - 4
 
         while i <= max_page:
             page_list.append(i)
@@ -318,12 +318,7 @@ def get_list_of_pages(selected_page, max_page):
             page_list.append(i)
             i += 1
 
-        if i == 1:
-            where = "start"
-        elif max_number == max_page:
-            where = "end"
-        else:
-            where = "mid"
+        where = "mid"
 
         return page_list, where
 
@@ -334,11 +329,9 @@ def calculate_total_order(order):
     all_items = order.items.all()
 
     for i in all_items:
-        print(i.total_price)
         total = total + i.total_price
 
     if(order.freight):
-        print("in calculate with freight")
         freight = int(order.freight.amount)
 
         total = total + freight

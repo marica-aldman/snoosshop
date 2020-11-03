@@ -4,7 +4,7 @@
 
 <!--orders-->
 <!--active-->
-<div class="container">
+<div class="container" style="margin: 0">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
@@ -21,50 +21,49 @@
         </div>
     </form>
 
-    <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'">
+    <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'" style="max-width: 100%; display: flex; flex-direction: column; align-items: center">
         {% csrf_token %}
-        <div class="row border border-warning" >
-            <h1>Order {{order.id}}</h1>
-            <table class="table-striped table-hover w-100  mb-2">
-                <thead>
-                    <tr>
-                        <th>
-                            Order Ref
-                        </th>
-                        <th>
+        <div style="max-width: 100%">
+            <h1>Order {{order.id}}</h1> 
+            <h4>{{ order.ref_code }}</h4>
+            <table class="table-striped table-hover mb-2" style="max-width: 100%; margin-left: 0;">
+                <thead style="max-width: 100%;">
+                    <tr style="max-width: 100%;">
+                        <th style="max-width: 24%">
                             Beställd
                         </th>
-                        <th>
+                        <th style="max-width: 24%">
                             Status
                         </th>
-                        <th>
+                        {% if comment != "" %}
+                        <th style="max-width: 24%">
                             Kommentar
                         </th>
-                        <th>
+                        {% endif %}
+                        <th style="max-width: 24%">
                             Ändra
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
-                            {{ order.ref_code }}
-                        </td>
-                        <td>
+                    <tr style="max-width: 100%">
+                        <td style="font-size:12px">
                             {{ order.ordered_date }}
                         </td>
-                        <td>
+                        <td style="font-size:12px">
                             {% if order.being_delivered %}
                                 Skickad
                             {% else %}
                                 Under behandling
                             {% endif %}
                         </td>
-                        <td>
+                        {% if comment != "" %}
+                        <td style="font-size:2vw">
                             {{ comment }}
                         </td>
-                        <td>
-                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary' {% if not_same_person %}disabled{%endif%}>
+                        {% endif %}
+                        <td  style="max-width: 18%">
+                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary' {% if not_same_person %}disabled{%endif%} style="padding:1px; max-width: 50%">
                                 Markera som skickad
                             </button>
                         </td>
@@ -75,9 +74,9 @@
         </div>
 
         <!--recently completed-->
-        <div class="row border border-dark">
-            <h1>Order delar</h1>
-            <table class="table-striped table-hover w-100  mb-2">
+        <div class="border border-dark" style="width: 75%;">
+            <h1 style="width: 100%">Order delar</h1>
+            <table class="table-striped table-hover mb-2" style="width: 100%">
                 <thead>
                     <tr>
                         <th>

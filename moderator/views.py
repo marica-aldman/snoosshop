@@ -3241,43 +3241,60 @@ class CouponsView(LoginRequiredMixin, View):
         gdpr_check = check_gdpr_cookies(self)
         path = self.request.get_full_path()
         is_post = False
+        limit = default_pagination_values
         # get the 20 first current freights
-        coupons = Coupon.objects.all().order_by('code')[:20]
+        coupons = Coupon.objects.all().order_by('code')[:limit]
         number_of_coupons = Coupon.objects.all().count()
 
         c_pages = 1
 
-        if number_of_coupons > 20:
-            # if there are more we divide by 20
-            c_pages = number_of_coupons / 20
+        if number_of_coupons > limit:
+            # if there are more we divide by the limit
+            c_pages = number_of_coupons / limit
             # see if there is a decimal
             testC = int(c_pages)
-            # if there isn't an even number of ten make an extra page for the last group
+            # if there isn't an even number make an extra page for the last group
             if testC != c_pages:
                 c_pages = int(c_pages)
                 c_pages += 1
             if type(c_pages) != "int":
-                f_pages = int(c_pages)
+                c_pages = int(c_pages)
+
+        # set current page, search type and search_value to start values
+        current_page = 1
+        search_type = "None"
+        search_value = ""
 
         # create a list for a ul to work through
 
-        more_coupons = []
+        more_coupons, where = get_list_of_pages(1, c_pages)
 
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(c_pages):
-            i += 1
-            more_coupons.append({'number': i})
+        # pagination booleans
+
+        if current_page == 1 or where == "no extras":
+            start = False
+        else:
+            start = True
+
+        if current_page == c_pages or where == "no extras":
+            end = False
+        else:
+            end = True
+
+        if current_page < c_pages:
+            next_page = True
+        else:
+            next_page = False
+
+        if current_page > 1:
+            previous_page = True
+        else:
+            previous_page = False
 
         # make an empty coupon for the new form
         coupon = Coupon()
         # search form
         form = searchCouponForm()
-
-        # set current page, search type and search_value to start values
-        current_page = 1
-        search_type = "None"
-        search_value = "None"
 
         onSubmit = get_message('warning', 7)
 
@@ -3292,6 +3309,10 @@ class CouponsView(LoginRequiredMixin, View):
             'more_coupons': more_coupons,
             'max_pages': c_pages,
             'onSubmit': onSubmit,
+            'previous_page': previous_page,
+            'next_page': next_page,
+            'end': end,
+            'start': start,
         }
 
         return render(self.request, "moderator/mod_coupons.html", context)
@@ -3299,6 +3320,7 @@ class CouponsView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        limit = default_pagination_values
         if 'delete' in self.request.POST.keys():
             # delete coupon
             # get id
@@ -3310,42 +3332,60 @@ class CouponsView(LoginRequiredMixin, View):
             messages.info(self.request, info_message)
             return redirect("moderator:coupons")
         elif 'previousPage' in self.request.POST.keys():
-            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
-                search_type = int(self.request.POST['search_type'])
-                search_value = int(self.request.POST['search_value'])
+            if 'search' in self.request.POST.keys() and 'searchValue' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = self.request.POST['search']
+                search_value = self.request.POST['searchValue']
                 current_page = int(self.request.POST['current_page'])
 
                 if current_page >= 2:
-                    # get the right 20 coupons
+                    # get the coupons
                     current_page -= 1
-                    offset = current_page
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
                     coupons = Coupon.objects.all().order_by('code')[
-                        20:offset]
+                        offset:o_l]
                     number_of_coupons = Coupon.objects.all().count()
 
                     c_pages = 1
 
-                    if number_of_coupons > 20:
-                        # if there are more we divide by 20
-                        c_pages = number_of_coupons / 20
+                    if number_of_coupons > limit:
+                        # if there are more we divide by the limit
+                        c_pages = number_of_coupons / limit
                         # see if there is a decimal
                         testO = int(c_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
+                        # if there isn't an even number make an extra page for the last group
                         if testO != c_pages:
                             c_pages = int(c_pages)
                             c_pages += 1
                         if type(c_pages) != "int":
-                            f_pages = int(c_pages)
+                            c_pages = int(c_pages)
 
                     # create a list for a ul to work through
 
-                    more_coupons = []
+                    more_coupons, where = get_list_of_pages(
+                        current_page, c_pages)
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(c_pages):
-                        i += 1
-                        more_coupons.append({'number': i})
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == c_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if current_page < c_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
 
                     # make an empty coupon for the new form
                     coupon = Coupon()
@@ -3364,38 +3404,60 @@ class CouponsView(LoginRequiredMixin, View):
                         'more_coupons': more_coupons,
                         'max_pages': c_pages,
                         'onSubmit': onSubmit,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
                     }
 
                     return render(self.request, "moderator/mod_coupons.html", context)
                 if current_page == 1:
                     # this shouldnt happen but to make sure
-                    # get the right 20 coupons
-                    coupons = Coupon.objects.all().order_by('code')[:20]
+                    # get the coupons
+                    coupons = Coupon.objects.all().order_by('code')[:limit]
                     number_of_coupons = Coupon.objects.all().count()
 
                     c_pages = 1
 
-                    if number_of_coupons > 20:
-                        # if there are more we divide by 20
-                        c_pages = number_of_coupons / 20
+                    if number_of_coupons > limit:
+                        # if there are more we divide by limit
+                        c_pages = number_of_coupons / limit
                         # see if there is a decimal
                         testO = int(c_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
+                        # if there isn't an even number make an extra page for the last group
                         if testO != c_pages:
                             c_pages = int(c_pages)
                             c_pages += 1
                         if type(c_pages) != "int":
-                            f_pages = int(c_pages)
+                            c_pages = int(c_pages)
 
                     # create a list for a ul to work through
 
-                    more_coupons = []
+                    # create a list for a ul to work through
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(c_pages):
-                        i += 1
-                        more_coupons.append({'number': i})
+                    more_coupons, where = get_list_of_pages(1, c_pages)
+
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == c_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if current_page < c_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
 
                     # make an empty coupon for the new form
                     coupon = Coupon()
@@ -3414,18 +3476,22 @@ class CouponsView(LoginRequiredMixin, View):
                         'more_coupons': more_coupons,
                         'max_pages': c_pages,
                         'onSubmit': onSubmit,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
                     }
 
                     return render(self.request, "moderator/mod_coupons.html", context)
 
             else:
                 messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                    self.request, "5 Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:overview")
         elif 'page' in self.request.POST.keys():
-            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
-                search_type = int(self.request.POST['search_type'])
-                search_value = int(self.request.POST['search_value'])
+            if 'search' in self.request.POST.keys() and 'searchValue' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+                search_type = self.request.POST['search']
+                search_value = self.request.POST['searchValue']
                 current_page = int(self.request.POST['current_page'])
                 page = int(self.request.POST['page'])
 
@@ -3435,30 +3501,47 @@ class CouponsView(LoginRequiredMixin, View):
 
                 c_pages = 1
 
-                if number_of_coupons > 20:
-                    # if there are more we divide by 20
-                    c_pages = number_of_coupons / 20
+                if number_of_coupons > limit:
+                    # if there are more we divide by limit
+                    c_pages = number_of_coupons / limit
                     # see if there is a decimal
                     testO = int(c_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
+                    # if there isn't an even number make an extra page for the last group
                     if testO != c_pages:
                         c_pages = int(c_pages)
                         c_pages += 1
                     if type(c_pages) != "int":
-                        f_pages = int(c_pages)
+                        c_pages = int(c_pages)
 
                 if page == 1:
                     coupons = Coupon.objects.all().order_by('code')[
-                        :20]
+                        :limit]
+
                     # create a list for a ul to work through
 
-                    more_coupons = []
+                    more_coupons, where = get_list_of_pages(1, c_pages)
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(c_pages):
-                        i += 1
-                        more_coupons.append({'number': i})
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == c_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if current_page < c_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
 
                     # make an empty coupon for the new form
                     coupon = Coupon()
@@ -3477,20 +3560,48 @@ class CouponsView(LoginRequiredMixin, View):
                         'more_coupons': more_coupons,
                         'max_pages': c_pages,
                         'onSubmit': onSubmit,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
                     }
 
                     return render(self.request, "moderator/mod_coupons.html", context)
-                elif page > c_pages:
+
+                if page > c_pages:
                     page = c_pages
 
-                # get the right 20 coupons
-                offset = page
+                # get the coupons
+                offset = limit * (page - 1)
+                o_l = offset + limit
                 coupons = Coupon.objects.all().order_by('code')[
-                    20:offset]
+                    offset:o_l]
 
                 # create a list for a ul to work through
 
-                more_coupons = []
+                more_coupons, where = get_list_of_pages(page, c_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 i = 0
                 # populate the list with the amount of pages there are
@@ -3517,19 +3628,24 @@ class CouponsView(LoginRequiredMixin, View):
                     'more_coupons': more_coupons,
                     'max_pages': c_pages,
                     'onSubmit': onSubmit,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_coupons.html", context)
 
             else:
                 messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                    self.request, "4 Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:overview")
         elif 'nextPage' in self.request.POST.keys():
-            if 'search_type' in self.request.POST.keys() and 'search_value' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
+            print(self.request.POST.keys())
+            if 'search' in self.request.POST.keys() and 'searchValue' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
 
-                search_type = int(self.request.POST['search_type'])
-                search_value = int(self.request.POST['search_value'])
+                search_type = self.request.POST['search']
+                search_value = self.request.POST['searchValue']
                 current_page = int(self.request.POST['current_page'])
 
                 # first we need the max amount of pages
@@ -3538,34 +3654,51 @@ class CouponsView(LoginRequiredMixin, View):
 
                 c_pages = 1
 
-                if number_of_coupons > 20:
-                    # if there are more we divide by 20
-                    c_pages = number_of_coupons / 20
+                if number_of_coupons > limit:
+                    # if there are more we divide by limit
+                    c_pages = number_of_coupons / limit
                     # see if there is a decimal
                     testO = int(c_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
+                    # if there isn't an even number make an extra page for the last group
                     if testO != c_pages:
                         c_pages = int(c_pages)
                         c_pages += 1
                     if type(c_pages) != "int":
-                        f_pages = int(c_pages)
+                        c_pages = int(c_pages)
 
                 if current_page < c_pages:
                     current_page += 1
 
-                offset = current_page
+                offset = limit * (current_page - 1)
+                o_l = offset + limit
                 coupons = Coupon.objects.all().order_by('code')[
-                    20:offset]
+                    offset:o_l]
 
                 # create a list for a ul to work through
 
-                more_coupons = []
+                more_coupons, where = get_list_of_pages(current_page, c_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(c_pages):
-                    i += 1
-                    more_coupons.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 # make an empty coupon for the new form
                 coupon = Coupon()
@@ -3586,15 +3719,18 @@ class CouponsView(LoginRequiredMixin, View):
                     'more_coupons': more_coupons,
                     'max_pages': c_pages,
                     'onSubmit': onSubmit,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_coupons.html", context)
             else:
                 messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                    self.request, "3 Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:overview")
         elif 'search' in self.request.POST.keys():
-            # get the 20 first current coupons
             if 'code' in self.request.POST.keys():
                 code = self.request.POST['code']
                 if code == "":
@@ -3602,7 +3738,7 @@ class CouponsView(LoginRequiredMixin, View):
                     return redirect("moderator:coupons")
                 coupons = Coupon.objects.filter(code=code)
                 c_pages = 1
-                more_coupons = [{'number': 1}]
+                more_coupons = [1]
 
                 # make an empty coupon for the new form
                 coupon = Coupon()
@@ -3613,6 +3749,28 @@ class CouponsView(LoginRequiredMixin, View):
                 search_type = "code"
                 search_value = code
                 onSubmit = get_message('warning', 7)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 context = {
                     'gdpr_check': gdpr_check,
@@ -3625,16 +3783,20 @@ class CouponsView(LoginRequiredMixin, View):
                     'more_coupons': more_coupons,
                     'max_pages': c_pages,
                     'onSubmit': onSubmit,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_coupons.html", context)
             else:
                 messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                    self.request, "1 Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:overview")
         else:
             messages.warning(
-                self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                self.request, "2 Något gick fel. Om detta återupprepas kontakta IT supporten.")
             return redirect("moderator:overview")
 
 
@@ -3820,14 +3982,14 @@ class FAQsView(LoginRequiredMixin, View):
 
             current_page = 1
             search_type = "None"
-            search_value = "None"
+            search_value = ""
 
             more_faqs = []
-            c_faqs = len(faqs)
+            c_faqs = FAQ.objects.all().count()
             d_faqs = 1
             if c_faqs > limit:
                 # if there are more we divide by the limit
-                d_faqs = c_faqs/limit
+                d_faqs = c_faqs / limit
                 # see if there is a decimal
                 testF = int(d_faqs)
                 # if there isn't an even number of ten make an extra page for the last group
@@ -3836,12 +3998,26 @@ class FAQsView(LoginRequiredMixin, View):
                 if type(testF) != type(d_faqs):
                     d_faqs = int(d_faqs)
 
-            i = 0
             # populate the list with the amount of pages there are
+            more_faqs, where = get_list_of_pages(1, d_faqs)
+            # some booleans to mark where we are in the pagination
 
-            for i in range(d_faqs):
-                i += 1
-                more_faqs.append({'number': i})
+            start = False
+
+            if current_page == 1:
+                previous_page = False
+            else:
+                previous_page = True
+
+            if where == "start":
+                end = True
+            else:
+                end = False
+
+            if current_page == d_faqs:
+                next_page = False
+            else:
+                next_page = True
 
             # for the new button
             empty_faq = FAQ()
@@ -3860,6 +4036,10 @@ class FAQsView(LoginRequiredMixin, View):
                 'current_page': current_page,
                 'more_faqs': more_faqs,
                 'max': d_faqs,
+                'start': start,
+                'previous_page': previous_page,
+                'end': end,
+                'next_page': next_page,
                 'empty_faq': empty_faq,
             }
 
@@ -3911,12 +4091,16 @@ class FAQsView(LoginRequiredMixin, View):
             search = self.request.POST['search']
             form = SearchFAQForm(self.request.POST)
             current_page = 1
-            more_faqs = [{'number': 1}]
             d_faqs = 1
             if search == "None":
                 if 'paging' in self.request.POST.keys():
+                    try:
+                        searchForm = SearchFAQForm()
+                        searchForm.language(theLanguage)
+                    except ObjectDoesNotExist:
+                        searchForm = SearchFAQForm()
                     search_type = "None"
-                    search_value = "None"
+                    search_value = ""
                     # we're paging not searching
                     previous_page = int(self.request.POST['current_page'])
                     # GDPR check
@@ -3977,13 +4161,6 @@ class FAQsView(LoginRequiredMixin, View):
                         if type(testF) != type(d_faqs):
                             d_faqs = int(d_faqs)
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-
-                    for i in range(d_faqs):
-                        i += 1
-                        more_faqs.append({'number': i})
-
                     if 'nextPage' in self.request.POST.keys():
                         if previous_page < d_faqs and previous_page > 0:
                             current_page = previous_page + 1
@@ -4032,10 +4209,32 @@ class FAQsView(LoginRequiredMixin, View):
                     else:
                         # something is off redirect
                         return redirect("moderator:faqs")
+
+                    # populate the list with the amount of pages there are# populate the list with the amount of pages there are
+                    more_faqs, where = get_list_of_pages(1, d_faqs)
+                    # some booleans to mark where we are in the pagination
+
+                    start = False
+
+                    if current_page == 1:
+                        previous_page = False
+                    else:
+                        previous_page = True
+
+                    if where == "start":
+                        end = True
+                    else:
+                        end = False
+
+                    if current_page == d_faqs:
+                        next_page = False
+                    else:
+                        next_page = True
+
                     context = {
                         'gdpr_check': gdpr_check,
-                        'searchform': form,
-                        'search': True,
+                        'searchform': searchForm,
+                        'search': False,
                         'search_type': search_type,
                         'search_value': search_value,
                         'FAQS': faqs,
@@ -4046,6 +4245,10 @@ class FAQsView(LoginRequiredMixin, View):
                         'current_page': current_page,
                         'more_faqs': more_faqs,
                         'max': d_faqs,
+                        'start': start,
+                        'previous_page': previous_page,
+                        'end': end,
+                        'next_page': next_page,
                         'empty_faq': empty_faq,
                     }
                     return render(self.request, "moderator/mod_faqs.html", context)
@@ -4064,10 +4267,31 @@ class FAQsView(LoginRequiredMixin, View):
                                 faqs = []
                             search_type = "searchID"
                             search_value = searchID
+                            more_faqs, where = get_list_of_pages(
+                                current_page, d_faqs)
+                            # some booleans to mark where we are in the pagination
+
+                            start = False
+
+                            if current_page == 1:
+                                previous_page = False
+                            else:
+                                previous_page = True
+
+                            if where == "start":
+                                end = True
+                            else:
+                                end = False
+
+                            if current_page == d_faqs:
+                                next_page = False
+                            else:
+                                next_page = True
+
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4078,6 +4302,10 @@ class FAQsView(LoginRequiredMixin, View):
                                 'current_page': current_page,
                                 'more_faqs': more_faqs,
                                 'max': d_faqs,
+                                'start': start,
+                                'previous_page': previous_page,
+                                'end': end,
+                                'next_page': next_page,
                                 'empty_faq': empty_faq,
                             }
                         elif searchTerm != None:
@@ -4088,10 +4316,31 @@ class FAQsView(LoginRequiredMixin, View):
                                 faqs = []
                             search_type = "searchTerm"
                             search_value = searchTerm
+
+                            more_faqs, where = get_list_of_pages(
+                                current_page, d_faqs)
+                            # some booleans to mark where we are in the pagination
+
+                            start = False
+
+                            if current_page == 1:
+                                previous_page = False
+                            else:
+                                previous_page = True
+
+                            if where == "start":
+                                end = True
+                            else:
+                                end = False
+
+                            if current_page == d_faqs:
+                                next_page = False
+                            else:
+                                next_page = True
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4102,6 +4351,10 @@ class FAQsView(LoginRequiredMixin, View):
                                 'current_page': current_page,
                                 'more_faqs': more_faqs,
                                 'max': d_faqs,
+                                'start': start,
+                                'previous_page': previous_page,
+                                'end': end,
+                                'next_page': next_page,
                                 'empty_faq': empty_faq,
                             }
                         else:
@@ -4133,7 +4386,7 @@ class FAQsView(LoginRequiredMixin, View):
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4142,8 +4395,12 @@ class FAQsView(LoginRequiredMixin, View):
                                 'deleteButton': deleteButton,
                                 'comment': comment,
                                 'current_page': current_page,
-                                'more_faqs': more_faqs,
+                                'more_faqs': [1],
                                 'max': d_faqs,
+                                'start': False,
+                                'previous_page': False,
+                                'end': False,
+                                'next_page': False,
                                 'empty_faq': empty_faq,
                             }
                         elif searchTerm != None:
@@ -4157,7 +4414,7 @@ class FAQsView(LoginRequiredMixin, View):
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4166,8 +4423,12 @@ class FAQsView(LoginRequiredMixin, View):
                                 'deleteButton': deleteButton,
                                 'comment': comment,
                                 'current_page': current_page,
-                                'more_faqs': more_faqs,
+                                'more_faqs': [1],
                                 'max': d_faqs,
+                                'start': False,
+                                'previous_page': False,
+                                'end': False,
+                                'next_page': False,
                                 'empty_faq': empty_faq,
                             }
                         else:
@@ -4202,7 +4463,7 @@ class FAQsView(LoginRequiredMixin, View):
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4211,11 +4472,15 @@ class FAQsView(LoginRequiredMixin, View):
                                 'deleteButton': deleteButton,
                                 'comment': comment,
                                 'current_page': current_page,
-                                'more_faqs': more_faqs,
+                                'more_faqs': [1],
                                 'max': d_faqs,
+                                'start': False,
+                                'previous_page': False,
+                                'end': False,
+                                'next_page': False,
                                 'empty_faq': empty_faq,
                             }
-                        elif searchTerm != None:
+                        elif searchTerm != "":
                             try:
                                 faqs = FAQ.objects.filter(
                                     Q(subject__contains=searchTerm) | Q(content__contains=searchTerm))
@@ -4226,7 +4491,7 @@ class FAQsView(LoginRequiredMixin, View):
                             context = {
                                 'gdpr_check': gdpr_check,
                                 'searchform': form,
-                                'search': True,
+                                'search': False,
                                 'search_type': search_type,
                                 'search_value': search_value,
                                 'FAQS': faqs,
@@ -4235,8 +4500,12 @@ class FAQsView(LoginRequiredMixin, View):
                                 'deleteButton': deleteButton,
                                 'comment': comment,
                                 'current_page': current_page,
-                                'more_faqs': more_faqs,
+                                'more_faqs': [1],
                                 'max': d_faqs,
+                                'start': False,
+                                'previous_page': False,
+                                'end': False,
+                                'next_page': False,
                                 'empty_faq': empty_faq,
                             }
                         else:

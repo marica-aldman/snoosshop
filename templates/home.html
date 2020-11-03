@@ -126,6 +126,14 @@
           </li>
           {% endif %}
 
+          {% if page_obj.number == 4 %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">1
+              <span class="sr-only">1</span>
+            </a>
+          </li>
+          {% endif %}
+
           {% for p in page_list %}
             {% if p == page_obj.number %}
           <li class="page-item active">
