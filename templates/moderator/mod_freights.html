@@ -18,7 +18,7 @@
                     Varning: Frakt ej funnen i vald typ
                 </div>
             {% endif %}
-            <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-around flex-wrap">
                 <div class="d-flex align-self-center">
                     <div>
                     {{form.freight_type.label}} {{form.freight_type}}
@@ -96,13 +96,13 @@
                         <form method="POST" action="{{a_freight.get_absolute_url_moderator}}">
                             {% csrf_token %}
                             <input type="hidden" name="freight_type" value="current">
-                            <button type="submit" value="{{a_freight.id}}" name="see" class='btn btn-primary'>
+                            <button type="submit" value="{{a_freight.id}}" name="see" class='btn btn-primary' style="padding: 5px">
                                 Se
                             </button>
                         </form>
                     </td>
                     <td>
-                        <div class="btn btn-success float-right">
+                        <div class="btn btn-success float-right" style="padding: 5px">
                             Aktiv
                         </div>
                     </td>

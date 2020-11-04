@@ -20,47 +20,50 @@
         {% for title in theTitle %}
             <h3>{{title.text}}</h3>
         {% endfor %}
-        <form method="POST" action=".">
+        <form method="POST" action="." style="max-width: 100%">
             {% csrf_token %}
-            <table class="table-striped table-hover w-100  mb-2 table-bordered">
-                <tbody>
-                    <tr>
-                        <td>
-                            <table class="table-striped table-hover w-100  mb-2 table-bordered">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            {{form.description.label}}
-                                        </td>
-                                        <td>
-                                            {{ form.description }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            Fråga
-                                        </td>
-                                        <td>
-                                            {{ form.subject }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            Svar
-                                        </td>
-                                        <td>
-                                            {{ form.content }}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+            <table class="table-striped table-hover mb-2 table-bordered" style="max-width: 100%">
+                <tbody style="max-width: 100%">
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            {{form.description.label}}
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            {{ form.description }}
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            Fråga
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            {{ form.subject }}
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            Svar
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            {{ form.content }}
+                        </td>
+                    </tr>
+                    <tr style="max-width: 100%">
+                        <td style="max-width: 100%">
+                            
+                            {% for button in saveButton %}
+                            <button type='submit' class='btn btn-primary' id="save" name="saveFAQ">{{button.buttonText}}</button>
+                            {% endfor %}
                         </td>
                     </tr>
                 </tbody>
             </table>
-        {% for button in saveButton %}
-            <button type='submit' class='btn btn-primary' id="save" name="saveFAQ">{{button.buttonText}}</button>
-        {% endfor %}
         </form>
     </div>
 </div>

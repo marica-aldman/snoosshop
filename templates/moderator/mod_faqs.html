@@ -14,7 +14,7 @@
             <input type="hidden" value="search" name="newSearch">
             <input type="hidden" value="{{current_page}}" name="current_page">
             <input type="hidden" name="search" value="{{search_type}}">
-            <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-around flex-wrap">
                 <div>
                     {{searchform.searchID.label}} {{searchform.searchID}}
                 </div>
@@ -42,9 +42,6 @@
                         FAQ ID
                     </th>
                     <th>
-                        Språk
-                    </th>
-                    <th>
                         Beskrivning
                     </th>
                     <th>
@@ -62,15 +59,12 @@
                         {{ faq.id }}
                     </td>
                     <td>
-                        {{ faq.language }}
-                    </td>
-                    <td>
                         {{ faq.description }}
                     </td>
                     <td>
                         <form method="POST" action="{{ faq.get_absolute_url_moderator }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary'>
+                            <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary' style="padding: 5px">
                                 Se FAQ
                             </button>
                         </form>
@@ -79,7 +73,7 @@
                         <form method="POST" action="{{ empty_faq.get_absolute_url_moderator_delete }}"  class="w-100">
                             {% csrf_token %}
                             {% for abutton in deleteButton %}
-                                <button type='submit' class='btn btn-primary' name="deleteFAQ" value="{{faq.id}}">{{abutton.buttonText}}</button>
+                                <button type='submit' class='btn btn-primary' name="deleteFAQ" value="{{faq.id}}" style="padding: 5px">{{abutton.buttonText}}</button>
                             {% endfor %}
                         </form>
                     </td>

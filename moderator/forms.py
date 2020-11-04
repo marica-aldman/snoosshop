@@ -310,6 +310,10 @@ class UpdateFAQ(forms.ModelForm):
             {'value': faq.description})
         self.fields['description'].widget.attrs.update(
             {'class': 'p-2', "readonly": 'readonly'})
+        self.fields['subject'].widget.attrs.update(
+            {'style': 'max-width: 85%'})
+        self.fields['content'].widget.attrs.update(
+            {'style': 'max-width: 85%'})
 
     def updateFromPost(self, aLanguage, faq, *arg):
         # correct description label and add fields for subject and content labels so we can get the right language)

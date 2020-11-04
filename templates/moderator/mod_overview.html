@@ -40,7 +40,7 @@
                             <td>
                                 <form method="POST" action="{{order.get_absolute_url_moderator}}">
                                     {% csrf_token %}
-                                    <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                                    <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary' style="padding: 5px">
                                         Se order
                                     </button>
                                 </form>
