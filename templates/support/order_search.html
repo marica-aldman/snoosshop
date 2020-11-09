@@ -21,7 +21,11 @@
                     Orderid: {{form.order_id|as_crispy_field}}
                 </div>
                 <div>
+                {% if paging_search %}
+                    Kundid: <input type="number" name="user_id" class="numberinput form-control" id="id_user_id" value="{{search_value}}">
+                {% else %}
                     Kundid: {{form.user_id|as_crispy_field}}
+                {% endif %}
                 </div>
                 <div>
                     <button type="submit" name="search" class='btn btn-primary mt-3' value="True">Sök</button>
@@ -50,22 +54,21 @@
                 </tr>
             </thead>
             <tbody>
-    {% if multiple %}
         {% for order in orders %}
                 <tr>
                     <td>
-                        {{ order.ref_code }} {{ order.id}}
+                        {{ order.ref_code }}
                     </td>
                     <td>
                         {{ order.ordered_date }}
                     </td>
                     <td>
-                        {% if order.refund_granted%}
+                        {% if order.refund_granted %}
                             Återbetalning godkänd
                         {% elif order.returned %}
                             Order returnerad
-                        {% elif order.refund_granted%}
-                            Återbetalning godkänd
+                        {% elif order.refund_requested and order.returned_flag %}
+                            Återbetalning begärd och påväg i retur
                         {% elif order.refund_requested %}
                             Återbetalning begärd
                         {% elif order.returned_flag %}
@@ -88,86 +91,104 @@
                     </td>
                 </tr>
         {% endfor %}
-    {% else %}
-                <tr>
-                    <td>
-                        {{ order.ref_code }}
-                    </td>
-                    <td>
-                        {{ order.ordered_date }}
-                    </td>
-                    <td>
-                        {% if order.refund_granted%}
-                            Återbetalning godkänd
-                        {% elif order.returned %}
-                            Order returnerad
-                        {% elif order.refund_granted%}
-                            Återbetalning godkänd
-                        {% elif order.refund_requested %}
-                            Återbetalning begärd
-                        {% elif order.returned_flag %}
-                            Order påväg i retur
-                        {% elif order.being_delivered %}
-                            Skickad
-                        {% elif order.being_read %}
-                            Packas
-                        {% else %}
-                            Underbehandling
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ order.get_absolute_url_support }}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
-                                Se order
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-    {% endif %}
             </tbody>
         </table>
     </div>
 
-
     <div class="d-flex w-100 justify-content-around">
         <ul class="pagination">
+            {% if previous_page %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
-                        <
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="True" name="previousPage" class="page-link">
+                        &laquo;
                     </button>
                 </form>
             </li>
-            {% for order in more_orders %}
-            <li class="page-item">
+            {% endif %}
+            {% if start %}
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ order.number }}" name="page" {% if current_page == order.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{order.number}}
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link">
+                        1
+                    </button>
+                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                        ...
+                    </button>
+                </form>
+            {% endif %}
+            {% if current_page == 4 %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link">
+                        1
+                    </button>
+                </form>
+            {% endif %}
+            {% for order in more_orders %}
+                {%if current_page == faq %}
+            <li class="page-item active">
+                {% else %}
+            <li class="page-item">
+                {% endif %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="{{ order }}" name="page" {% if current_page == order %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{order}}<span class="sr-only">(current)</span>
                     </button>
                 </form>
             </li>
             {% endfor %}
+            {% if end %}
+                <form method="POST">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                        ...
+                    </button>
+                    <button type="submit" value="{{max_pages}}" name="page" class="page-link">
+                        {{max_pages}}
+                    </button>
+                </form>
+            {% endif %}
+            {% if next_page %}
             <li class="page-item">
                 <form method="POST">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
-                        >
+                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" name="searchValue" value="{{search_value}}">
+                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
+                    &raquo;
                     </button>
                 </form>
             </li>
+            {% endif %}
         </ul>
 
     </div>
+
 </div>
 
 

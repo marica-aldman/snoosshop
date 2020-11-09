@@ -245,7 +245,7 @@ def get_list_of_pages(selected_page, max_page):
             page_list.append(i)
             i += 1
 
-        if (max_page <= end):
+        if max_page <= end + 1:
             where = "no extras"
         else:
             where = "start"
@@ -254,12 +254,13 @@ def get_list_of_pages(selected_page, max_page):
     elif (selected_page == max_page):
         i = max_page - 5
 
-        if i < 1:
+        if i <= 1:
             i = 1
 
             where = "no extras"
         else:
-            where = "end"
+            if i > 2:
+                where = "end"
 
         while i <= max_page:
             page_list.append(i)

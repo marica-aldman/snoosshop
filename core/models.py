@@ -265,6 +265,8 @@ class OrderItem(models.Model):
     cancel_handled = models.BooleanField(default=False)
     refund_flag = models.BooleanField(default=False)
     refund = models.BooleanField(default=False)
+    removed_from_order = models.BooleanField(default=False)
+    refund_handled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.title}"
@@ -321,6 +323,8 @@ class Order(models.Model):
     refund_requested = models.BooleanField(default=False)
     refund_granted = models.BooleanField(default=False)
     comment = models.CharField(max_length=500, blank=True, null=True)
+    refund_handled = models.BooleanField(default=False)
+    removed_order = models.BooleanField(default=False)
 
     '''
     1. Item added to cart

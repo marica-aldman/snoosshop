@@ -30,652 +30,104 @@ class Overview(LoginRequiredMixin, View):
 
         return render(self.request, "support/overview.html", context)
 
-    def post(self, *args, **kwargs):
-        # GDPR check
-        gdpr_check = check_gdpr_cookies(self)
-        try:
-            # get where we are
-
-            current_page_support = int(
-                self.request.POST['current_page_support'])
-            current_page_orders = int(self.request.POST['current_page_orders'])
-
-            if 'whichPageSupport' in self.request.POST.keys():
-                whichPageSupport = int(self.request.POST['whichPageSupport'])
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = whichPageSupport * 10
-                    support = SupportThread.objects.filter(last_responce=2)[
-                        10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    message = get_message('error', 36)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = Order.objects.filter(
-                        being_delivered=False).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                # fix the current pages
-                current_page_support = whichPageSupport
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                """if len(responces_a) < 0:
-                    context.update({'responces_a': responces_a})
-
-                if len(responces_r) < 0:
-                    context.update({'responces_r': responces_r})"""
-
-                return render(self.request, "support/overview.html", context)
-
-            elif 'whichPageOrder' in self.request.POST.keys():
-                whichPageOrder = int(self.request.POST['whichPageOrder'])
-                current_page_order = whichPageOrder
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    message = get_message('error', 37)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = whichPageOrder * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = Order.objects.filter(
-                        being_delivered=False).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "support/overview.html", context)
-
-            elif 'nextPageOrder' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    message = get_message('error', 38)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    number_orders = Order.objects.filter(
-                        being_delivered=False).count()
-                    whichPageOrder = 1
-                    if current_page_orders < (number_orders / 10):
-                        whichPageOrder = current_page_orders + 1
-                    offset = whichPageOrder * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "support/overview.html", context)
-
-            elif 'previousPageOrder' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    offset = 0
-                    if current_page_support > 1:
-                        offset = current_page_support * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    message = get_message('error', 39)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    whichPageOrder = 1
-                    if current_page_orders > 1:
-                        whichPageOrder = current_page_orders - 1
-                    offset = whichPageOrder * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = Order.objects.filter(
-                        being_delivered=False).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "support/overview.html", context)
-
-            elif 'nextPageSupport' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    number_support = Order.objects.filter(
-                        being_delivered=False).count()
-                    whichPageSupport = 1
-                    if current_page_support < (number_support / 10):
-                        whichPageSupport = current_page_support + 1
-                    offset = whichPageSupport * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                except ObjectDoesNotExist:
-                    message = get_message('error', 40)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "support/overview.html", context)
-
-            elif 'previousPageSupport' in self.request.POST.keys():
-                # get the next ten unanswered support errands and the count of the unanswerd support errands
-
-                try:
-                    whichPageSupport = 1
-                    if current_page_support > 1:
-                        whichPageSupport = current_page_support - 1
-                    offset = whichPageSupport * 10
-                    support = SupportThread.objects.filter(
-                        last_responce=2)[10:offset]
-                    number_support = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    message = get_message('error', 41)
-                    messages.warning(
-                        self.request, message)
-                    support = {}
-                    number_support = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                pages = 1
-
-                if number_support > 10:
-                    # if there are more we divide by ten
-                    pages = number_support / 10
-                    # see if there is a decimal
-                    numType = type(pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        pages += 1
-
-                # create a list for a ul to work through
-
-                more_support = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(pages):
-                    i += 1
-                    more_support.append({'number': i})
-
-                # get the first ten unsent orders and the count of all unsent orders
-
-                try:
-                    offset = 0
-                    if current_page_orders > 1:
-                        offset = current_page_orders * 10
-                    orders = Order.objects.filter(
-                        being_delivered=False)[10:offset]
-                    number_orders = SupportThread.objects.filter(
-                        last_responce=2).count()
-                except ObjectDoesNotExist:
-                    orders = {}
-                    number_orders = 0
-
-                # figure out how many pages of 10 there are
-                # if there are only 10 or fewer pages will be 1
-
-                o_pages = 1
-
-                if number_orders > 10:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 10
-                    # see if there is a decimal
-                    numType = type(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if numType == "Float":
-                        o_pages += 1
-
-                # create a list for a ul to work through
-
-                more_orders = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'support': support,
-                    'more_support': more_support,
-                    'orders': orders,
-                    'more_orders': more_orders,
-                    'current_page_support': current_page_support,
-                    'current_page_orders': current_page_orders,
-                }
-
-                return render(self.request, "support/overview.html", context)
-
-        except ObjectDoesNotExist:
-            message = get_message('error', 42)
-            messages.warning(
-                self.request, message)
-            return redirect("support:overview")
-
 
 class MultipleOrdersView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        limit = default_pagination_values
         try:
-            # get the first 20 orders and a count of all orders
+            # get the first orders and a count of all orders
 
             try:
-                orders = Order.objects.all()[:20]
-                number_orders = Order.objects.all().count()
+                orders = Order.objects.filter(ordered=True)[:limit]
+                number_orders = Order.objects.filter(ordered=True).count()
             except ObjectDoesNotExist:
                 orders = {}
                 number_orders = 0
 
-            # figure out how many pages of 20 there are
-            # if there are only 20 or fewer pages will be 1
+            # figure out how many pages there are
+            # if there are only the limit or fewer pages will be 1
 
             o_pages = 1
 
-            if number_orders > 20:
-                # if there are more we divide by ten
-                o_pages = number_orders / 20
+            if number_orders > limit:
+                # if there are more we divide by the limit
+                o_pages = number_orders / limit
                 # see if there is a decimal
                 testO = int(o_pages)
-                # if there isn't an even number of ten make an extra page for the last group
+                # if there isn't an even number make an extra page for the last group
                 if testO != o_pages:
                     o_pages = int(o_pages)
                     o_pages += 1
+                # we need this to be an int
+                if type(o_pages) != "int":
+                    o_pages = int(o_pages)
+
+            # set current page to 1
+            current_page = 1
 
             # create a list for a ul to work through
 
-            more_orders = []
+            more_orders, where = get_list_of_pages(current_page, o_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(o_pages):
-                i += 1
-                more_orders.append({'number': i})
+            # set next and previous pages
+            # this is true
+            previous_page = current_page - 1
+            next_page = current_page + 1
+
+            # unless
+
+            previous_page = True
+            next_page = True
+
+            if current_page <= 1:
+                previous_page = False
+            if o_pages <= current_page:
+                next_page = False
+            # check if we are near an end point and need fancy looking start or end
+            start = False
+            end = False
+
+            if where == "no extras":
+                start = False
+                end = False
+            elif where == "start":
+                start = False
+                end = True
+            elif where == "end":
+                start = True
+                end = False
+            elif where == "mid":
+                start = True
+                end = True
 
             # make search for specific order or customer
 
             form = searchOrderForm()
 
-            # set current page to 1
-            current_page = 1
+            # when we are searching for user_id we will want to display it in the form up top otherwise not
 
-            # set a bool to check if we are showing one or multiple orders
-
-            multiple = True
+            paging_search = False
 
             # set the hidden value for wether or not we have done a search
 
             search_type = "None"
-            search_value = "None"
+            search_value = ""
 
             context = {
                 'gdpr_check': gdpr_check,
                 'search_type': search_type,
                 'search_value': search_value,
-                'multiple': multiple,
                 'orders': orders,
                 'more_orders': more_orders,
                 'form': form,
                 'current_page': current_page,
                 'max_pages': o_pages,
+                'previous_page': previous_page,
+                'next_page': next_page,
+                'end': end,
+                'start': start,
             }
 
             return render(self.request, "support/order_search.html", context)
@@ -689,6 +141,7 @@ class MultipleOrdersView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        limit = default_pagination_values
         try:
             # where are we
             current_page = 1
@@ -699,8 +152,472 @@ class MultipleOrdersView(LoginRequiredMixin, View):
 
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
                 if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # fix this to display pagination for some types of searches and only one specific page for other others
-                    user_id = int(self.request.POST['search_value'])
+                    print("here1")
+                    # we are paginating a perticular users orders
+                    user_id = int(self.request.POST['searchValue'])
+                    theUser = User.objects.get(id=user_id)
+
+                    if 'nextPage' in self.request.POST.keys():
+
+                        try:
+                            number_orders = Order.objects.filter(
+                                user=theUser).count()
+                        except ObjectDoesNotExist:
+                            number_orders = 0
+
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer pages will be 1
+
+                        o_pages = 1
+
+                        if number_orders > limit:
+                            # if there are more we divide by the limit
+                            o_pages = number_orders / limit
+                            # see if there is a decimal
+                            testO = int(o_pages)
+                            # if there isn't an even number make an extra page for the last group
+                            if testO != o_pages:
+                                o_pages = int(o_pages)
+                                o_pages += 1
+                            # we need this to be an int
+                            if type(o_pages) != "int":
+                                o_pages = int(o_pages)
+
+                        try:
+                            if current_page < o_pages:
+                                current_page += 1
+                            offset = (current_page - 1) * limit
+                            o_l = offset + limit
+                            orders = Order.objects.filter(
+                                user=theUser)[offset:o_l]
+                        except ObjectDoesNotExist:
+                            orders = {}
+
+                        # create a list for a ul to work through
+
+                        more_orders, where = get_list_of_pages(
+                            current_page, o_pages)
+
+                        # set next and previous pages
+                        # this is true
+
+                        previous_page = True
+                        next_page = True
+
+                        # unless
+
+                        if current_page <= 1:
+                            previous_page = False
+                        if o_pages <= current_page:
+                            next_page = False
+
+                        # check if we are near an end point and need fancy looking start or end
+
+                        start = False
+                        end = False
+
+                        if where == "no extras":
+                            start = False
+                            end = False
+                        elif where == "start":
+                            start = False
+                            end = True
+                        elif where == "end":
+                            start = True
+                            end = False
+                        elif where == "mid":
+                            start = True
+                            end = True
+
+                        # make search for specific order or customer
+
+                        form = searchOrderForm()
+
+                        # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                        paging_search = True
+
+                        # set the hidden value for wether or not we have done a search
+
+                        search_type = "Search"
+                        search_value = user_id
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'orders': orders,
+                            'more_orders': more_orders,
+                            'form': form,
+                            'current_page': current_page,
+                            'max_pages': o_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                            'paging_search': paging_search,
+                        }
+
+                        return render(self.request, "support/order_search.html", context)
+
+                    elif 'previousPage' in self.request.POST.keys():
+
+                        try:
+                            number_orders = Order.objects.filter(
+                                user=theUser).count()
+                        except ObjectDoesNotExist:
+                            number_orders = 0
+
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer pages will be 1
+
+                        o_pages = 1
+
+                        if number_orders > limit:
+                            # if there are more we divide by the limit
+                            o_pages = number_orders / limit
+                            # see if there is a decimal
+                            testO = int(o_pages)
+                            # if there isn't an even number make an extra page for the last group
+                            if testO != o_pages:
+                                o_pages = int(o_pages)
+                                o_pages += 1
+                            # we need this to be an int
+                            if type(o_pages) != "int":
+                                o_pages = int(o_pages)
+
+                        if current_page >= 3:
+                            try:
+                                current_page = current_page - 1
+                                offset = (current_page - 1) * limit
+                                o_l = offset + limit
+                                orders = Order.objects.filter(
+                                    user=theUser)[offset:o_l]
+                            except ObjectDoesNotExist:
+                                orders = {}
+
+                            # create a list for a ul to work through
+
+                            more_orders, where = get_list_of_pages(
+                                current_page, o_pages)
+
+                            # set next and previous pages
+                            # this is true
+
+                            previous_page = True
+                            next_page = True
+
+                            # unless
+
+                            if current_page <= 1:
+                                previous_page = False
+                            if o_pages <= current_page:
+                                next_page = False
+
+                            # check if we are near an end point and need fancy looking start or end
+
+                            start = False
+                            end = False
+
+                            if where == "no extras":
+                                start = False
+                                end = False
+                            elif where == "start":
+                                start = False
+                                end = True
+                            elif where == "end":
+                                start = True
+                                end = False
+                            elif where == "mid":
+                                start = True
+                                end = True
+
+                            # make search for specific order or customer
+
+                            form = searchOrderForm()
+
+                            # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                            paging_search = True
+
+                            # set the hidden value for wether or not we have done a search
+
+                            search_type = "Search"
+                            search_value = user_id
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'orders': orders,
+                                'more_orders': more_orders,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': o_pages,
+                                'previous_page': previous_page,
+                                'next_page': next_page,
+                                'end': end,
+                                'start': start,
+                                'paging_search': paging_search,
+                            }
+
+                            return render(self.request, "support/order_search.html", context)
+                        else:
+                            try:
+                                if current_page == 2:
+                                    current_page -= 1
+                                orders = Order.objects.filter(
+                                    user=theUser)[:limit]
+                            except ObjectDoesNotExist:
+                                orders = {}
+
+                            # create a list for a ul to work through
+
+                            more_orders, where = get_list_of_pages(
+                                current_page, o_pages)
+
+                            # set next and previous pages
+                            # this is true
+
+                            previous_page = True
+                            next_page = True
+
+                            # unless
+
+                            if current_page <= 1:
+                                previous_page = False
+                            if o_pages <= current_page:
+                                next_page = False
+
+                            # check if we are near an end point and need fancy looking start or end
+
+                            start = False
+                            end = False
+
+                            if where == "no extras":
+                                start = False
+                                end = False
+                            elif where == "start":
+                                start = False
+                                end = True
+                            elif where == "end":
+                                start = True
+                                end = False
+                            elif where == "mid":
+                                start = True
+                                end = True
+
+                            # make search for specific order or customer
+
+                            form = searchOrderForm()
+
+                            # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                            paging_search = True
+
+                            # set the hidden value for wether or not we have done a search
+
+                            search_type = "Search"
+                            search_value = user_id
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'orders': orders,
+                                'more_orders': more_orders,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': o_pages,
+                                'previous_page': previous_page,
+                                'next_page': next_page,
+                                'end': end,
+                                'start': start,
+                                'paging_search': paging_search,
+                            }
+
+                            return render(self.request, "support/order_search.html", context)
+
+                    elif 'page' in self.request.POST.keys():
+                        page = int(self.request.POST['page'])
+                        try:
+                            number_orders = Order.objects.filter(
+                                user=theUser).count()
+                        except ObjectDoesNotExist:
+                            number_orders = 0
+
+                        # figure out how many pages there are
+                        # if there are only the limit or fewer pages will be 1
+
+                        o_pages = 1
+
+                        if number_orders > limit:
+                            # if there are more we divide by the limit
+                            o_pages = number_orders / limit
+                            # see if there is a decimal
+                            testO = int(o_pages)
+                            # if there isn't an even number make an extra page for the last group
+                            if testO != o_pages:
+                                o_pages = int(o_pages)
+                                o_pages += 1
+                            # we need this to be an int
+                            if type(o_pages) != "int":
+                                o_pages = int(o_pages)
+
+                        if page >= 2:
+                            try:
+                                current_page = page
+                                offset = (current_page - 1) * limit
+                                o_l = offset + limit
+                                orders = Order.objects.filter(
+                                    user=theUser)[offset:o_l]
+                            except ObjectDoesNotExist:
+                                orders = {}
+
+                            # create a list for a ul to work through
+
+                            more_orders, where = get_list_of_pages(
+                                current_page, o_pages)
+
+                            # set next and previous pages
+                            # this is true
+
+                            previous_page = True
+                            next_page = True
+
+                            # unless
+
+                            if current_page <= 1:
+                                previous_page = False
+                            if o_pages <= current_page:
+                                next_page = False
+
+                            # check if we are near an end point and need fancy looking start or end
+
+                            start = False
+                            end = False
+
+                            if where == "no extras":
+                                start = False
+                                end = False
+                            elif where == "start":
+                                start = False
+                                end = True
+                            elif where == "end":
+                                start = True
+                                end = False
+                            elif where == "mid":
+                                start = True
+                                end = True
+
+                            # make search for specific order or customer
+
+                            form = searchOrderForm()
+
+                            # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                            paging_search = True
+
+                            # set the hidden value for wether or not we have done a search
+
+                            search_type = "Search"
+                            search_value = user_id
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'orders': orders,
+                                'more_orders': more_orders,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': o_pages,
+                                'previous_page': previous_page,
+                                'next_page': next_page,
+                                'end': end,
+                                'start': start,
+                                'paging_search': paging_search,
+                            }
+
+                            return render(self.request, "support/order_search.html", context)
+                        else:
+                            try:
+                                current_page = page
+                                orders = Order.objects.filter(
+                                    user=theUser)[:limit]
+                            except ObjectDoesNotExist:
+                                orders = {}
+
+                            # create a list for a ul to work through
+
+                            more_orders, where = get_list_of_pages(
+                                current_page, o_pages)
+
+                            # set next and previous pages
+                            # this is true
+
+                            previous_page = True
+                            next_page = True
+
+                            # unless
+
+                            if current_page <= 1:
+                                previous_page = False
+                            if o_pages <= current_page:
+                                next_page = False
+
+                            # check if we are near an end point and need fancy looking start or end
+
+                            start = False
+                            end = False
+
+                            if where == "no extras":
+                                start = False
+                                end = False
+                            elif where == "start":
+                                start = False
+                                end = True
+                            elif where == "end":
+                                start = True
+                                end = False
+                            elif where == "mid":
+                                start = True
+                                end = True
+
+                            # make search for specific order or customer
+
+                            form = searchOrderForm()
+
+                            # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                            paging_search = False
+
+                            # set the hidden value for wether or not we have done a search
+
+                            search_type = "Search"
+                            search_value = user_id
+
+                            context = {
+                                'gdpr_check': gdpr_check,
+                                'search_type': search_type,
+                                'search_value': search_value,
+                                'orders': orders,
+                                'more_orders': more_orders,
+                                'form': form,
+                                'current_page': current_page,
+                                'max_pages': o_pages,
+                                'previous_page': previous_page,
+                                'next_page': next_page,
+                                'end': end,
+                                'start': start,
+                                'paging_search': paging_search,
+                            }
+
+                            return render(self.request, "support/order_search.html", context)
+                    else:
+                        # something went wrong but just redirect this shouldnt happen
+                        return redirect("support:orders")
+
                 else:
                     # make a form and populate so we can clean the data
                     form = searchOrderForm(self.request.POST)
@@ -713,136 +630,290 @@ class MultipleOrdersView(LoginRequiredMixin, View):
                         # message for object does not exist
                         info_message = get_message('info', 19)
                         if len(order_ref) == 20:
-                            # search done on order reference
-                            search_value = order_ref
 
                             try:
-                                order = Order.objects.get(ref_code=order_ref)
-
-                                # set current page to 1
-                                current_page = 1
-
-                                # set a bool to check if we are showing one or multiple orders
-
-                                multiple = False
-                                more_orders = [{'number': 1}]
-
-                                # set the search type
-
-                                search_type = "Reference"
-
-                                context = {
-                                    'gdpr_check': gdpr_check,
-                                    'search_type': search_type,
-                                    'search_value': search_value,
-                                    'multiple': multiple,
-                                    'order': order,
-                                    'more_orders': more_orders,
-                                    'form': form,
-                                    'current_page': 1,
-                                    'max_pages': 1,
-                                }
-
-                                return render(self.request, "support/order_search.html", context)
-                            except ObjectDoesNotExist:
-                                messages.info(
-                                    self.request, info_message)
-                                return redirect("support:orders")
-
-                        elif order_id != None:
-                            # search on order id
-                            search_value = order_id
-
-                            try:
-                                order = Order.objects.get(id=order_id)
-
-                                # set current page to 1
-                                current_page = 1
-
-                                # set a bool to check if we are showing one or multiple orders
-
-                                multiple = False
-                                more_orders = [{'number': 1}]
-
-                                # set the search type
-
-                                search_type = "orderID"
-
-                                context = {
-                                    'gdpr_check': gdpr_check,
-                                    'search_type': search_type,
-                                    'search_value': search_value,
-                                    'multiple': multiple,
-                                    'order': order,
-                                    'more_orders': more_orders,
-                                    'form': form,
-                                    'current_page': 1,
-                                    'max_pages': 1,
-                                }
-
-                                return render(self.request, "support/order_search.html", context)
-                            except ObjectDoesNotExist:
-                                messages.info(
-                                    self.request, info_message)
-                                return redirect("support:orders")
-
-                        elif user_id != None:
-                            # search done on user
-                            search_value = user_id
-                            # get the user
-
-                            try:
-                                the_user = User.objects.get(id=user_id)
                                 orders = Order.objects.filter(
-                                    user=the_user)
+                                    ref_code=order_ref)
+                                print(orders)
                                 number_orders = Order.objects.filter(
-                                    user=the_user).count()
+                                    ref_code=order_ref).count()
 
-                                # figure out how many pages of 10 there are
-                                # if there are only 10 or fewer pages will be 1
+                                # if there are only the limit or fewer pages will be 1
 
                                 o_pages = 1
 
-                                if number_orders > 10:
-                                    # if there are more we divide by ten
-                                    o_pages = number_orders / 10
+                                if number_orders > limit:
+                                    # if there are more we divide by the limit
+                                    o_pages = number_orders / limit
                                     # see if there is a decimal
-                                    numType = type(o_pages)
-                                    # if there isn't an even number of ten make an extra page for the last group
-                                    if numType == "Float":
+                                    testO = int(o_pages)
+                                    # if there isn't an even number make an extra page for the last group
+                                    if testO != o_pages:
+                                        o_pages = int(o_pages)
                                         o_pages += 1
+                                    # we need this to be an int
+                                    if type(o_pages) != "int":
+                                        o_pages = int(o_pages)
 
                                 # create a list for a ul to work through
 
-                                more_orders = []
+                                more_orders, where = get_list_of_pages(
+                                    current_page, o_pages)
 
-                                i = 0
-                                # populate the list with the amount of pages there are
-                                for i in range(o_pages):
-                                    i += 1
-                                    more_orders.append({'number': i})
+                                # set next and previous pages
+                                # this is true
+
+                                previous_page = True
+                                next_page = True
+
+                                # unless
+
+                                if current_page <= 1:
+                                    previous_page = False
+                                if o_pages <= current_page:
+                                    next_page = False
+
+                                # check if we are near an end point and need fancy looking start or end
+
+                                start = False
+                                end = False
+
+                                if where == "no extras":
+                                    start = False
+                                    end = False
+                                elif where == "start":
+                                    start = False
+                                    end = True
+                                elif where == "end":
+                                    start = True
+                                    end = False
+                                elif where == "mid":
+                                    start = True
+                                    end = True
 
                                 # set current page to 1
                                 current_page = 1
 
-                                # set a bool to check if we are showing one or multiple orders
+                                # when we are searching for user_id we will want to display it in the form up top otherwise not
 
-                                multiple = True
+                                paging_search = False
 
                                 # set the search type
 
-                                search_type = "userID"
+                                search_type = "search"
+                                search_value = order_ref
 
                                 context = {
                                     'gdpr_check': gdpr_check,
                                     'search_type': search_type,
                                     'search_value': search_value,
-                                    'multiple': multiple,
                                     'orders': orders,
                                     'more_orders': more_orders,
                                     'form': form,
                                     'current_page': current_page,
                                     'max_pages': o_pages,
+                                    'previous_page': previous_page,
+                                    'next_page': next_page,
+                                    'end': end,
+                                    'start': start,
+                                    'paging_search': paging_search,
+                                }
+
+                                return render(self.request, "support/order_search.html", context)
+
+                            except ObjectDoesNotExist:
+                                info_message = get_message(
+                                    'info', 20)
+                                messages.info(
+                                    self.request, info_message)
+                                return redirect("support:orders")
+
+                        elif order_id != None:
+
+                            try:
+                                orders = Order.objects.filter(
+                                    id=order_id)
+                                number_orders = Order.objects.filter(
+                                    id=order_id).count()
+
+                                # if there are only the limit or fewer pages will be 1
+
+                                o_pages = 1
+
+                                if number_orders > limit:
+                                    # if there are more we divide by the limit
+                                    o_pages = number_orders / limit
+                                    # see if there is a decimal
+                                    testO = int(o_pages)
+                                    # if there isn't an even number make an extra page for the last group
+                                    if testO != o_pages:
+                                        o_pages = int(o_pages)
+                                        o_pages += 1
+                                    # we need this to be an int
+                                    if type(o_pages) != "int":
+                                        o_pages = int(o_pages)
+
+                                # create a list for a ul to work through
+
+                                more_orders, where = get_list_of_pages(
+                                    current_page, o_pages)
+
+                                # set next and previous pages
+                                # this is true
+
+                                previous_page = True
+                                next_page = True
+
+                                # unless
+
+                                if current_page <= 1:
+                                    previous_page = False
+                                if o_pages <= current_page:
+                                    next_page = False
+
+                                # check if we are near an end point and need fancy looking start or end
+
+                                start = False
+                                end = False
+
+                                if where == "no extras":
+                                    start = False
+                                    end = False
+                                elif where == "start":
+                                    start = False
+                                    end = True
+                                elif where == "end":
+                                    start = True
+                                    end = False
+                                elif where == "mid":
+                                    start = True
+                                    end = True
+
+                                # set current page to 1
+                                current_page = 1
+
+                                # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                                paging_search = False
+
+                                # set the search type
+
+                                search_type = "search"
+                                search_value = order_id
+
+                                context = {
+                                    'gdpr_check': gdpr_check,
+                                    'search_type': search_type,
+                                    'search_value': search_value,
+                                    'orders': orders,
+                                    'more_orders': more_orders,
+                                    'form': form,
+                                    'current_page': current_page,
+                                    'max_pages': o_pages,
+                                    'previous_page': previous_page,
+                                    'next_page': next_page,
+                                    'end': end,
+                                    'start': start,
+                                    'paging_search': paging_search,
+                                }
+
+                                return render(self.request, "support/order_search.html", context)
+
+                            except ObjectDoesNotExist:
+                                info_message = get_message(
+                                    'info', 20)
+                                messages.info(
+                                    self.request, info_message)
+                                return redirect("support:orders")
+
+                        elif user_id != None:
+
+                            try:
+                                the_user = User.objects.get(id=user_id)
+                                orders = Order.objects.filter(
+                                    user=the_user)[:limit]
+                                number_orders = Order.objects.filter(
+                                    user=the_user).count()
+
+                                # if there are only the limit or fewer pages will be 1
+
+                                o_pages = 1
+
+                                if number_orders > limit:
+                                    # if there are more we divide by the limit
+                                    o_pages = number_orders / limit
+                                    # see if there is a decimal
+                                    testO = int(o_pages)
+                                    # if there isn't an even number make an extra page for the last group
+                                    if testO != o_pages:
+                                        o_pages = int(o_pages)
+                                        o_pages += 1
+                                    # we need this to be an int
+                                    if type(o_pages) != "int":
+                                        o_pages = int(o_pages)
+
+                                # create a list for a ul to work through
+
+                                more_orders, where = get_list_of_pages(
+                                    current_page, o_pages)
+
+                                # set next and previous pages
+                                # this is true
+
+                                previous_page = True
+                                next_page = True
+
+                                # unless
+
+                                if current_page <= 1:
+                                    previous_page = False
+                                if o_pages <= current_page:
+                                    next_page = False
+
+                                # check if we are near an end point and need fancy looking start or end
+
+                                start = False
+                                end = False
+
+                                if where == "no extras":
+                                    start = False
+                                    end = False
+                                elif where == "start":
+                                    start = False
+                                    end = True
+                                elif where == "end":
+                                    start = True
+                                    end = False
+                                elif where == "mid":
+                                    start = True
+                                    end = True
+
+                                # set current page to 1
+                                current_page = 1
+
+                                # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                                paging_search = False
+
+                                # set the search type
+
+                                search_type = "search"
+                                search_value = user_id
+
+                                context = {
+                                    'gdpr_check': gdpr_check,
+                                    'search_type': search_type,
+                                    'search_value': search_value,
+                                    'orders': orders,
+                                    'more_orders': more_orders,
+                                    'form': form,
+                                    'current_page': current_page,
+                                    'max_pages': o_pages,
+                                    'previous_page': previous_page,
+                                    'next_page': next_page,
+                                    'end': end,
+                                    'start': start,
+                                    'paging_search': paging_search,
                                 }
 
                                 return render(self.request, "support/order_search.html", context)
@@ -857,202 +928,454 @@ class MultipleOrdersView(LoginRequiredMixin, View):
                             return redirect("support:orders")
 
             elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
 
                 try:
                     number_orders = Order.objects.all(
                     ).count()
-                    number_pages = number_users / 20
-                    if current_page < number_pages:
-                        current_page += 1
-                    offset = current_page * 20
-                    orders = Order.objects.all()[20:offset]
                 except ObjectDoesNotExist:
-                    orders = {}
                     number_orders = 0
 
-                # figure out how many pages of 20 there are
-                # if there are only 20 or fewer pages will be 1
+                # figure out how many pages there are
+                # if there are only the limit or fewer pages will be 1
 
                 o_pages = 1
 
-                if number_orders > 20:
-                    # if there are more we divide by ten
-                    o_pages = number_orders / 20
+                if number_orders > limit:
+                    # if there are more we divide by the limit
+                    o_pages = number_orders / limit
                     # see if there is a decimal
                     testO = int(o_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
+                    # if there isn't an even number make an extra page for the last group
                     if testO != o_pages:
                         o_pages = int(o_pages)
                         o_pages += 1
+                    # we need this to be an int
+                    if type(o_pages) != "int":
+                        o_pages = int(o_pages)
+
+                try:
+                    if current_page < o_pages:
+                        current_page += 1
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    orders = Order.objects.filter(ordered=True)[offset:o_l]
+                except ObjectDoesNotExist:
+                    orders = {}
 
                 # create a list for a ul to work through
 
-                more_orders = []
+                more_orders, where = get_list_of_pages(current_page, o_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
+                # set next and previous pages
+                # this is true
+
+                previous_page = True
+                next_page = True
+
+                # unless
+
+                if current_page <= 1:
+                    previous_page = False
+                if o_pages <= current_page:
+                    next_page = False
+
+                # check if we are near an end point and need fancy looking start or end
+
+                start = False
+                end = False
+
+                if where == "no extras":
+                    start = False
+                    end = False
+                elif where == "start":
+                    start = False
+                    end = True
+                elif where == "end":
+                    start = True
+                    end = False
+                elif where == "mid":
+                    start = True
+                    end = True
 
                 # make search for specific order or customer
 
                 form = searchOrderForm()
 
-                # set a bool to check if we are showing one or multiple orders
+                # when we are searching for user_id we will want to display it in the form up top otherwise not
 
-                multiple = True
+                paging_search = False
 
                 # set the hidden value for wether or not we have done a search
 
                 search_type = "None"
-                search_value = "None"
+                search_value = ""
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'search_type': search_type,
                     'search_value': search_value,
-                    'multiple': multiple,
                     'orders': orders,
                     'more_orders': more_orders,
                     'form': form,
                     'current_page': current_page,
                     'max_pages': o_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "support/order_search.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
 
-                if current_page > 2:
+                try:
+                    number_orders = Order.objects.all(
+                    ).count()
+                except ObjectDoesNotExist:
+                    number_orders = 0
+
+                # figure out how many pages there are
+                # if there are only the limit or fewer pages will be 1
+
+                o_pages = 1
+
+                if number_orders > limit:
+                    # if there are more we divide by the limit
+                    o_pages = number_orders / limit
+                    # see if there is a decimal
+                    testO = int(o_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testO != o_pages:
+                        o_pages = int(o_pages)
+                        o_pages += 1
+                    # we need this to be an int
+                    if type(o_pages) != "int":
+                        o_pages = int(o_pages)
+
+                if current_page >= 3:
                     try:
-                        if current_page > 1:
-                            current_page -= 1
-                            offset = current_page * 20
-                        orders = Order.objects.all()[20:offset]
-                        number_orders = Order.objects.all(
-                        ).count()
+                        current_page = current_page - 1
+                        offset = (current_page - 1) * limit
+                        o_l = offset + limit
+                        orders = Order.objects.filter(ordered=True)[offset:o_l]
                     except ObjectDoesNotExist:
                         orders = {}
-                        number_orders = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    o_pages = 1
-
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        testO = int(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if testO != o_pages:
-                            o_pages = int(o_pages)
-                            o_pages += 1
 
                     # create a list for a ul to work through
 
-                    more_orders = []
+                    more_orders, where = get_list_of_pages(
+                        current_page, o_pages)
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
+                    # set next and previous pages
+                    # this is true
+
+                    previous_page = True
+                    next_page = True
+
+                    # unless
+
+                    if current_page <= 1:
+                        previous_page = False
+                    if o_pages <= current_page:
+                        next_page = False
+
+                    # check if we are near an end point and need fancy looking start or end
+
+                    start = False
+                    end = False
+
+                    if where == "no extras":
+                        start = False
+                        end = False
+                    elif where == "start":
+                        start = False
+                        end = True
+                    elif where == "end":
+                        start = True
+                        end = False
+                    elif where == "mid":
+                        start = True
+                        end = True
 
                     # make search for specific order or customer
 
                     form = searchOrderForm()
 
-                    # set a bool to check if we are showing one or multiple orders
+                    # when we are searching for user_id we will want to display it in the form up top otherwise not
 
-                    multiple = True
+                    paging_search = False
 
                     # set the hidden value for wether or not we have done a search
 
                     search_type = "None"
-                    search_value = "None"
+                    search_value = ""
 
                     context = {
                         'gdpr_check': gdpr_check,
                         'search_type': search_type,
                         'search_value': search_value,
-                        'multiple': multiple,
                         'orders': orders,
                         'more_orders': more_orders,
                         'form': form,
                         'current_page': current_page,
                         'max_pages': o_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
                     }
 
                     return render(self.request, "support/order_search.html", context)
                 else:
                     try:
-                        if current_page > 1:
+                        if current_page == 2:
                             current_page -= 1
-                        orders = Order.objects.all()[:20]
-                        number_orders = Order.objects.all(
-                        ).count()
+                        orders = Order.objects.filter(ordered=True)[:limit]
                     except ObjectDoesNotExist:
                         orders = {}
-                        number_orders = 0
-
-                    # figure out how many pages of 20 there are
-                    # if there are only 20 or fewer pages will be 1
-
-                    o_pages = 1
-
-                    if number_orders > 20:
-                        # if there are more we divide by ten
-                        o_pages = number_orders / 20
-                        # see if there is a decimal
-                        testO = int(o_pages)
-                        # if there isn't an even number of ten make an extra page for the last group
-                        if testO != o_pages:
-                            o_pages = int(o_pages)
-                            o_pages += 1
 
                     # create a list for a ul to work through
 
-                    more_orders = []
+                    more_orders, where = get_list_of_pages(
+                        current_page, o_pages)
 
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(o_pages):
-                        i += 1
-                        more_orders.append({'number': i})
+                    # set next and previous pages
+                    # this is true
+
+                    previous_page = True
+                    next_page = True
+
+                    # unless
+
+                    if current_page <= 1:
+                        previous_page = False
+                    if o_pages <= current_page:
+                        next_page = False
+
+                    # check if we are near an end point and need fancy looking start or end
+
+                    start = False
+                    end = False
+
+                    if where == "no extras":
+                        start = False
+                        end = False
+                    elif where == "start":
+                        start = False
+                        end = True
+                    elif where == "end":
+                        start = True
+                        end = False
+                    elif where == "mid":
+                        start = True
+                        end = True
 
                     # make search for specific order or customer
 
                     form = searchOrderForm()
 
-                    # set a bool to check if we are showing one or multiple orders
+                    # when we are searching for user_id we will want to display it in the form up top otherwise not
 
-                    multiple = True
+                    paging_search = False
 
                     # set the hidden value for wether or not we have done a search
 
                     search_type = "None"
-                    search_value = "None"
+                    search_value = ""
 
                     context = {
                         'gdpr_check': gdpr_check,
                         'search_type': search_type,
                         'search_value': search_value,
-                        'multiple': multiple,
                         'orders': orders,
                         'more_orders': more_orders,
                         'form': form,
                         'current_page': current_page,
                         'max_pages': o_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
                     }
 
                     return render(self.request, "support/order_search.html", context)
+
+            elif 'page' in self.request.POST.keys():
+                page = int(self.request.POST['page'])
+                try:
+                    number_orders = Order.objects.all(
+                    ).count()
+                except ObjectDoesNotExist:
+                    number_orders = 0
+
+                # figure out how many pages there are
+                # if there are only the limit or fewer pages will be 1
+
+                o_pages = 1
+
+                if number_orders > limit:
+                    # if there are more we divide by the limit
+                    o_pages = number_orders / limit
+                    # see if there is a decimal
+                    testO = int(o_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testO != o_pages:
+                        o_pages = int(o_pages)
+                        o_pages += 1
+                    # we need this to be an int
+                    if type(o_pages) != "int":
+                        o_pages = int(o_pages)
+
+                if page >= 2:
+                    try:
+                        current_page = page
+                        offset = (current_page - 1) * limit
+                        o_l = offset + limit
+                        orders = Order.objects.filter(ordered=True)[offset:o_l]
+                    except ObjectDoesNotExist:
+                        orders = {}
+
+                    # create a list for a ul to work through
+
+                    more_orders, where = get_list_of_pages(
+                        current_page, o_pages)
+
+                    # set next and previous pages
+                    # this is true
+
+                    previous_page = True
+                    next_page = True
+
+                    # unless
+
+                    if current_page <= 1:
+                        previous_page = False
+                    if o_pages <= current_page:
+                        next_page = False
+
+                    # check if we are near an end point and need fancy looking start or end
+
+                    start = False
+                    end = False
+
+                    if where == "no extras":
+                        start = False
+                        end = False
+                    elif where == "start":
+                        start = False
+                        end = True
+                    elif where == "end":
+                        start = True
+                        end = False
+                    elif where == "mid":
+                        start = True
+                        end = True
+
+                    # make search for specific order or customer
+
+                    form = searchOrderForm()
+
+                    # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                    paging_search = False
+
+                    # set the hidden value for wether or not we have done a search
+
+                    search_type = "None"
+                    search_value = ""
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'orders': orders,
+                        'more_orders': more_orders,
+                        'form': form,
+                        'current_page': current_page,
+                        'max_pages': o_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "support/order_search.html", context)
+                else:
+                    try:
+                        current_page = page
+                        orders = Order.objects.filter(ordered=True)[:limit]
+                    except ObjectDoesNotExist:
+                        orders = {}
+
+                    # create a list for a ul to work through
+
+                    more_orders, where = get_list_of_pages(
+                        current_page, o_pages)
+
+                    # set next and previous pages
+                    # this is true
+
+                    previous_page = True
+                    next_page = True
+
+                    # unless
+
+                    if current_page <= 1:
+                        previous_page = False
+                    if o_pages <= current_page:
+                        next_page = False
+
+                    # check if we are near an end point and need fancy looking start or end
+
+                    start = False
+                    end = False
+
+                    if where == "no extras":
+                        start = False
+                        end = False
+                    elif where == "start":
+                        start = False
+                        end = True
+                    elif where == "end":
+                        start = True
+                        end = False
+                    elif where == "mid":
+                        start = True
+                        end = True
+
+                    # make search for specific order or customer
+
+                    form = searchOrderForm()
+
+                    # when we are searching for user_id we will want to display it in the form up top otherwise not
+
+                    paging_search = False
+
+                    # set the hidden value for wether or not we have done a search
+
+                    search_type = "None"
+                    search_value = ""
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'orders': orders,
+                        'more_orders': more_orders,
+                        'form': form,
+                        'current_page': current_page,
+                        'max_pages': o_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "support/order_search.html", context)
+            else:
+                # something went wrong but just redirect this shouldnt happen
+                return redirect("support:orders")
 
         except ObjectDoesNotExist:
             message = get_message('error', 44)
@@ -1119,20 +1442,15 @@ class Users(LoginRequiredMixin, View):
             # set current page to 1
             current_page = 1
 
-            # set a bool to check if we are showing one or multiple orders
-
-            multiple = True
-
             # set the hidden value for wether or not we have done a search
 
             search_type = "None"
-            search_value = "None"
+            search_value = ""
 
             context = {
                 'gdpr_check': gdpr_check,
                 'search_type': search_type,
                 'search_value': search_value,
-                'multiple': multiple,
                 'users': users,
                 'more_users': more_users,
                 'form': form,
@@ -1198,13 +1516,8 @@ class Users(LoginRequiredMixin, View):
                         # set current page to 1
                         current_page = 1
 
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = False
-
                         context = {
                             'search_type': search_type,
-                            'multiple': multiple,
                             'users': the_user,
                             'more_users': more_users,
                             'form': form,
@@ -1229,7 +1542,7 @@ class Users(LoginRequiredMixin, View):
                 limit = default_pagination_values
                 # get what type of search
                 search_type = self.request.POST['searched']
-                if search_type != None:
+                if search_type != "None":
                     try:
                         search_type = int(search_type)
                     except ValueError:
@@ -1297,22 +1610,17 @@ class Users(LoginRequiredMixin, View):
 
                     # make search for specific order or customer
 
-                    form = searchOrderForm()
-
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = True
+                    form = searchUserForm()
 
                     # set the hidden value for wether or not we have done a search
 
                     search_type = "None"
-                    search_value = "None"
+                    search_value = ""
 
                     context = {
                         'gdpr_check': gdpr_check,
                         'search_type': search_type,
                         'search_value': search_value,
-                        'multiple': multiple,
                         'users': users,
                         'more_users': more_users,
                         'form': form,
@@ -1344,10 +1652,6 @@ class Users(LoginRequiredMixin, View):
                     # set current page to 1
                     current_page = 1
 
-                    # set a bool to check if we are showing one or multiple orders
-
-                    multiple = False
-
                     # set the search type
 
                     search_type = "userID"
@@ -1355,7 +1659,6 @@ class Users(LoginRequiredMixin, View):
                     context = {
                         'gdpr_check': gdpr_check,
                         'search_type': search_type,
-                        'multiple': multiple,
                         'users': the_user,
                         'more_users': more_users,
                         'form': form,
@@ -1418,10 +1721,6 @@ class Users(LoginRequiredMixin, View):
 
                         form = searchUserForm()
 
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
                         # set the hidden value for wether or not we have done a search
 
                         search_type = "None"
@@ -1431,7 +1730,6 @@ class Users(LoginRequiredMixin, View):
                             'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'multiple': multiple,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
@@ -1489,10 +1787,6 @@ class Users(LoginRequiredMixin, View):
 
                         form = searchUserForm()
 
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
                         # set the hidden value for wether or not we have done a search
 
                         search_type = "None"
@@ -1502,7 +1796,6 @@ class Users(LoginRequiredMixin, View):
                             'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'multiple': multiple,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
@@ -1583,10 +1876,6 @@ class Users(LoginRequiredMixin, View):
 
                         form = searchUserForm()
 
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
                         # set the hidden value for wether or not we have done a search
 
                         search_type = "None"
@@ -1596,7 +1885,6 @@ class Users(LoginRequiredMixin, View):
                             'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'multiple': multiple,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
@@ -1658,10 +1946,6 @@ class Users(LoginRequiredMixin, View):
 
                         form = searchUserForm()
 
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
                         # set the hidden value for wether or not we have done a search
 
                         search_type = "None"
@@ -1671,7 +1955,6 @@ class Users(LoginRequiredMixin, View):
                             'gdpr_check': gdpr_check,
                             'search_type': search_type,
                             'search_value': search_value,
-                            'multiple': multiple,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
@@ -1704,62 +1987,7 @@ class Users(LoginRequiredMixin, View):
 
 class OrderView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
-        # GDPR check
-        gdpr_check = check_gdpr_cookies(self)
-        # this is either a redirect or someone refreshing the page
-        # if redirect
-        if 'order_ref' in self.request.GET.keys():
-            order_ref = self.request.GET['order_ref']
-            message = ""
-
-            # get the user's specific order
-            try:
-                order = Order.objects.get(ref_code=order_ref)
-            except ObjectDoesNotExist:
-                message = get_message('error', 52)
-                messages.warning(
-                    self.request, message)
-                return redirect("support:orders")
-
-            # get the order items
-            orderItems = order.items.all()
-
-            hasPayment = False
-            if order.payment_type == "S":
-                hasPayment = True
-            elif order.paid:
-                hasPayment = True
-            coupon = order.coupon
-            hasCoupon = False
-            if coupon:
-                hasCoupon = True
-            billing_address = order.billing_address
-            shipping_address = order.shipping_address
-            theClient = order.user
-            theClientInfo = UserInfo.objects.get(user=order.user)
-            path = self.request.get_full_path()
-
-            context = {
-                'gdpr_check': gdpr_check,
-                'order': order,
-                'orderItems': orderItems,
-                'payment': payment,
-                'coupon': coupon,
-                'shipping_address': shipping_address,
-                'billing_address': billing_address,
-                'hasPayment': hasPayment,
-                'hasCoupon': hasCoupon,
-                'theClient': theClient,
-                'theClientInfo': theClientInfo,
-            }
-
-            return render(self.request, "support/vieworder.html", context)
-        else:
-            # this is a refresh, we might loose valuable info if this is just refreshed after a long time so redirect
-            message = get_message('error', 109)
-            messages.warning(
-                self.request, message)
-            return redirect("support:orders")
+        return redirect("support:orders")
 
     def post(self, *args, **kwargs):
         # GDPR check
@@ -1788,8 +2016,14 @@ class OrderView(LoginRequiredMixin, View):
                 hasCoupon = False
                 if coupon:
                     hasCoupon = True
-                billing_address = order.billing_address
-                shipping_address = order.shipping_address
+                if order.billing_address != None:
+                    billing_address = order.billing_address.street_address
+                else:
+                    billing_address = "Address borttagen"
+                if order.shipping_address != None:
+                    shipping_address = order.shipping_address.street_address
+                else:
+                    shipping_address = "Address borttagen"
                 theClient = order.user
                 theClientInfo = UserInfo.objects.get(user=order.user)
                 path = self.request.get_full_path()
@@ -1907,6 +2141,39 @@ class OrderView(LoginRequiredMixin, View):
                         item.save()
                     info_message = get_message('info', 61)
                     messages.info(self.request, info_message)
+                if 'CancelOrder' in self.request.POST.keys():
+                    # we have granted full money back without reutrn
+                    order.refund_granted = True
+                    order.removed_order = True
+                    order.comment = "Avbeställt hela ordern"
+                    # set refund for all orderItems
+                    for item in orderItems:
+                        item.refund_granted = True
+                        item.removed_from_order = True
+                        item.save()
+                    info_message = "Ordern har avbeställts"
+                    messages.info(self.request, info_message)
+                if 'CancelCancelOrder' in self.request.POST.keys():
+                    if not order.refund_handled:
+                        print("In refund handling")
+                        # if we havent refunded the money we can return the order as was
+                        order.refund_flag = False
+                        order.refund_granted = False
+                        order.removed_order = False
+                        if order.comment == "Avbeställt hela ordern":
+                            order.comment = ""
+                        # set refund for all orderItems
+                        for item in orderItems:
+                            if not item.refund_handled:
+                                item.refund_granted = False
+                                item.removed_from_order = False
+                                item.save()
+                        info_message = "Ordern tillbaka lagd"
+                        messages.info(self.request, info_message)
+                    else:
+                        warning_message = "Ordern har betalats tillbaka och kan inte bara läggas tillbaka som den är. Kunden måste lägga en ny order."
+                        messages.warning(self.request, warning_message)
+                order.updated_date = make_aware(datetime.now())
                 order.save()
                 return redirect("support:orders")
 
@@ -1982,46 +2249,76 @@ class OrderItemView(LoginRequiredMixin, View):
                 item.returned_flag = True
                 info_message = get_message('info', 64)
                 messages.info(
-                    self.request, item.title + info_message)
+                    self.request, item.title + " " + info_message)
             if 'ItemToReturnUn' in self.request.POST.keys():
                 item.returned_flag = False
                 info_message = get_message('info', 65)
                 messages.info(
-                    self.request, item.title + info_message)
+                    self.request, item.title + " " + info_message)
             if 'ItemReturned' in self.request.POST.keys():
                 item.returned = True
                 info_message = get_message('info', 66)
                 messages.info(
-                    self.request, item.title + info_message)
+                    self.request, item.title + " " + info_message)
             if 'ItemUnReturned' in self.request.POST.keys():
                 item.returned = False
                 info_message = get_message('info', 67)
                 messages.info(
-                    self.request, item.title + info_message)
+                    self.request, item.title + " " + info_message)
             if 'PaybackRequested' in self.request.POST.keys():
                 item.refund_flag = True
                 info_message = get_message('info', 68)
                 messages.info(
-                    self.request, info_message + item.title)
+                    self.request, info_message + " " + item.title)
             if 'PaybackRequestCancel' in self.request.POST.keys():
                 item.refund_flag = False
                 info_message = get_message('info', 69)
                 messages.info(
-                    self.request, info_message + item.title)
+                    self.request, info_message + " " + item.title)
             if 'PaybackApproved' in self.request.POST.keys():
                 item.refund = True
                 info_message = get_message('info', 70)
                 messages.info(
-                    self.request, info_message + item.title)
+                    self.request, info_message + " " + item.title)
             if 'PaybackCancel' in self.request.POST.keys():
                 item.refund = False
                 info_message = get_message('info', 71)
                 messages.info(
-                    self.request, info_message + item.title)
+                    self.request, info_message + " " + item.title)
+            if 'CancelItem' in self.request.POST.keys():
+                item.refund = True
+                item.removed_from_order = True
+                item.save()
+                check_num = order.items.filter(
+                    removed_from_order=False).count() - 1
+                message = "Avbeställt " + item.title
+                order.comment = "Avbeställt delar"
+                if check_num <= 0:
+                    # nothing left in the order, order should be canceled too and refunded, but we cant remove order until refund has been sorted
+                    order.refund_granted = True
+                    order.removed_order = True
+                    order.comment = "Avbeställt order"
+                    message = order.comment
+                order.save()
+
+                messages.info(
+                    self.request, message)
+            if 'CancelCancelItem' in self.request.POST.keys():
+                item.refund = False
+                item.removed_from_order = False
+                item.save()
+                message = "Åter i beställning: " + item.title
+                order.comment = ""
+                order.refund_granted = False
+                order.removed_order = False
+                order.save()
+
+                messages.info(
+                    self.request, message)
 
             info_message = get_message('info', 72)
             messages.info(
-                self.request, item.title + info_message)
+                self.request, item.title + " " + info_message)
             item.save()
             # changes made create redirect  with variable
             base_url = order.get_absolute_url_support()

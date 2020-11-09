@@ -33,9 +33,11 @@ class Overview(LoginRequiredMixin, View):
 
             try:
                 orders = Order.objects.filter(
-                    being_delivered=False, ordered=True)[:limit]
+                    being_delivered=False,
+                    removed_order=False, ordered=True)[:limit]
                 number_orders = Order.objects.filter(
-                    being_delivered=False, ordered=True).count()
+                    being_delivered=False,
+                    removed_order=False, ordered=True).count()
             except ObjectDoesNotExist:
                 orders = {}
                 number_orders = 0
@@ -103,12 +105,14 @@ class Overview(LoginRequiredMixin, View):
                         offset = (whichPageOrder - 1) * limit
                         o_l = offset + limit
                         orders = Order.objects.filter(
-                            being_delivered=False, ordered=True)[offset:o_l]
+                            being_delivered=False, removed_order=False, ordered=True)[offset:o_l]
                     else:
                         orders = Order.objects.filter(
-                            being_delivered=False, ordered=True)[:limit]
+                            being_delivered=False,
+                            removed_order=False, ordered=True)[:limit]
                     number_orders = Order.objects.filter(
-                        being_delivered=False, ordered=True).count()
+                        being_delivered=False,
+                        removed_order=False, ordered=True).count()
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
@@ -156,14 +160,16 @@ class Overview(LoginRequiredMixin, View):
 
                 try:
                     number_orders = Order.objects.filter(
-                        being_delivered=False, ordered=True).count()
+                        being_delivered=False,
+                        removed_order=False, ordered=True).count()
                     whichPageOrder = 1
                     if current_page_orders < (number_orders / limit):
                         whichPageOrder = current_page_orders + 1
                     offset = (whichPageOrder - 1) * limit
                     o_l = offset + limit
                     orders = Order.objects.filter(
-                        being_delivered=False, ordered=True)[offset:o_l]
+                        being_delivered=False,
+                        removed_order=False, ordered=True)[offset:o_l]
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
@@ -215,14 +221,17 @@ class Overview(LoginRequiredMixin, View):
                         whichPageOrder = current_page_orders - 1
                     if whichPageOrder == 1:
                         orders = Order.objects.filter(
-                            being_delivered=False, ordered=True)[:limit]
+                            being_delivered=False,
+                            removed_order=False, ordered=True)[:limit]
                     else:
                         offset = (whichPageOrder - 1) * limit
                         o_l = offset + limit
                         orders = Order.objects.filter(
-                            being_delivered=False, ordered=True)[offset:o_l]
+                            being_delivered=False,
+                            removed_order=False, ordered=True)[offset:o_l]
                     number_orders = Order.objects.filter(
-                        being_delivered=False, ordered=True).count()
+                        being_delivered=False,
+                        removed_order=False, ordered=True).count()
                 except ObjectDoesNotExist:
                     orders = {}
                     number_orders = 0
@@ -1843,14 +1852,14 @@ class OrderHandlingView(LoginRequiredMixin, View):
         o_pages = 1
         try:
             orders = Order.objects.filter(
-                ordered=True, being_delivered=False).order_by('id')[:limit]
+                ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
             info1 = ""
         except ObjectDoesNotExist:
             orders = []
             info1 = get_message('info', 49)
 
         number_orders = Order.objects.filter(
-            ordered=True, being_delivered=False).count()
+            ordered=True, being_delivered=False, removed_order=False).count()
 
         if number_orders > limit:
             # if there are more we divide by the limit
@@ -1921,7 +1930,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
         # get max pages
         o_pages = 1
         number_orders = Order.objects.filter(
-            ordered=True, being_delivered=False).count()
+            ordered=True, being_delivered=False, removed_order=False).count()
 
         if number_orders > limit:
             # if there are more we divide by the limit
@@ -2074,7 +2083,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
                 offset = (current_page - 1) * limit
                 o_l = offset + limit
                 orders = Order.objects.filter(
-                    ordered=True, being_delivered=False).order_by('id')[offset:o_l]
+                    ordered=True, being_delivered=False, removed_order=False).order_by('id')[offset:o_l]
             except ObjectDoesNotExist:
                 # no orders left to complete
                 info1 = get_message('info', 49)
@@ -2082,7 +2091,7 @@ class OrderHandlingView(LoginRequiredMixin, View):
         else:
             try:
                 orders = Order.objects.filter(
-                    ordered=True, being_delivered=False).order_by('id')[:limit]
+                    ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
             except ObjectDoesNotExist:
                 # no orders left to complete
                 info1 = get_message('info', 49)

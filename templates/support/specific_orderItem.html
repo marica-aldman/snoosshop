@@ -50,7 +50,11 @@
                             Rabatt
                         </td>
                         <td>
+                            {% if item.discount_price %}
                             {{ item.discount_price }}
+                            {% else %}
+                                ---
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -63,10 +67,26 @@
                     </tr>
                     <tr>
                         <td>
+                            Avbeställd
+                        </td>
+                        <td>
+                            {% if item.removed_from_order %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             Skickad
                         </td>
                         <td>
-                            {{ item.sent }}
+                            {% if item.sent %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -74,7 +94,11 @@
                             Flaggad för retur
                         </td>
                         <td>
-                            {{ item.returned_flag }}
+                            {% if item.returned_flag %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -82,7 +106,11 @@
                             Returnerad
                         </td>
                         <td>
-                            {{ item.returned }}
+                            {% if item.returned %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -90,7 +118,11 @@
                             Återbetalningbegärd
                         </td>
                         <td>
-                            {{ item.refund_flag }}
+                            {% if item.refund_flag %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -98,17 +130,21 @@
                             Återbetalningbeviljad
                         </td>
                         <td>
-                            {{ item.refund }}
+                            {% if item.refund %}
+                            Ja
+                            {% else %}
+                            Nej
+                            {% endif %}
                         </td>
                     </tr>
+                    {% if item.refund_handled %}
                     <tr>
-                        <td>
-                            Markera för retur
-                        </td>
-                        <td>
-                            <input type="checkbox" name="ItemToReturn" value="True">
+                        <td style="colspan: 2">
+                            Varan har betalats tillbaka och vi kan därmed inte göra några justeringar här
                         </td>
                     </tr>
+                    {% else %}
+                            {% if item.returned_flag %}
                     <tr>
                         <td>
                             Avmarkera för retur
@@ -117,14 +153,17 @@
                             <input type="checkbox" name="ItemToReturnUn" value="True">
                         </td>
                     </tr>
+                            {% else %}
                     <tr>
                         <td>
-                            Markera returnerad
+                            Markera för retur
                         </td>
                         <td>
-                            <input type="checkbox" name="ItemReturned" value="True">
+                            <input type="checkbox" name="ItemToReturn" value="True">
                         </td>
                     </tr>
+                            {% endif %}
+                            {% if item.returned %}
                     <tr>
                         <td>
                             Markera oreturnerad
@@ -133,14 +172,17 @@
                             <input type="checkbox" name="ItemUnReturned" value="True">
                         </td>
                     </tr>
+                            {% else %}
                     <tr>
                         <td>
-                            Markera Återbetalningbegärd
+                            Markera returnerad
                         </td>
                         <td>
-                            <input type="checkbox" name="PaybackRequested" value="True">
+                            <input type="checkbox" name="ItemReturned" value="True">
                         </td>
                     </tr>
+                            {% endif %}
+                            {% if item.refund_flag %}
                     <tr>
                         <td>
                             Avmarkera Återbetalningbegärd
@@ -149,14 +191,17 @@
                             <input type="checkbox" name="PaybackRequestCancel" value="True">
                         </td>
                     </tr>
+                            {% else %}
                     <tr>
                         <td>
-                            Godkänn återbetalning
+                            Markera Återbetalningbegärd
                         </td>
                         <td>
-                            <input type="checkbox" name="PaybackApproved" value="True">
+                            <input type="checkbox" name="PaybackRequested" value="True">
                         </td>
                     </tr>
+                            {% endif %}
+                            {% if item.refund %}
                     <tr>
                         <td>
                             Avbryt återbetalning
@@ -165,6 +210,39 @@
                             <input type="checkbox" name="PaybackCancel" value="True">
                         </td>
                     </tr>
+                            {% else %}
+                    <tr>
+                        <td>
+                            Godkänn återbetalning
+                        </td>
+                        <td>
+                            <input type="checkbox" name="PaybackApproved" value="True">
+                        </td>
+                    </tr>
+                            {% endif %}
+                        {% if item.sent %}
+                        {% else %}
+                            {% if item.removed_from_order %}
+                    <tr>
+                        <td>
+                            Lägg tillbaka i beställning
+                        </td>
+                        <td>
+                            <input type="checkbox" name="CancelCancelItem" value="True">
+                        </td>
+                    </tr>
+                            {% else %}
+                    <tr>
+                        <td>
+                            Avbeställ vara
+                        </td>
+                        <td>
+                            <input type="checkbox" name="CancelItem" value="True">
+                        </td>
+                    </tr>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
                 </tbody>
             </table>
 
