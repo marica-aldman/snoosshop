@@ -8,6 +8,13 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="container">
+    <div>
+        <a href="{% url 'support:search_users' %}">
+            <button type="submit" class="btn btn-primary float-right">
+                Tillbaka
+            </button>
+        </a>
+    </div>
     <!--orders-->
     <!--active-->
         <div class="border rounded mb-3">

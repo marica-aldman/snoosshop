@@ -9,6 +9,13 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="container">
+    <div>
+        <a href="{% url 'support:search_users' %}">
+            <button type="submit" class="btn btn-primary float-right">
+                Tillbaka
+            </button>
+        </a>
+    </div>
     <!--profile-->
         <div class="border rounded mb-3 p-2">
         <h3>
@@ -97,6 +104,107 @@
             {% endfor %}
             </tbody>
         </table>
+        <div class="d-flex w-100 justify-content-around">
+            <ul class="pagination">
+                {% if previous_page %}
+                <li class="page-item">
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_value}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="True" name="previousPage" class="page-link">
+                            &laquo;
+                        </button>
+                    </form>
+                </li>
+                {% endif %}
+                {% if start %}
+                <li>
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_value}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                            1
+                        </button>
+                </li>
+                <li>
+                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0" disabled>
+                            ...
+                        </button>
+                    </form>
+                </li>
+                {% endif %}
+                {% if current_page == 4 %}
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_value}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                            1
+                        </button>
+                    </form>
+                {% endif %}
+                {% for address in more_addresses %}
+                {%if current_page == address %}
+                <li class="page-item active">
+                {% else %}
+                <li class="page-item">
+                {% endif %}
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_type}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="{{ address }}" name="page" {% if current_page == address %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                            {{address}}<span class="sr-only">(current)</span>
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+                {% if end %}
+                <li>
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_value}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0" disabled>
+                            ...
+                        </button>
+                </li>
+                <li>
+                        <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0">
+                            {{max}}
+                        </button>
+                    </form>
+                </li>
+                {% endif %}
+                {% if next_page %}
+                <li class="page-item">
+                    <form method="POST">
+                    {% csrf_token %}
+                        <input type="hidden" value="pagination" name="paging">
+                        <input type="hidden" value="{{current_page}}" name="current_page">
+                        <input type="hidden" name="search" value="{{search_value}}">
+                        <input type="hidden" name="person" value="{{person.id}}">
+                        <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
+                        &raquo;
+                        </button>
+                    </form>
+                </li>
+                {% endif %}
+            </ul>
+
+        </div>
 
     </div>
 

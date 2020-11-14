@@ -288,12 +288,13 @@ def get_list_of_pages(selected_page, max_page):
             if selected_page == 4:
                 i = 2
                 end = 6
+                where = "4"
+            else:
+                where = "start"
 
             while i <= end:
                 page_list.append(i)
                 i += 1
-
-            where = "start"
 
         return page_list, where
 

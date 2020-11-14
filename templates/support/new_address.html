@@ -9,6 +9,16 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="container">
+    <form method="POST" action="{% url 'support:edit_addresses' %}">
+        {% csrf_token %}
+        <div>
+            <div>
+                <button type="submit" class='btn btn-primary' name="back" value="{{person.id}}">
+                    Tillbaka
+                </button>
+            </div>
+        </div>
+    </form>
     <!--orders-->
     <!--active-->
         <div class="border rounded mb-3">

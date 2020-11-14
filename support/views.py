@@ -1392,6 +1392,8 @@ class Users(LoginRequiredMixin, View):
             # get the limit of users and a count of all users
 
             limit = default_pagination_values
+            # test
+            limit = 1
 
             try:
                 user_objects = User.objects.filter(
@@ -1425,37 +1427,53 @@ class Users(LoginRequiredMixin, View):
                 if type(u_pages) != "int":
                     u_pages = int(u_pages)
 
+            # set current page, search type and search_value to start values
+            current_page = 1
+            search_value = ""
+
             # create a list for a ul to work through
 
-            more_users = []
+            more_users, where = get_list_of_pages(1, u_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(u_pages):
-                i += 1
-                more_users.append({'number': i})
+            # pagination booleans
+
+            if current_page == 1 or where == "no extras":
+                start = False
+            else:
+                start = True
+
+            if current_page == u_pages or where == "no extras":
+                end = False
+            else:
+                end = True
+
+            if current_page < u_pages:
+                next_page = True
+            else:
+                next_page = False
+
+            if current_page > 1:
+                previous_page = True
+            else:
+                previous_page = False
 
             # make search for specific order or customer
 
             form = searchUserForm()
 
-            # set current page to 1
-            current_page = 1
-
-            # set the hidden value for wether or not we have done a search
-
-            search_type = "None"
-            search_value = ""
-
             context = {
                 'gdpr_check': gdpr_check,
-                'search_type': search_type,
                 'search_value': search_value,
                 'users': users,
                 'more_users': more_users,
                 'form': form,
                 'current_page': current_page,
+                'search_value': search_value,
                 'max_pages': u_pages,
+                'previous_page': previous_page,
+                'next_page': next_page,
+                'end': end,
+                'start': start,
             }
 
             return render(self.request, "support/user_search.html", context)
@@ -1472,6 +1490,8 @@ class Users(LoginRequiredMixin, View):
         try:
             # GDPR check
             limit = default_pagination_values
+            # test
+            limit = 1
             # where are we
             current_page = 1
             if 'current_page' in self.request.POST.keys():
@@ -1483,23 +1503,84 @@ class Users(LoginRequiredMixin, View):
 
             # what button did we press
 
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-                # make a form and populate so we can clean the data
-                form = searchUserForm(self.request.POST)
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
+                print("test")
+                # check if its a new search
+                if self.request.POST['search'] == "new":
 
-                if form.is_valid():
-                    # get the values
-                    user_id = form.cleaned_data.get('user_id')
-                    if user_id == None:
-                        # resetting page
+                    # make a form and populate so we can clean the data
+
+                    form = searchUserForm(self.request.POST)
+
+                    if form.is_valid():
+                        # get the values
+                        user_id = form.cleaned_data.get('user_id')
+                        if user_id == None:
+                            # resetting page
+                            return redirect("support:search_users")
+                        # get the user
+
+                        try:
+                            the_user = []
+                            user_object = User.objects.filter(
+                                id=user_id, groups__name='client')
+
+                            if user_object.count() == 1:
+                                the_user_object = user_object[0]
+
+                                a_user = UserInfo.objects.get(
+                                    user=the_user_object)
+
+                                the_user.append({
+                                    "id": the_user_object.id,
+                                    'person': a_user,
+                                })
+
+                                # there is only one
+                                u_pages = 1
+                                more_users = [1]
+
+                                # set current page to 1
+                                current_page = 1
+                                search_value = the_user_object.id
+
+                                context = {
+                                    'users': the_user,
+                                    'more_users': more_users,
+                                    'form': form,
+                                    'current_page': current_page,
+                                    'search_value': search_value,
+                                    'max': u_pages,
+                                    'previous_page': False,
+                                    'next_page': False,
+                                    'end': False,
+                                    'start': False,
+                                }
+
+                                return render(self.request, "support/user_search.html", context)
+                            else:
+                                messages.info(
+                                    self.request, "Kan inte hitta användaren.")
+                                return redirect("support:search_users")
+
+                        except ObjectDoesNotExist:
+                            info_message = get_message('info', 22)
+                            print(info_message)
+                            messages.info(
+                                self.request, info_message)
+                            return redirect("support:search_users")
+                    else:
+                        messages.info(
+                            self.request, "Formuläret ej korrekt ifyllt, var god använd siffror för id. Om problemet kvarstår kontakta IT supporten.")
                         return redirect("support:search_users")
-                    # search done on user
-                    search_type = user_id
-                    # get the user
+                else:
+                    user_id = int(self.request.POST['search'])
+                    the_user = []
+                    user_object = User.objects.filter(
+                        id=user_id, groups__name='client')
 
-                    try:
-                        the_user = []
-                        the_user_object = User.objects.get(id=user_id)
+                    if user_object.count() == 1:
+                        the_user_object = user_object[0]
 
                         a_user = UserInfo.objects.get(
                             user=the_user_object)
@@ -1511,179 +1592,135 @@ class Users(LoginRequiredMixin, View):
 
                         # there is only one
                         u_pages = 1
-                        more_users = [{'number': 1}]
+                        more_users = [1]
 
                         # set current page to 1
                         current_page = 1
+                        search_value = the_user_object.id
 
                         context = {
-                            'search_type': search_type,
                             'users': the_user,
                             'more_users': more_users,
                             'form': form,
                             'current_page': current_page,
+                            'search_value': search_value,
                             'max_pages': u_pages,
+                            'previous_page': False,
+                            'next_page': False,
+                            'end': False,
+                            'start': False,
                         }
 
                         return render(self.request, "support/user_search.html", context)
-
-                    except ObjectDoesNotExist:
-                        info_message = get_message('info', 22)
-                        print(info_message)
+                    else:
                         messages.info(
-                            self.request, info_message)
+                            self.request, "Kan inte hitta användaren.")
                         return redirect("support:search_users")
-                else:
-                    messages.info(
-                        self.request, "Formuläret ej korrekt ifyllt, var god använd siffror för id. Om problemet kvarstår kontakta IT supporten.")
-                    return redirect("support:search_users")
 
             elif 'nextPage' in self.request.POST.keys():
-                limit = default_pagination_values
-                # get what type of search
-                search_type = self.request.POST['searched']
-                if search_type != "None":
-                    try:
-                        search_type = int(search_type)
-                    except ValueError:
-                        messages.warning(
-                            self.request, "ID kan endast skrivas med siffror.")
-                        return redirect("support:search_users")
+
                 try:
-                    current_page = int(self.request.POST['page'])
-                except ValueError:
+                    number_users = User.objects.filter(
+                        groups__name='client').count()
+                except ObjectDoesNotExist:
+                    users = {}
+                    number_users = 0
+
+                # figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                u_pages = 1
+
+                if number_users > limit:
+                    # if there are more we divide by the limit
+                    u_pages = number_users / limit
+                    # see if there is a decimal
+                    testU = int(u_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testU != u_pages:
+                        u_pages = int(u_pages)
+                        u_pages += 1
+
+                try:
+                    if current_page < u_pages:
+                        current_page += 1
+                    if current_page >= u_pages:
+                        current_page = u_pages
+
+                    offset = (current_page - 1) * limit
+                    o_and_l = offset + limit
+                    user_objects = User.objects.filter(
+                        groups__name='client')[offset:o_and_l]
+                    users = []
+                    for a_user in user_objects:
+                        the_user = UserInfo.objects.get(user=a_user)
+                        users.append({
+                            'id': a_user.id,
+                            'person': the_user})
+                except ObjectDoesNotExist:
+                    message = get_message('error', 48)
                     messages.warning(
-                        self.request, "Något gick fel, om detta fortsätter kontakta it supporten.")
+                        self.request, message)
                     return redirect("support:search_users")
 
-                if search_type == None:
-                    try:
-                        number_users = User.objects.filter(
-                            groups__name='client').count()
-                    except ObjectDoesNotExist:
-                        users = {}
-                        number_users = 0
+                # create a list for a ul to work through
 
-                    # figure out how many pages there are
-                    # if there are only the limit or fewer number of pages will be 1
+                more_users, where = get_list_of_pages(
+                    current_page, u_pages)
 
-                    u_pages = 1
+                # pagination booleans
 
-                    if number_users > limit:
-                        # if there are more we divide by the limit
-                        u_pages = number_users / limit
-                        # see if there is a decimal
-                        testU = int(u_pages)
-                        # if there isn't an even number make an extra page for the last group
-                        if testU != u_pages:
-                            u_pages = int(u_pages)
-                            u_pages += 1
-
-                    # create a list for a ul to work through
-
-                    more_users = []
-
-                    i = 0
-                    # populate the list with the amount of pages there are
-                    for i in range(u_pages):
-                        i += 1
-                        more_users.append({'number': i})
-                        try:
-                            if current_page < u_pages:
-                                current_page += 1
-
-                            offset = current_page * limit
-                            o_and_l = offset + limit
-                            user_objects = User.objects.filter(
-                                groups__name='client')[offset:o_and_l]
-                            users = []
-                            for a_user in user_objects:
-                                the_user = UserInfo.objects.get(user=a_user)
-                                users.append({
-                                    'id': a_user.id,
-                                    'person': the_user})
-                        except ObjectDoesNotExist:
-                            message = get_message('error', 48)
-                            messages.warning(
-                                self.request, message)
-                            return redirect("support:search_users")
-
-                    # make search for specific order or customer
-
-                    form = searchUserForm()
-
-                    # set the hidden value for wether or not we have done a search
-
-                    search_type = "None"
-                    search_value = ""
-
-                    context = {
-                        'gdpr_check': gdpr_check,
-                        'search_type': search_type,
-                        'search_value': search_value,
-                        'users': users,
-                        'more_users': more_users,
-                        'form': form,
-                        'current_page': current_page,
-                        'max_pages': u_pages,
-                    }
-
-                    return render(self.request, "support/user_search.html", context)
+                if current_page == 1 or where == "no extras":
+                    start = False
                 else:
-                    try:
-                        user_objects = User.objects.filter(
-                            id=search_type)
-                        users = []
-                        for a_user in user_objects:
-                            the_user = UserInfo.objects.get(user=a_user)
-                            users.append({
-                                'id': a_user.id,
-                                'person': the_user})
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 48)
-                        messages.warning(
-                            self.request, message)
-                        return redirect("support:search_users")
+                    start = True
 
-                    # there is only one
-                    u_pages = 1
-                    more_users = [{'number': 1}]
+                if current_page == u_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
 
-                    # set current page to 1
-                    current_page = 1
+                if current_page < u_pages:
+                    next_page = True
+                else:
+                    next_page = False
 
-                    # set the search type
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
-                    search_type = "userID"
+                # make search for specific order or customer
 
-                    context = {
-                        'gdpr_check': gdpr_check,
-                        'search_type': search_type,
-                        'users': the_user,
-                        'more_users': more_users,
-                        'form': form,
-                        'current_page': current_page,
-                        'max_pages': u_pages,
-                    }
+                form = searchUserForm()
 
-                    return render(self.request, "support/user_search.html", context)
+                # set the hidden value for wether or not we have done a search
+
+                search_value = ""
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_value': search_value,
+                    'users': users,
+                    'more_users': more_users,
+                    'form': form,
+                    'current_page': int(current_page),
+                    'search_value': search_value,
+                    'max': u_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
+                }
+
+                return render(self.request, "support/user_search.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
-                search_type = self.request.POST['searched']
-                if search_type != None:
-                    try:
-                        search_type = int(search_type)
-                    except ValueError:
-                        messages.warning(
-                            self.request, "ID kan endast skrivas med siffror.")
-                        return redirect("support:search_users")
-
-                limit = default_pagination_values
+                search_value = self.request.POST['search']
                 if current_page > 2:
                     try:
-                        if current_page > 1:
-                            current_page -= 1
-                        offset = current_page * limit
+                        current_page = current_page - 1
+                        offset = (current_page - 1) * limit
                         o_and_l = offset + limit
                         users = User.objects.filter(
                             groups__name='client')[offset:o_and_l]
@@ -1709,13 +1746,30 @@ class Users(LoginRequiredMixin, View):
 
                         # create a list for a ul to work through
 
-                        more_users = []
+                        more_users, where = get_list_of_pages(
+                            current_page, u_pages)
 
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == u_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if current_page < u_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
 
                         # make search for specific order or customer
 
@@ -1723,18 +1777,21 @@ class Users(LoginRequiredMixin, View):
 
                         # set the hidden value for wether or not we have done a search
 
-                        search_type = "None"
                         search_value = "None"
 
                         context = {
                             'gdpr_check': gdpr_check,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
                             'current_page': current_page,
+                            'search_value': search_value,
                             'max_pages': u_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "support/user_search.html", context)
@@ -1747,14 +1804,21 @@ class Users(LoginRequiredMixin, View):
 
                 else:
                     try:
-                        if current_page > 1:
+                        if current_page == 2:
                             current_page -= 1
                         if current_page < 1:
                             current_page = 1
-                        users = User.objects.filter(
+                        user_objects = User.objects.filter(
                             groups__name='client')[:limit]
+                        users = []
+                        for a_user in user_objects:
+                            the_user = UserInfo.objects.get(user=a_user)
+                            users.append({
+                                'id': a_user.id,
+                                'person': the_user})
                         number_users = User.objects.filter(
                             groups__name='client').count()
+                        print(users)
 
                         # figure out how many pages there are
                         # if there are only the limit or fewer number of pages will be 1
@@ -1763,7 +1827,7 @@ class Users(LoginRequiredMixin, View):
 
                         if number_users > limit:
                             # if there are more we divide by the limit
-                            u_pages = number_users / 20
+                            u_pages = number_users / limit
                             # see if there is a decimal
                             testU = int(u_pages)
                             # if there isn't an even number make an extra page for the last group
@@ -1775,32 +1839,51 @@ class Users(LoginRequiredMixin, View):
 
                         # create a list for a ul to work through
 
-                        more_users = []
+                        more_users, where = get_list_of_pages(
+                            1, u_pages)
 
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == u_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if current_page < u_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
 
                         # make search for specific order or customer
 
                         form = searchUserForm()
 
                         # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
+                        search_value = ""
 
                         context = {
                             'gdpr_check': gdpr_check,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
+                            'current_page': int(current_page),
+                            'search_value': search_value,
+                            'max': u_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "support/user_search.html", context)
@@ -1814,25 +1897,12 @@ class Users(LoginRequiredMixin, View):
             elif 'page' in self.request.POST.keys():
                 # paging through the pagination using specific offset
                 # get what type of search
-                search_type = self.request.POST['searched']
-                if search_type != None:
-                    try:
-                        search_type = int(search_type)
-                    except ValueError:
-                        messages.warning(
-                            self.request, "ID kan endast skrivas med siffror.")
-                        return redirect("support:search_users")
-                try:
-                    current_page = int(self.request.POST['page'])
-                except ValueError:
-                    messages.warning(
-                        self.request, "Något gick fel, om detta fortsätter kontakta it supporten.")
-                    return redirect("support:search_users")
+                search_value = self.request.POST['search']
+                current_page = int(self.request.POST['page'])
 
                 if current_page > 1:
-                    limit = default_pagination_values
                     try:
-                        offset = current_page * limit
+                        offset = (current_page - 1) * limit
                         o_and_l = offset + limit
                         user_objects = User.objects.filter(
                             groups__name='client')[offset:o_and_l]
@@ -1864,13 +1934,30 @@ class Users(LoginRequiredMixin, View):
 
                         # create a list for a ul to work through
 
-                        more_users = []
+                        more_users, where = get_list_of_pages(
+                            current_page, u_pages)
 
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == u_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if current_page < u_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
 
                         # make search for specific order or customer
 
@@ -1878,18 +1965,21 @@ class Users(LoginRequiredMixin, View):
 
                         # set the hidden value for wether or not we have done a search
 
-                        search_type = "None"
-                        search_value = "None"
+                        search_value = ""
 
                         context = {
                             'gdpr_check': gdpr_check,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
-                            'current_page': current_page,
-                            'max_pages': u_pages,
+                            'current_page': int(current_page),
+                            'search_value': search_value,
+                            'max': u_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "support/user_search.html", context)
@@ -1901,8 +1991,6 @@ class Users(LoginRequiredMixin, View):
                         return redirect("support:search_users")
 
                 else:
-
-                    limit = default_pagination_values
                     try:
                         user_objects = User.objects.filter(
                             groups__name='client')[:limit]
@@ -1934,13 +2022,30 @@ class Users(LoginRequiredMixin, View):
 
                         # create a list for a ul to work through
 
-                        more_users = []
+                        more_users, where = get_list_of_pages(
+                            current_page, u_pages)
 
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(u_pages):
-                            i += 1
-                            more_users.append({'number': i})
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == u_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if current_page < u_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
 
                         # make search for specific order or customer
 
@@ -1948,18 +2053,21 @@ class Users(LoginRequiredMixin, View):
 
                         # set the hidden value for wether or not we have done a search
 
-                        search_type = "None"
                         search_value = "None"
 
                         context = {
                             'gdpr_check': gdpr_check,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'users': users,
                             'more_users': more_users,
                             'form': form,
                             'current_page': current_page,
-                            'max_pages': u_pages,
+                            'search_value': search_value,
+                            'max': u_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "support/user_search.html", context)
@@ -2667,17 +2775,73 @@ class EditAdresses(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        limit = default_pagination_values
         try:
-            if 'lookAtAddresses' in self.request.POST.keys():
+            if 'lookAtAddresses' in self.request.POST.keys() or 'back' in self.request.POST.keys():
                 # get the client
-                user_id = int(self.request.POST['lookAtAddresses'])
+                if "back" in self.request.POST.keys():
+                    user_id = int(self.request.POST['back'])
+                if "lookAtAddresses" in self.request.POST.keys():
+                    user_id = int(self.request.POST['lookAtAddresses'])
                 theUser = User.objects.get(id=user_id)
 
                 # get the specific user's addresses
                 try:
-                    addresses = Address.objects.filter(user=theUser)
+                    addresses = Address.objects.filter(user=theUser)[:limit]
+                    number_of_addresses = Address.objects.filter(
+                        user=theUser).count()
                 except ObjectDoesNotExist:
                     addresses = {}
+
+                # count number of pages# figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                a_pages = 1
+
+                if number_of_addresses > limit:
+                    # if there are more we divide by the limit
+                    a_pages = number_of_addresses / limit
+                    # see if there is a decimal
+                    testU = int(a_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testU != a_pages:
+                        a_pages = int(a_pages)
+                        a_pages += 1
+                    if type(a_pages) != "int":
+                        a_pages = int(a_pages)
+
+                # set current page, search type and search_value to start values
+                current_page = 1
+                search_value = ""
+
+                # create a list for a ul to work through
+
+                more_addresses, where = get_list_of_pages(1, a_pages)
+                print(more_addresses)
+                print(where)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == a_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < a_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
                 onsubmit = get_message('warning', 3)
 
                 context = {
@@ -2685,6 +2849,14 @@ class EditAdresses(LoginRequiredMixin, View):
                     'addresses': addresses,
                     'person': theUser,
                     'onsubmit': onsubmit,
+                    'more_addresses': more_addresses,
+                    'current_page': int(current_page),
+                    'search_value': search_value,
+                    'max': a_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "support/edit_addresses.html", context)
@@ -2746,6 +2918,391 @@ class EditAdresses(LoginRequiredMixin, View):
                 else:
                     message.warning(
                         self.request, "Användarinformationen saknades. Detta är ett allvarligt fel kontakta IT supporten.")
+                    return redirect("support:search_users")
+            elif 'paging' in self.request.POST.keys():
+                if 'page' in self.request.POST.keys():
+                    # who again
+                    if "person" in self.request.POST.keys():
+                        user_id = int(self.request.POST['person'])
+                    theUser = User.objects.get(id=user_id)
+                    # page we're looking for
+
+                    page = int(self.request.POST['page'])
+
+                    if page <= 1:
+
+                        # get the specific user's addresses
+                        try:
+                            addresses = Address.objects.filter(user=theUser)[
+                                :limit]
+                            number_of_addresses = Address.objects.filter(
+                                user=theUser).count()
+                        except ObjectDoesNotExist:
+                            addresses = {}
+
+                        # count number of pages# figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
+
+                        a_pages = 1
+
+                        if number_of_addresses > limit:
+                            # if there are more we divide by the limit
+                            a_pages = number_of_addresses / limit
+                            # see if there is a decimal
+                            testU = int(a_pages)
+                            # if there isn't an even number make an extra page for the last group
+                            if testU != a_pages:
+                                a_pages = int(a_pages)
+                                a_pages += 1
+                            if type(a_pages) != "int":
+                                a_pages = int(a_pages)
+
+                        # set current page, search type and search_value to start values
+                        current_page = 1
+                        search_value = ""
+
+                        # create a list for a ul to work through
+
+                        more_addresses, where = get_list_of_pages(1, a_pages)
+                        print(more_addresses)
+                        print(where)
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == a_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < a_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        onsubmit = get_message('warning', 3)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'addresses': addresses,
+                            'person': theUser,
+                            'onsubmit': onsubmit,
+                            'more_addresses': more_addresses,
+                            'current_page': int(current_page),
+                            'search_value': search_value,
+                            'max': a_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "support/edit_addresses.html", context)
+                    else:
+                        # adjust for page
+                        offset = (page - 1) * limit
+                        o_l = offset + limit
+                        current_page = page
+                        try:
+                            addresses = Address.objects.filter(user=theUser)[
+                                offset:o_l]
+                            number_of_addresses = Address.objects.filter(
+                                user=theUser).count()
+                        except ObjectDoesNotExist:
+                            addresses = {}
+
+                        # count number of pages# figure out how many pages there are
+                        # if there are only the limit or fewer number of pages will be 1
+
+                        a_pages = 1
+
+                        if number_of_addresses > limit:
+                            # if there are more we divide by the limit
+                            a_pages = number_of_addresses / limit
+                            # see if there is a decimal
+                            testU = int(a_pages)
+                            # if there isn't an even number make an extra page for the last group
+                            if testU != a_pages:
+                                a_pages = int(a_pages)
+                                a_pages += 1
+                            if type(a_pages) != "int":
+                                a_pages = int(a_pages)
+
+                        # set current page, search type and search_value to start values
+                        search_value = ""
+
+                        # create a list for a ul to work through
+
+                        more_addresses, where = get_list_of_pages(
+                            current_page, a_pages)
+                        print(where)
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if where == "4" or where == "start":
+                            start = False
+
+                        if current_page == a_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < a_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        if where == "mid":
+                            start = True
+                            end = True
+
+                        onsubmit = get_message('warning', 3)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'addresses': addresses,
+                            'person': theUser,
+                            'onsubmit': onsubmit,
+                            'more_addresses': more_addresses,
+                            'current_page': int(current_page),
+                            'search_value': search_value,
+                            'max': a_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "support/edit_addresses.html", context)
+                elif 'nextPage' in self.request.POST.keys():
+                    # who again
+                    if "person" in self.request.POST.keys():
+                        user_id = int(self.request.POST['person'])
+                    theUser = User.objects.get(id=user_id)
+                    # page we're looking for
+                    current_page = int(self.request.POST['current_page'])
+
+                    # get the specific user's number of addresses
+                    try:
+                        number_of_addresses = Address.objects.filter(
+                            user=theUser).count()
+                    except ObjectDoesNotExist:
+                        addresses = {}
+
+                    # count number of pages# figure out how many pages there are
+                    # if there are only the limit or fewer number of pages will be 1
+
+                    a_pages = 1
+
+                    if number_of_addresses > limit:
+                        # if there are more we divide by the limit
+                        a_pages = number_of_addresses / limit
+                        # see if there is a decimal
+                        testU = int(a_pages)
+                        # if there isn't an even number make an extra page for the last group
+                        if testU != a_pages:
+                            a_pages = int(a_pages)
+                            a_pages += 1
+                        if type(a_pages) != "int":
+                            a_pages = int(a_pages)
+
+                    if current_page < a_pages:
+                        current_page = current_page + 1
+                    else:
+                        current_page = a_pages
+
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    addresses = Address.objects.filter(user=theUser)[
+                        offset:o_l]
+
+                    # set current page, search type and search_value to start values
+                    search_value = ""
+
+                    # create a list for a ul to work through
+
+                    more_addresses, where = get_list_of_pages(
+                        current_page, a_pages)
+                    print(where)
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if where == "4" or where == "start":
+                        start = False
+
+                    if current_page == a_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if where == "end":
+                        end = False
+
+                    if current_page < a_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
+
+                    if where == "mid":
+                        start = True
+                        end = True
+
+                    onsubmit = get_message('warning', 3)
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'addresses': addresses,
+                        'person': theUser,
+                        'onsubmit': onsubmit,
+                        'more_addresses': more_addresses,
+                        'current_page': int(current_page),
+                        'search_value': search_value,
+                        'max': a_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "support/edit_addresses.html", context)
+
+                elif 'previousPage' in self.request.POST.keys():
+                    # who again
+                    if "person" in self.request.POST.keys():
+                        user_id = int(self.request.POST['person'])
+                    theUser = User.objects.get(id=user_id)
+                    # page we're looking for
+                    current_page = int(self.request.POST['current_page'])
+
+                    # get the specific user's number of addresses
+                    try:
+                        number_of_addresses = Address.objects.filter(
+                            user=theUser).count()
+                    except ObjectDoesNotExist:
+                        addresses = {}
+
+                    # count number of pages# figure out how many pages there are
+                    # if there are only the limit or fewer number of pages will be 1
+
+                    a_pages = 1
+
+                    if number_of_addresses > limit:
+                        # if there are more we divide by the limit
+                        a_pages = number_of_addresses / limit
+                        # see if there is a decimal
+                        testU = int(a_pages)
+                        # if there isn't an even number make an extra page for the last group
+                        if testU != a_pages:
+                            a_pages = int(a_pages)
+                            a_pages += 1
+                        if type(a_pages) != "int":
+                            a_pages = int(a_pages)
+
+                    if current_page >= 3:
+                        current_page = current_page - 1
+                        offset = (current_page - 1) * limit
+                        o_l = offset + limit
+                        addresses = Address.objects.filter(user=theUser)[
+                            offset:o_l]
+                    else:
+                        current_page = 1
+                        addresses = Address.objects.filter(user=theUser)[
+                            :limit]
+
+                    # set current page, search type and search_value to start values
+                    search_value = ""
+
+                    # create a list for a ul to work through
+
+                    more_addresses, where = get_list_of_pages(
+                        current_page, a_pages)
+                    print(where)
+
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if where == "4" or where == "start":
+                        start = False
+
+                    if current_page == a_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if where == "end":
+                        end = False
+
+                    if current_page < a_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
+
+                    if where == "mid":
+                        start = True
+                        end = True
+
+                    onsubmit = get_message('warning', 3)
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'addresses': addresses,
+                        'person': theUser,
+                        'onsubmit': onsubmit,
+                        'more_addresses': more_addresses,
+                        'current_page': int(current_page),
+                        'search_value': search_value,
+                        'max': a_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "support/edit_addresses.html", context)
+                else:
                     return redirect("support:search_users")
             else:
                 message = get_message('error', 63)
