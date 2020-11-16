@@ -44,20 +44,8 @@
                         Efternamn
                     </th>
                     <th>
-                        Profil
+                        &nbsp;
                     </th>
-                    <th>
-                        Företag
-                    </th>
-                    <th>
-                        Addresser
-                    </th>
-                    <th>
-                        Inställningar
-                    </th>
-                    {% comment %} <th>
-                        Support
-                    </th> {% endcomment %}
                 </tr>
             </thead>
             <tbody>
@@ -74,45 +62,13 @@
                         {{ entry.person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'support:edit_user' %}">
+                        <form method="POST" action="{% url 'support:specific_user' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtProfile" class='btn btn-primary'>
+                            <button type="submit" value="{{entry.id}}" name="lookAt" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:edit_company' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtCompany" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:edit_addresses' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtAddresses" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:user_settings' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtSettings" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    {% comment %} <td>
-                        <form method="POST" action="{% url 'support:support' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td> {% endcomment %}
                 </tr>
         {% endfor %}
     {% else %}
@@ -128,45 +84,13 @@
                         {{ entry.person.last_name }}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'support:edit_user' %}">
+                        <form method="POST" action="{% url 'support:specific_user' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtProfile" class='btn btn-primary'>
+                            <button type="submit" value="{{entry.id}}" name="lookAt" class='btn btn-primary'>
                                 Se
                             </button>
                         </form>
                     </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:edit_company' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtCompany" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:edit_addresses' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtAddresses" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'support:user_settings' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{entry.id}}" name="lookAtSettings" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    {% comment %} <td>
-                        <form method="POST" action="{% url 'support:support' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{person.id}}" name="lookAtSupport" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td> {% endcomment %}
                 </tr>
         {% endfor %}
     {% endif %}
@@ -194,10 +118,10 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                         1
                     </button>
-                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                         ...
                     </button>
                 </form>
@@ -236,10 +160,10 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                         ...
                     </button>
-                    <button type="submit" value="{{max}}" name="page" class="page-link">
+                    <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                         {{max}}
                     </button>
                 </form>

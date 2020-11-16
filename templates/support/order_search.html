@@ -13,7 +13,7 @@
         <form method="POST" class="w-100">
             {% csrf_token %}
             <input type="hidden" value="{{current_page}}" name="current_page">
-            <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-around flex-wrap">
                 <div>
                     Referens: {{form.order_ref|as_crispy_field}}
                 </div>
@@ -28,7 +28,7 @@
                 {% endif %}
                 </div>
                 <div>
-                    <button type="submit" name="search" class='btn btn-primary mt-3' value="True">Sök</button>
+                    <button type="submit" name="search" class='btn btn-primary mt-3' value="True" style="padding:10px">Sök</button>
                 </div>
             </div>
         </form>
@@ -39,16 +39,13 @@
         <table class="table-striped table-hover w-100  mb-2">
             <thead class="mdb-color lighten-5">
                 <tr>
-                    <th>
+                    <th style="font-size: 0.8rem;">
                         Order Ref
                     </th>
-                    <th>
-                        Beställd
-                    </th>
-                    <th>
+                    <th style="font-size: 0.8rem;">
                         Status
                     </th>
-                    <th>
+                    <th style="font-size: 0.8rem;">
                         Titta på ordern
                     </th>
                 </tr>
@@ -56,13 +53,10 @@
             <tbody>
         {% for order in orders %}
                 <tr>
-                    <td>
+                    <td style="font-size: 0.8rem;">
                         {{ order.ref_code }}
                     </td>
-                    <td>
-                        {{ order.ordered_date }}
-                    </td>
-                    <td>
+                    <td style="font-size: 0.8rem;">
                         {% if order.refund_granted %}
                             Återbetalning godkänd
                         {% elif order.returned %}
@@ -84,7 +78,7 @@
                     <td>
                         <form method="POST" action="{{ order.get_absolute_url_support }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary' style="font-size: 0.8rem; padding:10px">
                                 Se order
                             </button>
                         </form>
@@ -118,10 +112,10 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                         1
                     </button>
-                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                         ...
                     </button>
                 </form>
@@ -163,10 +157,10 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="False" name="..." class="page-link" disabled>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                         ...
                     </button>
-                    <button type="submit" value="{{max_pages}}" name="page" class="page-link">
+                    <button type="submit" value="{{max_pages}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                         {{max_pages}}
                     </button>
                 </form>

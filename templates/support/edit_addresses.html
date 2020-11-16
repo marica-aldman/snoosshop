@@ -10,11 +10,16 @@
     {% endif %}
     <div class="container">
     <div>
-        <a href="{% url 'support:search_users' %}">
-            <button type="submit" class="btn btn-primary float-right">
-                Tillbaka
-            </button>
-        </a>
+        <form method="POST" action="{% url 'support:specific_user' %}">
+            {% csrf_token %}
+            <div>
+                <div>
+                    <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
+                        Tillbaka
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
     <!--profile-->
         <div class="border rounded mb-3 p-2">
@@ -108,7 +113,7 @@
             <ul class="pagination">
                 {% if previous_page %}
                 <li class="page-item">
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">
@@ -122,25 +127,23 @@
                 {% endif %}
                 {% if start %}
                 <li>
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">
                         <input type="hidden" name="search" value="{{search_value}}">
                         <input type="hidden" name="person" value="{{person.id}}">
-                        <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                        <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                             1
                         </button>
-                </li>
-                <li>
-                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0" disabled>
+                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                             ...
                         </button>
                     </form>
                 </li>
                 {% endif %}
                 {% if current_page == 4 %}
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">
@@ -157,7 +160,7 @@
                 {% else %}
                 <li class="page-item">
                 {% endif %}
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">
@@ -171,18 +174,16 @@
                 {% endfor %}
                 {% if end %}
                 <li>
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">
                         <input type="hidden" name="search" value="{{search_value}}">
                         <input type="hidden" name="person" value="{{person.id}}">
-                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0" disabled>
+                        <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
                             ...
                         </button>
-                </li>
-                <li>
-                        <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0">
+                        <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
                             {{max}}
                         </button>
                     </form>
@@ -190,7 +191,7 @@
                 {% endif %}
                 {% if next_page %}
                 <li class="page-item">
-                    <form method="POST">
+                    <form method="POST" action="{% url 'support:edit_addresses' %}">
                     {% csrf_token %}
                         <input type="hidden" value="pagination" name="paging">
                         <input type="hidden" value="{{current_page}}" name="current_page">

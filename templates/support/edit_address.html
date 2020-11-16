@@ -67,7 +67,7 @@
                             <td>
                                 <select name="address_type" class="select form-control">
                                     {% for choice_list in address_choices %}
-                                        <option value={{choice_list.key}} {% if choice_list.key == address.address_type %}selected{% endif %}>{{choice_list.name}}</option>
+                                        <option value={{choice_list.choice}} {% if choice_list.chosen %}selected{% endif %}>{{choice_list.value}}</option>
                                     {% endfor %}
                                 </select>
                             </td>
@@ -77,7 +77,7 @@
                                 Huvudsaklig address:
                             </td>
                             <td>
-                                <input type="checkbox" {% if address.default%} checked{% endif%} name="default">
+                                <input type="checkbox" {% if address.default%} checked{% endif%} name="default_address">
                             </td>
                         </tr>
                     </tbody>

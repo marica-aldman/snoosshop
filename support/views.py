@@ -152,7 +152,6 @@ class MultipleOrdersView(LoginRequiredMixin, View):
 
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
                 if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    print("here1")
                     # we are paginating a perticular users orders
                     user_id = int(self.request.POST['searchValue'])
                     theUser = User.objects.get(id=user_id)
@@ -634,7 +633,6 @@ class MultipleOrdersView(LoginRequiredMixin, View):
                             try:
                                 orders = Order.objects.filter(
                                     ref_code=order_ref)
-                                print(orders)
                                 number_orders = Order.objects.filter(
                                     ref_code=order_ref).count()
 
@@ -1392,8 +1390,6 @@ class Users(LoginRequiredMixin, View):
             # get the limit of users and a count of all users
 
             limit = default_pagination_values
-            # test
-            limit = 1
 
             try:
                 user_objects = User.objects.filter(
@@ -1490,8 +1486,6 @@ class Users(LoginRequiredMixin, View):
         try:
             # GDPR check
             limit = default_pagination_values
-            # test
-            limit = 1
             # where are we
             current_page = 1
             if 'current_page' in self.request.POST.keys():
@@ -1504,7 +1498,6 @@ class Users(LoginRequiredMixin, View):
             # what button did we press
 
             if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
-                print("test")
                 # check if its a new search
                 if self.request.POST['search'] == "new":
 
@@ -1565,7 +1558,6 @@ class Users(LoginRequiredMixin, View):
 
                         except ObjectDoesNotExist:
                             info_message = get_message('info', 22)
-                            print(info_message)
                             messages.info(
                                 self.request, info_message)
                             return redirect("support:search_users")
@@ -1818,7 +1810,6 @@ class Users(LoginRequiredMixin, View):
                                 'person': the_user})
                         number_users = User.objects.filter(
                             groups__name='client').count()
-                        print(users)
 
                         # figure out how many pages there are
                         # if there are only the limit or fewer number of pages will be 1
@@ -2093,6 +2084,28 @@ class Users(LoginRequiredMixin, View):
             return redirect("support:overview")
 
 
+class SpecificUser(LoginRequiredMixin, View):
+    def get(self, *args, **kwargs):
+        # should never be here
+        return redirect("support:search_users")
+
+    def post(self, *args, **kwargs):
+        # GDPR check
+        gdpr_check = check_gdpr_cookies(self)
+        if 'lookAt' in self.request.POST.keys():
+            user_id = int(self.request.POST['lookAt'])
+            theUser = User.objects.get(id=user_id)
+            userInfo = UserInfo.objects.get(user=theUser)
+
+            context = {
+                'gdpr_check': gdpr_check,
+                'user': theUser,
+                'userInfo': userInfo,
+            }
+
+            return render(self.request, "support/specific_user.html", context)
+
+
 class OrderView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         return redirect("support:orders")
@@ -2263,7 +2276,6 @@ class OrderView(LoginRequiredMixin, View):
                     messages.info(self.request, info_message)
                 if 'CancelCancelOrder' in self.request.POST.keys():
                     if not order.refund_handled:
-                        print("In refund handling")
                         # if we havent refunded the money we can return the order as was
                         order.refund_flag = False
                         order.refund_granted = False
@@ -2613,7 +2625,11 @@ class EditCompany(LoginRequiredMixin, View):
                 try:
                     theUser = User.objects.get(id=user_id)
                     if 'newOrOld' in self.request.POST.keys():
-                        newOrOld = self.request.POST['newOrOld']
+                        testNewOrOld = self.request.POST['newOrOld']
+                        if testNewOrOld == "False":
+                            newOrOld = False
+                        elif testNewOrOld == "True":
+                            newOrOld = True
                         c_form = CompanyInfoForm(self.request.POST)
                         a_form = SetupAddressForm(self.request.POST)
                         if c_form.is_valid():
@@ -2817,8 +2833,6 @@ class EditAdresses(LoginRequiredMixin, View):
                 # create a list for a ul to work through
 
                 more_addresses, where = get_list_of_pages(1, a_pages)
-                print(more_addresses)
-                print(where)
 
                 # pagination booleans
 
@@ -2964,8 +2978,6 @@ class EditAdresses(LoginRequiredMixin, View):
                         # create a list for a ul to work through
 
                         more_addresses, where = get_list_of_pages(1, a_pages)
-                        print(more_addresses)
-                        print(where)
 
                         # pagination booleans
 
@@ -3047,7 +3059,6 @@ class EditAdresses(LoginRequiredMixin, View):
 
                         more_addresses, where = get_list_of_pages(
                             current_page, a_pages)
-                        print(where)
 
                         # pagination booleans
 
@@ -3148,7 +3159,6 @@ class EditAdresses(LoginRequiredMixin, View):
 
                     more_addresses, where = get_list_of_pages(
                         current_page, a_pages)
-                    print(where)
                     # pagination booleans
 
                     if current_page == 1 or where == "no extras":
@@ -3250,7 +3260,6 @@ class EditAdresses(LoginRequiredMixin, View):
 
                     more_addresses, where = get_list_of_pages(
                         current_page, a_pages)
-                    print(where)
 
                     # pagination booleans
 
@@ -3342,14 +3351,46 @@ class EditAdress(LoginRequiredMixin, View):
             except ObjectDoesNotExist:
                 address = Address()
 
-            form = addressForm(address)
+            form = theAddressForm()
+            form.populate(address)
+
+            if address.address_type == "B":
+                CHOICES = [{
+                    "choice": "B",
+                    "value": "Fakturaaddress",
+                    "chosen": True,
+                }, {
+                    "choice": "S",
+                    "value": "Leveransaddress",
+                    "chosen": False,
+                }]
+            elif address.address_type == "S":
+                CHOICES = [{
+                    "choice": "B",
+                    "value": "Fakturaaddress",
+                    "chosen": False,
+                }, {
+                    "choice": "S",
+                    "value": "Leveransaddress",
+                    "chosen": True,
+                }]
+            else:
+                CHOICES = [{
+                    "choice": "B",
+                    "value": "Fakturaaddress",
+                    "chosen": False,
+                }, {
+                    "choice": "S",
+                    "value": "Leveransaddress",
+                    "chosen": False,
+                }]
 
             context = {
                 'gdpr_check': gdpr_check,
                 'person': theUser,
                 'form': form,
                 'address': address,
-                'address_choices': ADDRESS_CHOICES
+                'address_choices': CHOICES
             }
 
             return render(self.request, "support/edit_address.html", context)
@@ -3364,7 +3405,7 @@ class EditAdress(LoginRequiredMixin, View):
             address_id = int(self.request.POST['saveAddress'])
             address = Address.objects.get(id=address_id)
             # get the form
-            form = addressForm(data=self.request.POST, address=address)
+            form = theAddressForm(self.request.POST)
             # check form
             if form.is_valid():
 
@@ -3398,8 +3439,9 @@ class EditAdress(LoginRequiredMixin, View):
                     }
 
                     return render(self.request, "support/edit_address.html", context)
-                if address.default is True:
-                    if 'default_address' in self.request.POST.keys():
+
+                if 'default_address' in self.request.POST.keys():
+                    if not address.default:
                         address.default = True
                         new_address_default(address)
 
@@ -3417,27 +3459,119 @@ class EditAdress(LoginRequiredMixin, View):
                 messages.info(self.request, info_message)
 
                 # render the users addresses for a soft redirect
+                limit = default_pagination_values
                 # get the specific user's addresses
                 try:
-                    addresses = Address.objects.filter(user=theUser)
+                    addresses = Address.objects.filter(user=theUser)[:limit]
+                    number_of_addresses = Address.objects.filter(
+                        user=theUser).count()
                 except ObjectDoesNotExist:
                     addresses = {}
+
+                # count number of pages# figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                a_pages = 1
+
+                if number_of_addresses > limit:
+                    # if there are more we divide by the limit
+                    a_pages = number_of_addresses / limit
+                    # see if there is a decimal
+                    testU = int(a_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testU != a_pages:
+                        a_pages = int(a_pages)
+                        a_pages += 1
+                    if type(a_pages) != "int":
+                        a_pages = int(a_pages)
+
+                # set current page, search type and search_value to start values
+                current_page = 1
+                search_value = ""
+
+                # create a list for a ul to work through
+
+                more_addresses, where = get_list_of_pages(1, a_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == a_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < a_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                onsubmit = get_message('warning', 3)
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'addresses': addresses,
                     'person': theUser,
+                    'onsubmit': onsubmit,
+                    'more_addresses': more_addresses,
+                    'current_page': int(current_page),
+                    'search_value': search_value,
+                    'max': a_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "support/edit_addresses.html", context)
             else:
                 # rerender form
 
+                if address.address_type == "B":
+                    CHOICES = [{
+                        "choice": "B",
+                        "value": "Fakturaaddress",
+                        "chosen": True,
+                    }, {
+                        "choice": "S",
+                        "value": "Leveransaddress",
+                        "chosen": False,
+                    }]
+                elif address.address_type == "S":
+                    CHOICES = [{
+                        "choice": "B",
+                        "value": "Fakturaaddress",
+                        "chosen": False,
+                    }, {
+                        "choice": "S",
+                        "value": "Leveransaddress",
+                        "chosen": True,
+                    }]
+                else:
+                    CHOICES = [{
+                        "choice": "B",
+                        "value": "Fakturaaddress",
+                        "chosen": False,
+                    }, {
+                        "choice": "S",
+                        "value": "Leveransaddress",
+                        "chosen": False,
+                    }]
+
                 context = {
                     'gdpr_check': gdpr_check,
                     'form': form,
                     'address': address,
-                    'address_choices': ADDRESS_CHOICES
+                    'address_choices': CHOICES
                 }
                 info_message = get_message('info', 28)
                 messages.info(self.request, info_message)
@@ -3466,13 +3600,27 @@ class NewAddress(LoginRequiredMixin, View):
             user_id = int(self.request.POST['theClient'])
             theUser = User.objects.get(id=user_id)
             # get form for this using the user id
-            form = NewAddressForm()
+            form = theAddressForm()
+
+            CHOICES = [{
+                "choice": "B",
+                "value": "Fakturaaddress",
+                "chosen": True,
+            }, {
+                "choice": "S",
+                "value": "Leveransaddress",
+                "chosen": False,
+            }, {
+                "choice": "A",
+                "value": "Båda",
+                "chosen": False,
+            }]
 
             context = {
                 'gdpr_check': gdpr_check,
                 'form': form,
                 'person': theUser,
-                'address_choices': ADDRESS_CHOICES_EXTENDED
+                'address_choices': CHOICES
             }
 
             return render(self.request, "support/new_address.html", context)
@@ -3568,9 +3716,81 @@ class NewAddress(LoginRequiredMixin, View):
                 address.save()
                 info_message = get_message('info', 31)
                 messages.info(self.request, info_message)
-                # redirect
+                # soft redirect
+                limit = default_pagination_values
+                # get the specific user's addresses
+                try:
+                    addresses = Address.objects.filter(user=theUser)[:limit]
+                    number_of_addresses = Address.objects.filter(
+                        user=theUser).count()
+                except ObjectDoesNotExist:
+                    addresses = {}
 
-                return redirect("support:search_users")
+                # count number of pages# figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                a_pages = 1
+
+                if number_of_addresses > limit:
+                    # if there are more we divide by the limit
+                    a_pages = number_of_addresses / limit
+                    # see if there is a decimal
+                    testU = int(a_pages)
+                    # if there isn't an even number make an extra page for the last group
+                    if testU != a_pages:
+                        a_pages = int(a_pages)
+                        a_pages += 1
+                    if type(a_pages) != "int":
+                        a_pages = int(a_pages)
+
+                # set current page, search type and search_value to start values
+                current_page = 1
+                search_value = ""
+
+                # create a list for a ul to work through
+
+                more_addresses, where = get_list_of_pages(1, a_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == a_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < a_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                onsubmit = get_message('warning', 3)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'addresses': addresses,
+                    'person': theUser,
+                    'onsubmit': onsubmit,
+                    'more_addresses': more_addresses,
+                    'current_page': int(current_page),
+                    'search_value': search_value,
+                    'max': a_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
+                }
+
+                return render(self.request, "support/edit_addresses.html", context)
             else:
 
                 context = {
@@ -3613,6 +3833,7 @@ class SettingsView(LoginRequiredMixin, View):
                 context = {
                     'gdpr_check': gdpr_check,
                     'form': form,
+                    'person': theUser,
                 }
 
                 return render(self.request, "support/client_settings.html", context)

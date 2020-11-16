@@ -4,16 +4,16 @@
 
 <!--orders-->
 <!--active-->
-<div class="container">
+<div class="container" style="margin: 5px">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <form method="POST">
+    <form method="POST" action="{% url 'support:specific_user' %}">
         {% csrf_token %}
         <div>
             <div>
-                <button type="submit" class='btn btn-primary' name="back" value="1">
+                <button type="submit" class='btn btn-primary' name="lookAt" value="{{theClient.id}}">
                     Tillbaka
                 </button>
             </div>
@@ -23,7 +23,7 @@
     <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="order" value="{{order.id}}">
-        <div class="row border border-warning" >
+        <div class="row" style="padding: 5px;">
             <h1>Order {{order.id}}</h1>
             <table class="table-striped table-hover w-100  mb-2">
                 <tbody>
@@ -301,7 +301,7 @@
     </form>
 
         <!--recently completed-->
-        <div class="row border border-dark">
+        <div class="row">
             <h1>Order delar</h1>
             <table class="table-striped table-hover w-100  mb-2">
                 <thead>
@@ -355,7 +355,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="order" value="{{order.id}}">
                                 <input type="hidden" name="item" value="{{item.id}}">
-                                <button type='submit' class='btn btn-primary' name="handle" value="True">Hantera</button>
+                                <button type='submit' class='btn btn-primary' name="handle" value="True" style="padding: 10px;">Hantera</button>
                             </form>
                         </td>
                     </tr>

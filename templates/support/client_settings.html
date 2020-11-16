@@ -9,11 +9,16 @@
     {% endif %}
     <div class="container">
     <div>
-        <a href="{% url 'support:search_users' %}">
-            <button type="submit" class="btn btn-primary float-right">
-                Tillbaka
-            </button>
-        </a>
+        <form method="POST" action="{% url 'support:specific_user' %}">
+            {% csrf_token %}
+            <div>
+                <div>
+                    <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
+                        Tillbaka
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
     <!--orders-->
     <!--active-->

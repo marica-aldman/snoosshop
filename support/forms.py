@@ -91,3 +91,25 @@ class editOrCreateCategory(forms.ModelForm):
         self.fields['discount_price'].widget.attrs.update(
             {'value': category.discount_price})
         self.fields['description'].initial = category.description
+
+
+class theAddressForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(theAddressForm, self).__init__(*args, **kwargs)
+
+        self.fields['street_address'] = forms.CharField(
+            max_length=100, required=True, label='')
+        self.fields['apartment_address'] = forms.CharField(
+            max_length=100, required=False, label='')
+        self.fields['post_town'] = forms.CharField(
+            max_length=100, required=True, label='')
+        self.fields['zip'] = forms.CharField(
+            max_length=100, required=True, label='')
+
+    def populate(self, address, *args, **kwargs):
+
+        self.fields['street_address'].initial = address.street_address
+        self.fields['apartment_address'].initial = address.apartment_address
+        self.fields['post_town'].initial = address.post_town
+        self.fields['zip'].initial = address.zip
