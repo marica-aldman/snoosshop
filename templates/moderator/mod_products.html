@@ -18,7 +18,7 @@
                     Produkt id: {{form.product_id|as_crispy_field}}
                 </div>
                 <div>
-                    <button type="submit" name="search" class='btn btn-primary mt-3'>Sök</button>
+                    <button type="submit" name="search" class='btn btn-primary mt-3' value="new">Sök</button>
                 </div>
             </div>
         </form>
@@ -63,7 +63,6 @@
                 </tr>
             </thead>
             <tbody>
-    {% if multiple %}
         {% for product in products %}
                 <tr>
                     <td>
@@ -98,79 +97,99 @@
                     </td>
                 </tr>
         {% endfor %}
-    {% else %}
-                <tr>
-                    <td>
-                        {{ product.id }}
-                    </td>
-                    <td>
-                        {{ product.title }}
-                    </td>
-                    <td>
-                        {{ product.price }}
-                    </td>
-                    <td>
-                        {{ product.category }}
-                    </td>
-                    <td>
-                        <form method="POST" action="{% url 'moderator:product' %}">
-                            {% csrf_token %}
-                            <button type="submit" value="{{product.id}}" name="lookAtProduct" class='btn btn-primary'>
-                                Se
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the product? This action can not be undone.');">
-                            {% csrf_token %}
-                            <input type="hidden" name="delete" value='yes'>
-                            <input type="hidden" name="id" value={{product.id}}>
-                            <button type="submit" class="btn btn-primary float-right">
-                                Ta bort
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-    {% endif %}
             </tbody>
         </table>
     </div>
 
+    
     <div class="d-flex w-100 justify-content-around">
         <ul class="pagination">
+            {% if previous_page %}
             <li class="page-item">
-                <form method="POST">
+                <form method="POST" action="{% url 'moderator:products' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
-                        <
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="True" name="previousPage" class="page-link">
+                        &laquo;
                     </button>
                 </form>
             </li>
-            {% for product in more_products %}
-            <li class="page-item">
-                <form method="POST">
+            {% endif %}
+            {% if start %}
+            <li>
+                <form method="POST" action="{% url 'moderator:products' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ product.number }}" name="page" {% if current_page == product.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{product.number}}
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                        1
+                    </button>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                        ...
+                    </button>
+                </form>
+            </li>
+            {% endif %}
+            {% if current_page == 4 %}
+                <form method="POST" action="{% url 'moderator:products' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                        1
+                    </button>
+                </form>
+            {% endif %}
+            {% for product in more_products %}
+            {%if current_page == order %}
+            <li class="page-item active">
+            {% else %}
+            <li class="page-item">
+            {% endif %}
+                <form method="POST" action="{% url 'moderator:products' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="{{ product }}" name="page" {% if current_page == product %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{product}}<span class="sr-only">(current)</span>
                     </button>
                 </form>
             </li>
             {% endfor %}
-            <li class="page-item">
-                <form method="POST">
+            {% if end %}
+            <li>
+                <form method="POST" action="{% url 'moderator:products' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
-                        >
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                        ...
+                    </button>
+                    <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                        {{max}}
                     </button>
                 </form>
             </li>
+            {% endif %}
+            {% if next_page %}
+            <li class="page-item">
+                <form method="POST" action="{% url 'moderator:products' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
+                    &raquo;
+                    </button>
+                </form>
+            </li>
+            {% endif %}
         </ul>
 
     </div>

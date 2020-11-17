@@ -60,22 +60,41 @@ class Overview(LoginRequiredMixin, View):
 
             # create a list for a ul to work through
 
-            more_orders = []
+            current_page = 1
+            more_orders, where = get_list_of_pages(current_page, o_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(o_pages):
-                i += 1
-                more_orders.append({'number': i})
+            # pagination booleans
 
-            # we are on the first page so set the page to that
-            current_page_orders = 1
+            if current_page == 1 or where == "no extras":
+                start = False
+            else:
+                start = True
+
+            if current_page == o_pages or where == "no extras":
+                end = False
+            else:
+                end = True
+
+            if current_page < o_pages:
+                next_page = True
+            else:
+                next_page = False
+
+            if current_page > 1:
+                previous_page = True
+            else:
+                previous_page = False
 
             context = {
                 'gdpr_check': gdpr_check,
                 'orders': orders,
                 'more_orders': more_orders,
-                'current_page_orders': current_page_orders,
+                'current_page': int(current_page),
+                'max': o_pages,
+                'previous_page': previous_page,
+                'next_page': next_page,
+                'end': end,
+                'start': start,
             }
 
             return render(self.request, "moderator/mod_overview.html", context)
@@ -90,19 +109,16 @@ class Overview(LoginRequiredMixin, View):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
         try:
-            # get where we are
-            current_page_orders = int(self.request.POST['current_page_orders'])
 
-            if 'whichPageOrder' in self.request.POST.keys():
-                whichPageOrder = int(self.request.POST['whichPageOrder'])
-                current_page_order = whichPageOrder
+            if 'page' in self.request.POST.keys():
+                current_page = int(self.request.POST['page'])
                 # get the limit
                 limit = default_pagination_values
                 # get the first orders and the count of all unsent orders
 
                 try:
-                    if whichPageOrder > 1:
-                        offset = (whichPageOrder - 1) * limit
+                    if current_page > 1:
+                        offset = (current_page - 1) * limit
                         o_l = offset + limit
                         orders = Order.objects.filter(
                             being_delivered=False, removed_order=False, ordered=True)[offset:o_l]
@@ -135,24 +151,46 @@ class Overview(LoginRequiredMixin, View):
 
                 # create a list for a ul to work through
 
-                more_orders = []
+                more_orders, where = get_list_of_pages(current_page, o_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == o_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < o_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_orders': current_page_orders,
+                    'current_page': int(current_page),
+                    'max': o_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_overview.html", context)
 
-            elif 'nextPageOrder' in self.request.POST.keys():
+            elif 'nextPage' in self.request.POST.keys():
+                current_page = int(self.request.POST['current_page'])
 
                 # get the limit
                 limit = default_pagination_values
@@ -162,16 +200,7 @@ class Overview(LoginRequiredMixin, View):
                     number_orders = Order.objects.filter(
                         being_delivered=False,
                         removed_order=False, ordered=True).count()
-                    whichPageOrder = 1
-                    if current_page_orders < (number_orders / limit):
-                        whichPageOrder = current_page_orders + 1
-                    offset = (whichPageOrder - 1) * limit
-                    o_l = offset + limit
-                    orders = Order.objects.filter(
-                        being_delivered=False,
-                        removed_order=False, ordered=True)[offset:o_l]
                 except ObjectDoesNotExist:
-                    orders = {}
                     number_orders = 0
 
                 # figure out how many pages of there are
@@ -190,50 +219,76 @@ class Overview(LoginRequiredMixin, View):
                     if type(o_pages) != "int":
                         o_pages = int(o_pages)
 
+                # orders
+
+                if current_page < o_pages:
+                    current_page += 1
+                else:
+                    current_page = o_pages
+
+                if current_page > 1:
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    orders = Order.objects.filter(
+                        being_delivered=False,
+                        removed_order=False, ordered=True)[offset:o_l]
+                else:
+                    orders = Order.objects.filter(
+                        being_delivered=False,
+                        removed_order=False, ordered=True)[:limit]
+
                 # create a list for a ul to work through
 
-                more_orders = []
+                more_orders, where = get_list_of_pages(current_page, o_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == o_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < o_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_orders': current_page_orders,
+                    'current_page': int(current_page),
+                    'max': o_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_overview.html", context)
 
-            elif 'previousPageOrder' in self.request.POST.keys():
+            elif 'previousPage' in self.request.POST.keys():
+                current_page = int(self.request.POST['current_page'])
 
                 # get the limit
                 limit = default_pagination_values
                 # get the first unsent orders and the count of all unsent orders
 
                 try:
-                    whichPageOrder = 1
-                    if current_page_orders > 1:
-                        whichPageOrder = current_page_orders - 1
-                    if whichPageOrder == 1:
-                        orders = Order.objects.filter(
-                            being_delivered=False,
-                            removed_order=False, ordered=True)[:limit]
-                    else:
-                        offset = (whichPageOrder - 1) * limit
-                        o_l = offset + limit
-                        orders = Order.objects.filter(
-                            being_delivered=False,
-                            removed_order=False, ordered=True)[offset:o_l]
                     number_orders = Order.objects.filter(
                         being_delivered=False,
                         removed_order=False, ordered=True).count()
                 except ObjectDoesNotExist:
-                    orders = {}
                     number_orders = 0
 
                 # figure out how many pages there are
@@ -252,21 +307,60 @@ class Overview(LoginRequiredMixin, View):
                     if type(o_pages) != "int":
                         o_pages = int(o_pages)
 
+                # orders
+
+                if current_page > 1:
+                    current_page -= 1
+                else:
+                    current_page = 1
+
+                if current_page < 2:
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    orders = Order.objects.filter(
+                        being_delivered=False,
+                        removed_order=False, ordered=True)[offset:o_l]
+                else:
+                    orders = Order.objects.filter(
+                        being_delivered=False,
+                        removed_order=False, ordered=True)[:limit]
+
                 # create a list for a ul to work through
 
-                more_orders = []
+                more_orders, where = get_list_of_pages(current_page, o_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(o_pages):
-                    i += 1
-                    more_orders.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == o_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if current_page < o_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'orders': orders,
                     'more_orders': more_orders,
-                    'current_page_orders': current_page_orders,
+                    'current_page': int(current_page),
+                    'max': o_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_overview.html", context)
@@ -403,7 +497,6 @@ class ProductsView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
-        path = self.request.get_full_path()
         is_post = False
         try:
             # get the limit
@@ -430,44 +523,56 @@ class ProductsView(LoginRequiredMixin, View):
 
             # create a list for a ul to work through
 
-            more_products = []
+            current_page = 1
+            more_products, where = get_list_of_pages(current_page, p_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(p_pages):
-                i += 1
-                more_products.append({'number': i})
+            # pagination booleans
+
+            if current_page == 1 or where == "no extras":
+                start = False
+            else:
+                start = True
+
+            if current_page == p_pages or where == "no extras":
+                end = False
+            else:
+                end = True
+
+            if current_page < p_pages:
+                next_page = True
+            else:
+                next_page = False
+
+            if current_page > 1:
+                previous_page = True
+            else:
+                previous_page = False
 
             # make search for specific order or customer
 
             form = searchProductForm()
 
-            # set current page to 1
-            current_page = 1
-
-            # set a bool to check if we are showing one or multiple orders
-
-            multiple = True
-
             # set the hidden value for wether or not we have done a search
 
-            search_type = "None"
-            search_value = "None"
+            search_value = ""
 
             # onsubmit warning
             onsubmit = get_message('warning', 6)
 
             context = {
                 'gdpr_check': gdpr_check,
-                'search_type': search_type,
                 'search_value': search_value,
-                'multiple': multiple,
                 'products': products,
                 'more_products': more_products,
                 'form': form,
                 'current_page': current_page,
-                'max_pages': p_pages,
                 'onsubmit': onsubmit,
+                'current_page': int(current_page),
+                'max': p_pages,
+                'previous_page': previous_page,
+                'next_page': next_page,
+                'end': end,
+                'start': start,
             }
 
             return render(self.request, "moderator/mod_products.html", context)
@@ -492,197 +597,97 @@ class ProductsView(LoginRequiredMixin, View):
 
             # what button did we press
 
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
                 # make a form and populate so we can clean the data
-                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # we only have one type of search for this we can only get one page.
-                    product_id = int(self.request.POST['search_value'])
+                form = searchProductForm(self.request.POST)
 
-                    if product_id != 0:
-                        # next page on a single user is the same as the search for single user
-                        # get the user
-
-                        try:
-                            the_product = Item.objects.get(id=product_id)
-
-                            # there is only one
-                            p_pages = 1
-                            more_products = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "productID"
-
-                            # get the form
-                            form = searchProductForm()
-                            form.populate(product_id)
-                            # onsubmit warning
-                            onsubmit = get_message('warning', 6)
-
-                            context = {
-                                'search_type': search_type,
-                                'search_value': product_id,
-                                'multiple': multiple,
-                                'product': the_product,
-                                'more_products': more_products,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': p_pages,
-                                'onsubmit': onsubmit,
-                            }
-
-                            return render(self.request, "moderator/mod_products.html", context)
-
-                        except ObjectDoesNotExist:
-                            info_message = get_message('info', 41)
-                            messages.info(
-                                self.request, info_message)
-                            return redirect("moderator:products")
-                    else:
-                        # if the product id is 0 we are probably trying to reset the form
-                        return redirect("moderator:products")
-
-                else:
-                    # make a form and populate so we can clean the data
-                    form = searchProductForm(self.request.POST)
-
-                    if form.is_valid():
-                        # get the values
-                        product_id = form.cleaned_data.get('product_id')
-                        # search done on product id
-                        search_value = product_id
-                        # get the product
-                        try:
-                            product = Item.objects.get(id=product_id)
-                            p_pages = 1
-                            more_products = [{'number': 1}]
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "productID"
-                            # onsubmit warning
-                            onsubmit = get_message('warning', 6)
-
-                            context = {
-                                'gdpr_check': gdpr_check,
-                                'search_type': search_type,
-                                'search_value': search_value,
-                                'multiple': multiple,
-                                'product': product,
-                                'more_products': more_products,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': p_pages,
-                                'onsubmit': onsubmit,
-                            }
-
-                            return render(self.request, "moderator/mod_products.html", context)
-
-                        except ObjectDoesNotExist:
-                            if product_id is not None:
-                                info_message = get_message(
-                                    'info', 42)
-                                messages.info(
-                                    self.request, info_message)
-                            return redirect("moderator:products")
-                    else:
-                        # get the limit
-                        limit = default_pagination_values
-                        # rerender page with error message
-                        # get the first products and a count of all products
-                        products = Item.objects.all()[:20]
-                        number_products = Item.objects.all().count()
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer number of pages will be 1
-
+                if form.is_valid():
+                    # get the values
+                    product_id = form.cleaned_data.get('product_id')
+                    # search done on product id
+                    search_value = product_id
+                    # get the product
+                    try:
+                        product = Item.objects.filter(id=product_id)
                         p_pages = 1
-
-                        if number_products > limit:
-                            # if there are more we divide by the limit
-                            p_pages = number_products / limit
-                            # see if there is a decimal
-                            testP = int(p_pages)
-                            # if there isn't an even number make an extra page for the last group
-                            if testP != p_pages:
-                                p_pages = int(p_pages)
-                                p_pages += 1
-                            if type(p_pages) != "int":
-                                p_pages = int(p_pages)
-
-                        # create a list for a ul to work through
-
-                        more_products = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(p_pages):
-                            i += 1
-                            more_products.append({'number': i})
-
-                        # we already have the form
-
                         # set current page to 1
                         current_page = 1
 
-                        # set a bool to check if we are showing one or multiple orders
+                        # create a list for a ul to work through
 
-                        multiple = True
+                        more_products, where = get_list_of_pages(
+                            current_page, p_pages)
 
-                        # set the hidden value for wether or not we have done a search
+                        # pagination booleans
 
-                        search_type = "None"
-                        search_value = "None"
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == p_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if current_page < p_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
                         # onsubmit warning
                         onsubmit = get_message('warning', 6)
 
                         context = {
                             'gdpr_check': gdpr_check,
-                            'search_type': search_type,
                             'search_value': search_value,
-                            'multiple': multiple,
-                            'products': products,
+                            'product': product,
                             'more_products': more_products,
                             'form': form,
                             'current_page': current_page,
-                            'max_pages': p_pages,
                             'onsubmit': onsubmit,
+                            'current_page': int(current_page),
+                            'max': p_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
-                        if self.request.POST['product_id'] is not None:
-                            message = get_message('error', 103)
-                            messages.warning(
-                                self.request, message)
+
                         return render(self.request, "moderator/mod_products.html", context)
 
-            elif 'nextPage' in self.request.POST.keys():
+                    except ObjectDoesNotExist:
+                        if product_id is not None:
+                            info_message = get_message(
+                                'info', 42)
+                            messages.info(
+                                self.request, info_message)
+                        return redirect("moderator:products")
+                else:
+
+                    if self.request.POST['product_id'] is not None:
+                        message = get_message('error', 103)
+                        messages.warning(
+                            self.request, message)
+                    return redirect("moderator:products")
+
+            elif 'page' in self.request.POST.keys():
                 # get what type of search
-                search_type = self.request.POST['search']
+                search_value = self.request.POST['search']
+                # get what page
+                page = int(self.request.POST['page'])
                 # get the limit
                 limit = default_pagination_values
 
                 try:
                     number_products = Item.objects.all(
                     ).count()
-                    numbepages = number_products / limit
-                    if current_page < numbepages:
-                        current_page += 1
-                    offset = (current_page - 1) * limit
-                    o_l = offset + limit
-                    products = Item.objects.all()[offset:o_l]
                 except ObjectDoesNotExist:
-                    products = {}
                     number_products = 0
 
                 # figure out how many pages there are
@@ -702,205 +707,266 @@ class ProductsView(LoginRequiredMixin, View):
                     if type(p_pages) != "int":
                         p_pages = int(p_pages)
 
+                # get the products
+                if page > 1:
+                    offset = (page - 1) * limit
+                    o_l = offset + limit
+                    products = Item.objects.all()[offset:o_l]
+                else:
+                    products = Item.objects.all()[:limit]
+
                 # create a list for a ul to work through
 
-                more_products = []
+                current_page = page
+                more_products, where = get_list_of_pages(current_page, p_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(p_pages):
-                    i += 1
-                    more_products.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == p_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < p_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
 
                 # make search for specific order or customer
 
                 form = searchProductForm()
 
-                # set a bool to check if we are showing one or multiple orders
-
-                multiple = True
-
-                # set the hidden value for wether or not we have done a search
-
-                search_type = "None"
-                search_value = "None"
                 # onsubmit warning
                 onsubmit = get_message('warning', 6)
 
                 context = {
                     'gdpr_check': gdpr_check,
-                    'search_type': search_type,
                     'search_value': search_value,
-                    'multiple': multiple,
                     'products': products,
                     'more_products': more_products,
                     'form': form,
                     'current_page': current_page,
-                    'max_pages': p_pages,
                     'onsubmit': onsubmit,
+                    'current_page': int(current_page),
+                    'max': p_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
+                }
+
+                return render(self.request, "moderator/mod_products.html", context)
+
+            elif 'nextPage' in self.request.POST.keys():
+                # get what type of search
+                search_value = self.request.POST['search']
+                # get previous current page
+                current_page = int(self.request.POST['current_page'])
+                # get the limit
+                limit = default_pagination_values
+
+                try:
+                    number_products = Item.objects.all(
+                    ).count()
+                except ObjectDoesNotExist:
+                    number_products = 0
+
+                # figure out how many pages there are
+                # if there are only the limit or fewer number of pages will be 1
+
+                p_pages = 1
+
+                if number_products > limit:
+                    # if there are more we divide by the limit
+                    p_pages = number_products / limit
+                    # see if there is a decimal
+                    testP = int(p_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testP != p_pages:
+                        p_pages = int(p_pages)
+                        p_pages += 1
+                    if type(p_pages) != "int":
+                        p_pages = int(p_pages)
+
+                if current_page < p_pages:
+                    current_page += 1
+                else:
+                    current_page = p_pages
+
+                # get the products
+                offset = (current_page - 1) * limit
+                o_l = offset + limit
+                products = Item.objects.all()[offset:o_l]
+
+                # create a list for a ul to work through
+
+                more_products, where = get_list_of_pages(
+                    current_page, p_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == p_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < p_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                # make search for specific order or customer
+
+                form = searchProductForm()
+
+                # onsubmit warning
+                onsubmit = get_message('warning', 6)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_value': search_value,
+                    'products': products,
+                    'more_products': more_products,
+                    'form': form,
+                    'current_page': current_page,
+                    'onsubmit': onsubmit,
+                    'current_page': int(current_page),
+                    'max': p_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_products.html", context)
 
             elif 'previousPage' in self.request.POST.keys():
                 # get what type of search
-                search_type = self.request.POST['search']
+                search_value = self.request.POST['search']
+                # get previous current page
+                current_page = int(self.request.POST['current_page'])
                 # get the limit
                 limit = default_pagination_values
 
-                # check what page
-                if current_page > 2:
+                if current_page > 1:
+                    current_page -= 1
 
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                        if current_page == 1:
-                            products = Item.objects.all()[:limit]
-                            number_products = Item.objects.all(
-                            ).count()
-                        else:
-                            offset = (current_page - 1) * limit
-                            o_l = offset + limit
-                            products = Item.objects.all()[offset:o_l]
-                            number_products = Item.objects.all(
-                            ).count()
+                try:
+                    number_products = Item.objects.all(
+                    ).count()
 
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer number of pages will be 1
+                    # figure out how many pages there are
+                    # if there are only the limit or fewer number of pages will be 1
 
-                        p_pages = 1
+                    p_pages = 1
 
-                        if number_products > limit:
-                            # if there are more we divide by the limit
-                            p_pages = number_products / limit
-                            # see if there is a decimal
-                            testP = int(p_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testP != p_pages:
-                                p_pages = int(p_pages)
-                                p_pages += 1
-                            if type(p_pages) != "int":
-                                p_pages = int(p_pages)
+                    if number_products > limit:
+                        # if there are more we divide by the limit
+                        p_pages = number_products / limit
+                        # see if there is a decimal
+                        testP = int(p_pages)
+                        # if there isn't an even number of ten make an extra page for the last group
+                        if testP != p_pages:
+                            p_pages = int(p_pages)
+                            p_pages += 1
+                        if type(p_pages) != "int":
+                            p_pages = int(p_pages)
 
-                        # create a list for a ul to work through
-
-                        more_products = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(p_pages):
-                            i += 1
-                            more_products.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchProductForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-                        # onsubmit warning
-                        onsubmit = get_message('warning', 6)
-
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'products': products,
-                            'more_products': more_products,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': p_pages,
-                            'onsubmit': onsubmit,
-                        }
-
-                        return render(self.request, "moderator/mod_products.html", context)
-
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 87)
-                        messages.warning(
-                            self.request, message)
-                        return redirect("moderator:products")
-
-                else:
-
-                    try:
-                        # get the limit
-                        limit = default_pagination_values
-                        if current_page > 1:
-                            current_page -= 1
+                    # get the products
+                    if current_page > 1:
+                        offset = (current_page - 1) * limit
+                        o_l = offset + limit
+                        products = Item.objects.all()[offset:o_l]
+                    else:
                         products = Item.objects.all()[:limit]
-                        number_products = Item.objects.all(
-                        ).count()
 
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer pages will be 1
+                    # create a list for a ul to work through
 
-                        p_pages = 1
+                    more_products, where = get_list_of_pages(
+                        current_page, p_pages)
 
-                        if number_products > limit:
-                            # if there are more we divide by the limit
-                            p_pages = number_products / limit
-                            # see if there is a decimal
-                            testP = int(p_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testP != p_pages:
-                                p_pages = int(p_pages)
-                                p_pages += 1
-                            if type(p_pages) != "int":
-                                p_pages = int(p_pages)
+                    # pagination booleans
 
-                        # create a list for a ul to work through
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
 
-                        more_products = []
+                    if current_page == 4:
+                        start = False
 
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(p_pages):
-                            i += 1
-                            more_products.append({'number': i})
+                    if current_page == p_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
 
-                        # make search for specific order or customer
+                    if where == "end":
+                        end = False
 
-                        form = searchProductForm()
+                    if current_page < p_pages:
+                        next_page = True
+                    else:
+                        next_page = False
 
-                        # set a bool to check if we are showing one or multiple orders
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
 
-                        multiple = True
+                    # make search for specific order or customer
 
-                        # set the hidden value for wether or not we have done a search
+                    form = searchProductForm()
+                    # onsubmit warning
+                    onsubmit = get_message('warning', 6)
 
-                        search_type = "None"
-                        search_value = "None"
-                        # onsubmit warning
-                        onsubmit = get_message('warning', 6)
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'search_value': search_value,
+                        'products': products,
+                        'more_products': more_products,
+                        'form': form,
+                        'onsubmit': onsubmit,
+                        'current_page': int(current_page),
+                        'max': p_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
 
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'products': products,
-                            'more_products': more_products,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': p_pages,
-                            'onsubmit': onsubmit,
-                        }
+                    return render(self.request, "moderator/mod_products.html", context)
 
-                        return render(self.request, "moderator/mod_products.html", context)
-
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 88)
-                        messages.warning(
-                            self.request, message)
-                        return redirect("moderator:products")
+                except ObjectDoesNotExist:
+                    message = get_message('error', 87)
+                    messages.warning(
+                        self.request, message)
+                    return redirect("moderator:products")
 
             elif 'delete' in self.request.POST.keys():
                 if 'id' in self.request.POST.keys():
@@ -916,80 +982,7 @@ class ProductsView(LoginRequiredMixin, View):
                 else:
                     return redirect("moderator:products")
             else:
-                # we are paging through without search
-                # GDPR check
-                gdpr_check = check_gdpr_cookies(self)
-                path = self.request.get_full_path()
-                is_post = False
-
-                # get the limit
-                limit = default_pagination_values
-                # check if we are on page 1
-                if page == 1:
-                    products = Item.objects.all()[:limit]
-                    number_products = Item.objects.all().count()
-                else:
-                    offset = page * limit
-                    o_l = offset + limit
-                    products = Item.objects.all()[offset:o_l]
-                    number_products = Item.objects.all().count()
-                # figure out how many pages  there are
-                # if there are only the limit or fewer number of pages will be 1
-
-                p_pages = 1
-
-                if number_products > limit:
-                    # if there are more we divide by the limit
-                    p_pages = number_products / limit
-                    # see if there is a decimal
-                    testP = int(p_pages)
-                    # if there isn't an even number make an extra page for the last group
-                    if testP != p_pages:
-                        p_pages = int(p_pages)
-                        p_pages += 1
-                    if type(p_pages) != "int":
-                        p_pages = int(p_pages)
-
-                # create a list for a ul to work through
-
-                more_products = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(p_pages):
-                    i += 1
-                    more_products.append({'number': i})
-
-                # make search for specific order or customer
-
-                form = searchProductForm()
-
-                # set a bool to check if we are showing one or multiple orders
-
-                multiple = True
-
-                # set the hidden value for wether or not we have done a search
-
-                search_type = "None"
-                search_value = "None"
-
-                # onsubmit warning
-                onsubmit = get_message('warning', 6)
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'multiple': multiple,
-                    'products': products,
-                    'more_products': more_products,
-                    'form': form,
-                    'current_page': page,
-                    'max_pages': p_pages,
-                    'onsubmit': onsubmit,
-                }
-
-                return render(self.request, "moderator/mod_products.html", context)
+                return redirect("moderator:overview")
 
         except ObjectDoesNotExist:
             message = get_message('error', 89)
@@ -2273,17 +2266,14 @@ class FreightView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
-        path = self.request.get_full_path()
         is_post = False
         # get the default_pagination_values of the current freights
         limit = default_pagination_values
         freights = Freight.objects.all().order_by('title')[:limit]
         number_of_freights = Freight.objects.all().count()
-        lessThen = False
         try:
             number_of_old_freights = OldFreight.objects.all().count()
             if freights.count() < limit:
-                lessThen = True
                 left = limit - freights.count()
                 oldfreights = OldFreight.objects.all().order_by('title')[:left]
             else:
@@ -2309,20 +2299,42 @@ class FreightView(LoginRequiredMixin, View):
 
         # create a list for a ul to work through
 
-        more_freights = []
+        current_page = 1
+        more_freights, where = get_list_of_pages(current_page, f_pages)
 
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(f_pages):
-            i += 1
-            more_freights.append({'number': i})
+        # pagination booleans
+
+        if current_page == 1 or where == "no extras":
+            start = False
+        else:
+            start = True
+
+        if current_page == 4:
+            start = False
+
+        if current_page == f_pages or where == "no extras":
+            end = False
+        else:
+            end = True
+
+        if where == "end":
+            end = False
+
+        if current_page < f_pages:
+            next_page = True
+        else:
+            next_page = False
+
+        if current_page > 1:
+            previous_page = True
+        else:
+            previous_page = False
 
         # search form
         form = searchFreightForm()
         form.startup()
 
-        # set current page, search type and search_value to start values
-        current_page = 1
+        #  search type and search_value to start values
         search_type = "Not set"
         search_value = "Not set"
 
@@ -2336,15 +2348,18 @@ class FreightView(LoginRequiredMixin, View):
             'warning': False,
             'freights': freights,
             'oldfreights': oldfreights,
-            'lessThenOffset': lessThen,
             'form': form,
-            'current_page': current_page,
             'search_type': search_type,
             'search_value': search_value,
             'more_freights': more_freights,
-            'max_pages': f_pages,
             'onSubmit': onSubmit,
             'freight': emptyfreight,
+            'current_page': int(current_page),
+            'max': f_pages,
+            'previous_page': previous_page,
+            'next_page': next_page,
+            'end': end,
+            'start': start,
         }
 
         return render(self.request, "moderator/mod_freights.html", context)
@@ -2352,6 +2367,54 @@ class FreightView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        limit = default_pagination_values
+
+        search_type = self.request.POST['search']
+        if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
+            messages.warning(
+                self.request, "Något har gått fel, vargod kontakta IT supporten.")
+            return redirect("moderator:freights")
+
+        number_of_freights = Freight.objects.all().count()
+        number_of_old_freights = OldFreight.objects.all().count()
+        number_of_freights_total = number_of_freights + number_of_old_freights
+
+        if number_of_freights_total > limit:
+            # if there are more we divide by the limit
+            tf_pages = number_of_freights_total / limit
+            # see if there is a decimal
+            testO = int(tf_pages)
+            # if there isn't an even number make an extra page for the last group
+            if testO != tf_pages:
+                tf_pages = int(tf_pages)
+                tf_pages += 1
+            if type(tf_pages) != "int":
+                tf_pages = int(tf_pages)
+
+        if number_of_freights > limit:
+            # if there are more we divide by the limit
+            f_pages = number_of_freights / limit
+            # see if there is a decimal
+            testO = int(f_pages)
+            # if there isn't an even number make an extra page for the last group
+            if testO != f_pages:
+                f_pages = int(f_pages)
+                f_pages += 1
+            if type(f_pages) != "int":
+                f_pages = int(f_pages)
+
+        if number_of_old_freights > limit:
+            # if there are more we divide by the limit
+            of_pages = number_of_old_freights / limit
+            # see if there is a decimal
+            testO = int(of_pages)
+            # if there isn't an even number make an extra page for the last group
+            if testO != of_pages:
+                of_pages = int(of_pages)
+                of_pages += 1
+            if type(of_pages) != "int":
+                of_pages = int(of_pages)
+
         if 'delete' in self.request.POST.keys():
             # delete freight
             # get id
@@ -2367,584 +2430,1082 @@ class FreightView(LoginRequiredMixin, View):
             info_message = get_message('info', 76)
             messages.info(self.request, info_message)
             return redirect("moderator:freights")
-        elif 'previousPage' in self.request.POST.keys():
-            search_type = self.request.POST['search']
-            if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                messages.warning(
-                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
-                return redirect("moderator:freights")
+        elif 'paging' in self.request.POST.keys():
             search_value = self.request.POST['search_value']
             current_page = int(self.request.POST['current_page'])
-
-            if current_page < 1:
-                current_page = 1
-
-            if current_page > 2:
-                # get the right offset freights
-                # query[offset:offset + limit]
-                current_page -= 1
-                offset = current_page * default_pagination_values
-                o_and_l = offset + current_page
-                lessThen = False
-                stillSome = False
-                try:
-                    freights = Freight.objects.all().order_by('title')[
-                        offset:o_and_l]
-                    number_of_freights = Freight.objects.all().count()
-                    stillSome = True
-                except ObjectDoesNotExist:
-                    # not that many freights, we must have old freights though
-                    number_of_freights = Freight.objects.all().count()
-
-                try:
-                    number_of_old_freights = OldFreight.objects.all().count()
-                    if stillSome:
-                        if freights.count() < offset:
-                            lessThen = True
-                            left = offset - number_of_freights
-                            oldfreights = OldFreight.objects.all().order_by('title')[
-                                :left]
-                    if not stillSome:
-                        lessThen = True
-                        oldfreights = OldFreight.objects.all().order_by('title')[
-                            offset:o_and_l]
-                    number_of_freights = number_of_freights + number_of_old_freights
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
-
-                f_pages = 1
-
-                if number_of_freights > 20:
-                    # if there are more we divide by 20
-                    f_pages = number_of_freights / 20
-                    # see if there is a decimal
-                    testO = int(f_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testO != f_pages:
-                        f_pages = int(f_pages)
-                        f_pages += 1
-                    if type(f_pages) != "int":
-                        f_pages = int(f_pages)
-
-                # create a list for a ul to work through
-
-                more_freights = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(f_pages):
-                    i += 1
-                    more_freights.append({'number': i})
-
-                # make an empty freight for the new form
-                freight = Freight()
-                # search form
-                form = searchFreightForm()
-                form.startup()
-                onSubmit = get_message('warning', 5)
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'warning': False,
-                    'freights': freights,
-                    'oldfreights': oldfreights,
-                    'lessThenOffset': lessThen,
-                    'freight': freight,
-                    'form': form,
-                    'current_page': current_page,
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'more_freights': more_freights,
-                    'max_pages': f_pages,
-                    'onSubmit': onSubmit,
-                }
-
-                return render(self.request, "moderator/mod_freights.html", context)
-            elif current_page < 3:
-                # this shouldnt happen but to make sure
-                # get the default_pagination_values of the current freights
-                limit = default_pagination_values
-                number_of_freights = Freight.objects.all().count()
-                number_of_old_freights = OldFreight.objects.all().count()
-                total = number_of_freights + number_of_old_freights
-                lessThen = False
-                f_pages = 1
-
-                if total > limit:
-                    # if there are more we divide by limit
-                    f_pages = total / limit
-                    # see if there is a decimal
-                    testO = int(f_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testO != f_pages:
-                        f_pages = int(f_pages)
-                        f_pages += 1
-
-                f_only_pages = 1
-
-                if number_of_freights > limit:
-                    # if there are more we divide by limit
-                    f_only_pages = number_of_freights / limit
-                    # see if there is a decimal
-                    testO = int(f_only_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testO != f_only_pages:
-                        f_only_pages = int(f_only_pages)
-                        f_only_pages += 1
-                    if type(f_pages) != "int":
-                        f_pages = int(f_pages)
-
-                new_current_page = current_page
-                if current_page > f_only_pages:
-                    new_current_page = current_page - f_only_pages
-
-                try:
-                    freights = Freight.objects.all().order_by('title')[:limit]
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    freights = []
-
-                try:
-                    collected_freight = freights.count()
-                    if collected_freight < limit:
-                        lessThen = True
-                        someThere = True
-                        if collected_freight == 0:
-                            someThere = False
-                        left = limit - collected_freight
-                        if left > 0:
-                            oldfreights = OldFreight.objects.all().order_by('title')[
-                                :left]
-                        else:
-                            oldfreights = []
-                    else:
-                        oldfreights = []
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
-
-                # create a list for a ul to work through
-
-                more_freights = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(f_pages):
-                    i += 1
-                    more_freights.append({'number': i})
-
-                # make an empty freight for the new form
-                freight = Freight()
-                # search form
-                form = searchFreightForm()
-                form.startup()
-
-                # set current page, search type and search_value to start values
-                current_page = 1
-
-                onSubmit = get_message('warning', 5)
-
-                if current_page < f_pages and current_page > 1:
-                    current_page -= 1
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'warning': False,
-                    'freights': freights,
-                    'oldfreights': oldfreights,
-                    'lessThenOffset': lessThen,
-                    'freight': freight,
-                    'form': form,
-                    'current_page': current_page,
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'more_freights': more_freights,
-                    'max_pages': f_pages,
-                    'onSubmit': onSubmit,
-                }
-
-                return render(self.request, "moderator/mod_freights.html", context)
-            else:
-                messages.warning(
-                    self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
-                return redirect("moderator:freights")
-        elif 'page' in self.request.POST.keys():
-            search_type = self.request.POST['search']
-            if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                messages.warning(
-                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
-                return redirect("moderator:freights")
-            search_value = self.request.POST['search_value']
-            page = int(self.request.POST['page'])
-            current_page = page
-
-            # we need the max pages first
-
-            number_of_freights = Freight.objects.all().count()
-            number_of_old_freights = OldFreight.objects.all().count()
-            total = number_of_freights + number_of_old_freights
-
-            f_pages = 1
-            limit = default_pagination_values
-
-            if total > limit:
-                # if there are more we divide by default_pagination_values
-                limit = limit
-                f_pages = total / limit
-                # see if there is a decimal
-                testO = int(f_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testO != f_pages:
-                    f_pages = int(f_pages)
-                    f_pages += 1
-                if type(f_pages) != "int":
-                    f_pages = int(f_pages)
-
-            f_only_pages = 1
-
-            if number_of_freights > limit:
-                # if there are more we divide by limit
-                f_only_pages = number_of_freights / limit
-                # see if there is a decimal
-                testO = int(f_only_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testO != f_only_pages:
-                    f_only_pages = int(f_only_pages)
-                    f_only_pages += 1
-                if type(f_only_pages) != "int":
-                    f_only_pages = int(f_only_pages)
-
-            new_current_page = 0
-            if current_page > f_only_pages:
-                new_current_page = current_page - f_only_pages
-            else:
-                new_current_page = current_page
-
-            if page == 1:
-                freights = Freight.objects.all().order_by('title')[:limit]
-                lessThen = False
-                try:
-                    if freights.count() <= limit:
-                        lessThen = True
-                        left = limit - freights.count()
-                        if left > 0:
-                            oldfreights = OldFreight.objects.all().order_by('title')[
-                                :left]
-                        else:
-                            oldfreights = []
-                    else:
-                        oldfreights = []
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
-
-                # create a list for a ul to work through
-
-                more_freights = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(f_pages):
-                    i += 1
-                    more_freights.append({'number': i})
-
-                # make an empty freight for the new form
-                freight = Freight()
-                # search form
-                form = searchFreightForm()
-                form.startup()
-                onSubmit = get_message('warning', 5)
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'warning': False,
-                    'freights': freights,
-                    'oldfreights': oldfreights,
-                    'lessThenOffset': lessThen,
-                    'freight': freight,
-                    'form': form,
-                    'current_page': current_page,
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'more_freights': more_freights,
-                    'max_pages': f_pages,
-                    'onSubmit': onSubmit,
-                }
-
-                return render(self.request, "moderator/mod_freights.html", context)
-            elif page > 1:
-                offset = (current_page - 1) * limit
-                o_and_l = offset + current_page
-                lessThen = False
-                stillSome = False
-                if o_and_l > number_of_freights:
-                    try:
-                        freights = Freight.objects.all().order_by('title')[
-                            offset:number_of_freights]
-                        if freights.count() > 0:
-                            stillSome = True
-                    except ObjectDoesNotExist:
-                        # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
-                        freights = []
+            if 'previousPage' in self.request.POST.keys():
+                if current_page < 1:
+                    current_page = 1
                 else:
-                    try:
-                        freights = Freight.objects.all().order_by('title')[
-                            offset:o_and_l]
-                        if freights.count() > 0:
-                            stillSome = True
-                    except ObjectDoesNotExist:
-                        # not that many freights, we must have old freights though we just want to catch this so we dont get exeptions thrown
-                        freights = []
+                    if current_page > 1:
+                        current_page -= 1
 
-                try:
-                    newoffset = new_current_page * limit
-                    new_o_and_l = newoffset + limit
-                    if stillSome:
-                        if freights.count() < limit:
-                            lessThen = True
-                            left = offset - freights.count()
-                            if left > 0:
-                                oldfreights = OldFreight.objects.all().order_by('title')[
-                                    :left]
-                            else:
-                                oldfreights = []
-                        else:
-                            oldfreights = []
-                    if not stillSome:
-                        lessThen = True
-                        if newoffset > 1:
-                            oldfreights = OldFreight.objects.all().order_by('title')[
-                                newoffset:new_o_and_l]
-                        elif newoffset == 1:
-                            oldfreights = OldFreight.objects.all().order_by('title')[
-                                :limit]
-                        else:
-                            oldfreights = []
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
-            else:
-                freight = []
-                oldfreight = []
-                lessThen = False
-
-            # create a list for a ul to work through
-
-            more_freights = []
-
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(f_pages):
-                i += 1
-                more_freights.append({'number': i})
-
-            # make an empty freight for the new form
-            freight = Freight()
-            # search form
-            form = searchFreightForm()
-            form.startup()
-
-            current_page = page
-            onSubmit = get_message('warning', 5)
-
-            context = {
-                'gdpr_check': gdpr_check,
-                'warning': False,
-                'freights': freights,
-                'oldfreights': oldfreights,
-                'lessThenOffset': lessThen,
-                'freight': freight,
-                'form': form,
-                'current_page': current_page,
-                'search_type': search_type,
-                'search_value': search_value,
-                'more_freights': more_freights,
-                'max_pages': f_pages,
-                'onSubmit': onSubmit,
-            }
-
-            return render(self.request, "moderator/mod_freights.html", context)
-
-        elif 'nextPage' in self.request.POST.keys():
-            search_type = self.request.POST['search']
-            if search_type != "current" and search_type != "old" and search_type != "freight_id_current" and search_type != "freight_id_old" and search_type != "Not set":
-                messages.warning(
-                    self.request, "Något har gått fel, vargod kontakta IT supporten.")
-                return redirect("moderator:freights")
-            search_value = self.request.POST['search_value']
-            current_page = int(self.request.POST['current_page'])
-
-            # first we need the max amount of pages
-
-            number_of_freights = Freight.objects.all().count()
-            number_of_old_freights = OldFreight.objects.all().count()
-            total = number_of_freights + number_of_old_freights
-            f_pages = 1
-            limit = default_pagination_values
-
-            if total > limit:
-                # if there are more we divide by limit
-                f_pages = total / limit
-                # see if there is a decimal
-                testO = int(f_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testO != f_pages:
-                    f_pages = int(f_pages)
-                    f_pages += 1
-                if type(f_pages) != "int":
-                    f_pages = int(f_pages)
-
-            f_only_pages = 1
-
-            if number_of_freights > limit:
-                # if there are more we divide by limit
-                f_only_pages = number_of_freights / limit
-                # see if there is a decimal
-                testO = int(f_only_pages)
-                # if there isn't an even number of ten make an extra page for the last group
-                if testO != f_only_pages:
-                    f_only_pages = int(f_only_pages)
-                    f_only_pages += 1
-                if type(f_only_pages) != "int":
-                    f_only_pages = int(f_only_pages)
-
-            new_current_page = current_page
-            if current_page > f_only_pages:
-                new_current_page = current_page - f_only_pages
-
-            offset = current_page * limit
-            o_and_l = offset + limit
-            lessThen = False
-            stillSome = False
-            if current_page <= f_only_pages:
-                freights = Freight.objects.all().order_by('title')[
-                    offset:o_and_l]
-                stillSome = True
-
-                try:
-                    if stillSome:
-                        if freights.count() < offset:
-                            lessThen = True
-                            left = offset - freights.count()
-                            if left > 0:
-                                oldfreights = OldFreight.objects.all().order_by('title')[
-                                    :left]
-                            else:
-                                oldfreights = []
-                    if not stillSome:
-                        lessThen = True
-                        oldfreights = OldFreight.objects.all().order_by('title')[
-                            offset:o_and_l]
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
-            else:
-                new_current_page = current_page - f_only_pages
-                offset = new_current_page * limit
-                o_and_l = offset + new_current_page
-
-                try:
-                    lessThen = True
-                    if new_current_page == 1:
-                        oldfreights = OldFreight.objects.all().order_by('title')[
-                            :limit]
+                if search_type == 1:
+                    if search_value != "Not set":
+                        # we are paginating a search if we are here we shouldnt have any page above 1 it also shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
                     else:
-                        oldfreights = OldFreight.objects.all().order_by('title')[
-                            offset:o_and_l]
-                except ObjectDoesNotExist:
-                    # there are no old freights
-                    oldfreights = []
+                        if current_page > 1:
+                            # we are just looking for current freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            oldfreights = []
 
-            # create a list for a ul to work through
+                            # create a list for a ul to work through
 
-            more_freights = []
+                            more_freights, where = get_list_of_pages(
+                                current_page, f_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(f_pages):
-                i += 1
-                more_freights.append({'number': i})
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                freights = Freight.objects.all().order_by('title')[
+                                    :limit]
+                                oldfreights = []
+                                # create a list for a ul to work through
 
-            # make an empty freight for the new form
-            freight = Freight()
-            # search form
-            form = searchFreightForm()
-            form.startup()
-            onSubmit = get_message('warning', 5)
+                                more_freights, where = get_list_of_pages(
+                                    current_page, f_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
 
-            if current_page < f_pages:
-                current_page += 1
+                        # pagination booleans
 
-            context = {
-                'gdpr_check': gdpr_check,
-                'warning': False,
-                'freights': freights,
-                'oldfreights': oldfreights,
-                'lessThenOffset': lessThen,
-                'freight': freight,
-                'form': form,
-                'current_page': current_page,
-                'search_type': search_type,
-                'search_value': search_value,
-                'more_freights': more_freights,
-                'max_pages': f_pages,
-                'onSubmit': onSubmit,
-            }
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
 
-            return render(self.request, "moderator/mod_freights.html", context)
+                        if current_page == 4:
+                            start = False
 
-        elif 'search' in self.request.POST.keys():
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                elif search_type == 2:
+                    if search_value != "Not set":
+                        # we are paginating a search if we are here we shouldnt have any page above 1 it also shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
+                    else:
+                        if current_page > 1:
+                            # we are just looking for old freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            freights = []
+
+                            # create a list for a ul to work through
+
+                            more_freights, where = get_list_of_pages(
+                                current_page, of_pages)
+
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                                freights = []
+                                # create a list for a ul to work through
+
+                                more_freights, where = get_list_of_pages(
+                                    current_page, of_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                else:
+
+                    if current_page > 1:
+                        # get the right offset freights
+                        # query[offset:offset + limit]
+                        if current_page <= f_pages:
+                            # we are still showing currently active freigts and possibly some old ones, bet the current ones first
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            if freights.count() < limit:
+                                # a check to see if we need to fill in with old ones
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            # we have surpassed the current freights and only need the old ones
+                            page = current_page - f_pages
+                            if page == 1:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                            else:
+                                offset = (page - 1) * limit
+                                o_and_l = offset + limit
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    offset:o_and_l]
+
+                        # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                    else:
+                        # check if we have any current ones
+                        if f_pages > 0:
+                            freights = Freight.objects.all().order_by('title')[
+                                :limit]
+                            if freights.count() < limit:
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            oldfreigths = OldFreight.objects.all().order_by('title')[
+                                :limit]  # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == 4:
+                        start = False
+
+                    if current_page == f_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if where == "end":
+                        end = False
+
+                    if current_page < f_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
+
+                    # make an empty freight for the new form
+                    freight = Freight()
+                    # search form
+                    form = searchFreightForm()
+                    form.startup()
+                    onSubmit = get_message('warning', 5)
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'warning': False,
+                        'freights': freights,
+                        'oldfreights': oldfreights,
+                        'freight': freight,
+                        'form': form,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'more_freights': more_freights,
+                        'onSubmit': onSubmit,
+                        'current_page': int(current_page),
+                        'max': f_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "moderator/mod_freights.html", context)
+
+            elif 'page' in self.request.POST.keys():
+                current_page = int(self.request.POST['page'])
+
+                if search_type == 1:
+                    if search_value != "Not set":
+                        # we are paginating a specific search if we are here we shouldnt have any pageing it shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
+                    else:
+                        if current_page > 1:
+                            # we are just looking for current freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            oldfreights = []
+
+                            # create a list for a ul to work through
+
+                            more_freights, where = get_list_of_pages(
+                                current_page, f_pages)
+
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                freights = Freight.objects.all().order_by('title')[
+                                    :limit]
+                                oldfreights = []
+                                # create a list for a ul to work through
+
+                                more_freights, where = get_list_of_pages(
+                                    current_page, f_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                elif search_type == 2:
+                    if search_value != "Not set":
+                        # we are paginating a search if we are here we shouldnt have any page above 1 it also shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
+                    else:
+                        if current_page > 1:
+                            # we are just looking for old freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            freights = []
+
+                            # create a list for a ul to work through
+
+                            more_freights, where = get_list_of_pages(
+                                current_page, of_pages)
+
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                                freights = []
+                                # create a list for a ul to work through
+
+                                more_freights, where = get_list_of_pages(
+                                    current_page, of_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                else:
+                    if current_page > 1:
+                        # get the right offset freights
+                        # query[offset:offset + limit]
+                        if current_page <= f_pages:
+                            # we are still showing currently active freigts and possibly some old ones, bet the current ones first
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            if freights.count() < limit:
+                                # a check to see if we need to fill in with old ones
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            # we have surpassed the current freights and only need the old ones
+                            page = current_page - f_pages
+                            if page == 1:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                            else:
+                                offset = (page - 1) * limit
+                                o_and_l = offset + limit
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    offset:o_and_l]
+
+                        # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                    else:
+                        # check if we have any current ones
+                        if f_pages > 0:
+                            freights = Freight.objects.all().order_by('title')[
+                                :limit]
+                            if freights.count() < limit:
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            oldfreigths = OldFreight.objects.all().order_by('title')[
+                                :limit]
+
+                        # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == 4:
+                        start = False
+
+                    if current_page == f_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if where == "end":
+                        end = False
+
+                    if current_page < f_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
+
+                    # make an empty freight for the new form
+                    freight = Freight()
+                    # search form
+                    form = searchFreightForm()
+                    form.startup()
+                    onSubmit = get_message('warning', 5)
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'warning': False,
+                        'freights': freights,
+                        'oldfreights': oldfreights,
+                        'freight': freight,
+                        'form': form,
+                        'search_type': search_type,
+                        'search_value': search_value,
+                        'more_freights': more_freights,
+                        'onSubmit': onSubmit,
+                        'current_page': int(current_page),
+                        'max': f_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "moderator/mod_freights.html", context)
+
+            elif 'nextPage' in self.request.POST.keys():
+                if current_page > tf_pages:
+                    current_page = tf_pages
+                else:
+                    if current_page < tf_pages:
+                        current_page += 1
+
+                if search_type == 1:
+                    if search_value != "Not set":
+                        # we are paginating a specific search if we are here we shouldnt have any pageing it shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
+                    else:
+                        if current_page > 1:
+                            # we are just looking for current freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            oldfreights = []
+
+                            # create a list for a ul to work through
+
+                            more_freights, where = get_list_of_pages(
+                                current_page, f_pages)
+
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                freights = Freight.objects.all().order_by('title')[
+                                    :limit]
+                                oldfreights = []
+                                # create a list for a ul to work through
+
+                                more_freights, where = get_list_of_pages(
+                                    current_page, f_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                elif search_type == 2:
+                    if search_value != "Not set":
+                        # we are paginating a search if we are here we shouldnt have any page above 1 it also shouldnt be possible to be here so reload
+                        messages.warning(
+                            self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
+                        return redirect("moderator:freights")
+                    else:
+                        if current_page > 1:
+                            # we are just looking for old freights we dont need aditionals
+                            # get the right offset freights
+                            # query[offset:offset + limit]
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            oldfreights = OldFreight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            freights = []
+
+                            # create a list for a ul to work through
+
+                            more_freights, where = get_list_of_pages(
+                                current_page, of_pages)
+
+                        else:
+                            # we are just looking for current freights we dont need aditionals
+                            # check if we have any current ones
+                            if f_pages > 0:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                                freights = []
+                                # create a list for a ul to work through
+
+                                more_freights, where = get_list_of_pages(
+                                    current_page, of_pages)
+                            else:
+                                freights = []
+                                oldfreigths = []
+                                more_freights = []
+                                where = "no extras"
+                                f_pages = 1
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+                else:
+                    if current_page > 1:
+                        # get the right offset freights
+                        # query[offset:offset + limit]
+                        if current_page <= f_pages:
+                            # we are still showing currently active freigts and possibly some old ones, bet the current ones first
+                            offset = (current_page - 1) * limit
+                            o_and_l = offset + limit
+                            freights = Freight.objects.all().order_by('title')[
+                                offset:o_and_l]
+                            if freights.count() < limit:
+                                # a check to see if we need to fill in with old ones
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            # we have surpassed the current freights and only need the old ones
+                            page = current_page - f_pages
+                            if page == 1:
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :limit]
+                            else:
+                                offset = (page - 1) * limit
+                                o_and_l = offset + limit
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    offset:o_and_l]
+
+                        # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+                    else:
+                        # check if we have any current ones
+                        if f_pages > 0:
+                            freights = Freight.objects.all().order_by('title')[
+                                :limit]
+                            if freights.count() < limit:
+                                left = limit - freights.count()
+                                oldfreights = OldFreight.objects.all().order_by('title')[
+                                    :left]
+                            else:
+                                oldfreights = []
+                        else:
+                            freights = []
+                            oldfreigths = OldFreight.objects.all().order_by('title')[
+                                :limit]  # create a list for a ul to work through
+
+                        more_freights, where = get_list_of_pages(
+                            current_page, tf_pages)
+
+                        # pagination booleans
+
+                        if current_page == 1 or where == "no extras":
+                            start = False
+                        else:
+                            start = True
+
+                        if current_page == 4:
+                            start = False
+
+                        if current_page == f_pages or where == "no extras":
+                            end = False
+                        else:
+                            end = True
+
+                        if where == "end":
+                            end = False
+
+                        if current_page < f_pages:
+                            next_page = True
+                        else:
+                            next_page = False
+
+                        if current_page > 1:
+                            previous_page = True
+                        else:
+                            previous_page = False
+
+                        # make an empty freight for the new form
+                        freight = Freight()
+                        # search form
+                        form = searchFreightForm()
+                        form.startup()
+                        onSubmit = get_message('warning', 5)
+
+                        context = {
+                            'gdpr_check': gdpr_check,
+                            'warning': False,
+                            'freights': freights,
+                            'oldfreights': oldfreights,
+                            'freight': freight,
+                            'form': form,
+                            'search_type': search_type,
+                            'search_value': search_value,
+                            'more_freights': more_freights,
+                            'onSubmit': onSubmit,
+                            'current_page': int(current_page),
+                            'max': f_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
+                        }
+
+                        return render(self.request, "moderator/mod_freights.html", context)
+
+        elif 'newSearch' in self.request.POST.keys():
             # get the default number of current freights
             warning = False
             allFreight = False
             form = searchFreightForm(self.request.POST)
-            form.startup()
+            current_page = 1
             if form.is_valid():
                 freight_id = form.cleaned_data.get('freight_id')
                 if freight_id == None:
                     # we are searching for all of a type
                     allFreight = True
                 freight_type = form.cleaned_data.get('freight_type')
-                lessThen = False
+
                 if freight_type == "1":
+                    oldfreights = []
                     if allFreight:
                         # all current  we wont paginate here for now
-                        freights = Freight.objects.all()
-                        f_pages = 1
-                        more_freights = [{'number': 1}]
-                        oldfreights = []
+                        freights = Freight.objects.all()[:limit]
                         if freights.count() == 0:
                             warning = True
+                            where = "no extras"
+                            more_freights = []
+                            p_pages = 0
+                        else:
+                            more_freights, where = get_list_of_pages(
+                                1, f_pages)
+                            p_pages = f_pages
                     else:
                         freights = Freight.objects.filter(id=freight_id)
-                        f_pages = 1
-                        more_freights = [{'number': 1}]
-                        oldfreights = []
                         if freights.count() == 0:
                             warning = True
+                            where = "no extras"
+                            more_freights = []
+                            p_pages = 0
                 elif freight_type == "2":
                     freights = []
                     if allFreight:
                         # all old ones we wont paginate here for now
                         oldfreights = OldFreight.objects.all()
-                        f_pages = 1
-                        more_freights = [{'number': 1}]
                         if oldfreights.count() == 0:
                             warning = True
+                            where = "no extras"
+                            more_freights = []
+                            p_pages = 0
+                        else:
+                            more_freights, where = get_list_of_pages(
+                                1, of_pages)
+                            p_pages = f_pages
                     else:
                         oldfreights = OldFreight.objects.filter(id=freight_id)
-                        f_pages = 1
-                        more_freights = [{'number': 1}]
                         if oldfreights.count() == 0:
                             warning = True
+                            where = "no extras"
+                            more_freights = []
+                            p_pages = 0
                 else:
-                    #something is wrong
-                    test = "test"
+                    # something is wrong just list some empty values
+                    warning = False
                     freights = []
                     oldfreights = []
+                    where = "no extras"
+                    more_freights = []
+                    p_pages = 0
 
-                current_page = 1
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == 4:
+                    start = False
+
+                if current_page == p_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < p_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
                 search_value = freight_id
                 search_type = "freight_id"
                 if allFreight and freight_type == "1":
@@ -2969,40 +3530,46 @@ class FreightView(LoginRequiredMixin, View):
 
                 # make an empty freight for the new form
                 freight = Freight()
+                # update labels etc
+                form.startup()
 
                 context = {
                     'gdpr_check': gdpr_check,
                     'warning': warning,
                     'freights': freights,
                     'oldfreights': oldfreights,
-                    'lessThenOffset': lessThen,
                     'freight': freight,
                     'form': form,
-                    'current_page': current_page,
                     'search_type': search_type,
                     'search_value': search_value,
                     'search_done': search_done,
                     'more_freights': more_freights,
-                    'max_pages': f_pages,
                     'onSubmit': onSubmit,
+                    'current_page': int(current_page),
+                    'max': f_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_freights.html", context)
             else:
                 # display just the regular page, show warning
                 warning = True
+                # GDPR check
+                gdpr_check = check_gdpr_cookies(self)
+                is_post = False
+                # get the default_pagination_values of the current freights
                 limit = default_pagination_values
                 freights = Freight.objects.all().order_by('title')[:limit]
-                number_of_freights = Freight.objects.all().count()
-                lessThen = False
                 try:
-                    number_of_old_freights = OldFreight.objects.all().count()
                     if freights.count() < limit:
-                        lessThen = True
-                        left = limit - number_of_freights
+                        left = limit - freights.count()
                         oldfreights = OldFreight.objects.all().order_by('title')[
                             :left]
-                    number_of_freights = number_of_freights + number_of_old_freights
+                    else:
+                        oldfreights = []
                 except ObjectDoesNotExist:
                     # there are no old freights
                     oldfreights = []
@@ -3023,16 +3590,42 @@ class FreightView(LoginRequiredMixin, View):
 
                 # create a list for a ul to work through
 
-                more_freights = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(f_pages):
-                    i += 1
-                    more_freights.append({'number': i})
-
-                # set current page, search type and search_value to start values
                 current_page = 1
+                more_freights, where = get_list_of_pages(current_page, f_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == 4:
+                    start = False
+
+                if current_page == f_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < f_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                # search form
+                form = searchFreightForm()
+                form.startup()
+
+                #  search type and search_value to start values
                 search_type = "Not set"
                 search_value = "Not set"
 
@@ -3046,16 +3639,18 @@ class FreightView(LoginRequiredMixin, View):
                     'warning': warning,
                     'freights': freights,
                     'oldfreights': oldfreights,
-                    'lessThenOffset': lessThen,
-                    'freight': freight,
                     'form': form,
-                    'current_page': current_page,
                     'search_type': search_type,
                     'search_value': search_value,
                     'more_freights': more_freights,
-                    'max_pages': f_pages,
                     'onSubmit': onSubmit,
                     'freight': emptyfreight,
+                    'current_page': int(current_page),
+                    'max': f_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_freights.html", context)
@@ -3650,7 +4245,6 @@ class CouponsView(LoginRequiredMixin, View):
                     self.request, "4 Något gick fel. Om detta återupprepas kontakta IT supporten.")
                 return redirect("moderator:overview")
         elif 'nextPage' in self.request.POST.keys():
-            print(self.request.POST.keys())
             if 'search' in self.request.POST.keys() and 'searchValue' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
 
                 search_type = self.request.POST['search']
@@ -4582,10 +5176,9 @@ class SpecificFAQView(LoginRequiredMixin, View):
             # establish the users language first, this should later have a check
             theLang = "Svenska"
             comment = []
-            try:
-                theLanguage = LanguageChoices.objects.get(
-                    language=theLang)
-            except ObjectDoesNotExist:
+            theLanguage = LanguageChoices.objects.get(
+                language=theLang)
+            if theLanguage == None:
                 print("no language")
                 return redirect("moderator:faqs")
 
@@ -4702,9 +5295,6 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
             except ObjectDoesNotExist:
                 cancelButton = {"buttonText": "cancel"}
                 comment.append("No save Button found")
-
-            if len(comment) > 0:
-                print(comment)
 
             context = {
                 'gdpr_check': gdpr_check,
