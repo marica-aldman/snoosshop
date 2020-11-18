@@ -18,7 +18,7 @@
                     Kategori id: {{form.category_id|as_crispy_field}}
                 </div>
                 <div>
-                    <button type="submit" name="search" class='btn btn-primary mt-3'>Sök</button>
+                    <button type="submit" name="search" class='btn btn-primary mt-3' value="newSearch">Sök</button>
                 </div>
             </div>
         </form>
@@ -129,42 +129,94 @@
             </tbody>
         </table>
     </div>
-
     <div class="d-flex w-100 justify-content-around">
         <ul class="pagination">
+            {% if previous_page %}
             <li class="page-item">
-                <form method="POST">
+                <form method="POST" action="{% url 'moderator:categories' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="previousPage" class="page-link" {% if current_page == 1 %}disabled{% endif %}>
-                        <
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="True" name="previousPage" class="page-link">
+                        &laquo;
                     </button>
                 </form>
             </li>
-            {% for category in more_categories %}
-            <li class="page-item">
-                <form method="POST">
+            {% endif %}
+            {% if start %}
+            <li>
+                <form method="POST" action="{% url 'moderator:categories' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="{{ category.number }}" name="page" {% if current_page == category.number %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
-                        {{category.number}}
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                        1
+                    </button>
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                        ...
+                    </button>
+                </form>
+            </li>
+            {% endif %}
+            {% if current_page == 4 %}
+                <form method="POST" action="{% url 'moderator:categories' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                        1
+                    </button>
+                </form>
+            {% endif %}
+            {% for c in more_categories %}
+            {%if current_page == c %}
+            <li class="page-item active">
+            {% else %}
+            <li class="page-item">
+            {% endif %}
+                <form method="POST" action="{% url 'moderator:categories' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="{{ c }}" name="page" {% if current_page == c %}class="page-link disabled" disabled{% else %} class="page-link"{% endif %}>
+                        {{c}}<span class="sr-only">(current)</span>
                     </button>
                 </form>
             </li>
             {% endfor %}
-            <li class="page-item">
-                <form method="POST">
+            {% if end %}
+            <li>
+                <form method="POST" action="{% url 'moderator:categories' %}">
                 {% csrf_token %}
-                    <input type="hidden" name="search" value="{{search_type}}">
-                    <input type="hidden" name="searchvalue" value="{{search_value}}">
+                    <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
-                    <button type="submit" value="True" name="nextPageOrder" class="page-link" {% if max_pages == current_page %} disabled{% endif %}>
-                        >
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                        ...
+                    </button>
+                    <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                        {{max}}
                     </button>
                 </form>
             </li>
+            {% endif %}
+            {% if next_page %}
+            <li class="page-item">
+                <form method="POST" action="{% url 'moderator:categories' %}">
+                {% csrf_token %}
+                    <input type="hidden" value="pagination" name="paging">
+                    <input type="hidden" value="{{current_page}}" name="current_page">
+                    <input type="hidden" name="search" value="{{search_value}}">
+                    <button type="submit" value="True" name="nextPage" class="page-link" {% if max == current_page %} disabled{% endif %}>
+                    &raquo;
+                    </button>
+                </form>
+            </li>
+            {% endif %}
         </ul>
 
     </div>

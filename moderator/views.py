@@ -1170,20 +1170,40 @@ class CategoriesView(LoginRequiredMixin, View):
 
             # create a list for a ul to work through
 
-            more_categories = []
+            current_page = 1
+            more_categories, where = get_list_of_pages(current_page, c_pages)
 
-            i = 0
-            # populate the list with the amount of pages there are
-            for i in range(c_pages):
-                i += 1
-                more_categories.append({'number': i})
+            # pagination booleans
+
+            if current_page == 1 or where == "no extras":
+                start = False
+            else:
+                start = True
+
+            if current_page == 4:
+                start = False
+
+            if current_page == c_pages or where == "no extras":
+                end = False
+            else:
+                end = True
+
+            if where == "end":
+                end = False
+
+            if current_page < c_pages:
+                next_page = True
+            else:
+                next_page = False
+
+            if current_page > 1:
+                previous_page = True
+            else:
+                previous_page = False
 
             # make search for specific category
 
             form = searchCategoryForm()
-
-            # set current page to 1
-            current_page = 1
 
             # set a bool to check if we are showing one or multiple categories
 
@@ -1191,7 +1211,6 @@ class CategoriesView(LoginRequiredMixin, View):
 
             # set the hidden value for wether or not we have done a search
 
-            search_type = "None"
             search_value = "None"
 
             # delete warning
@@ -1199,15 +1218,18 @@ class CategoriesView(LoginRequiredMixin, View):
 
             context = {
                 'gdpr_check': gdpr_check,
-                'search_type': search_type,
                 'search_value': search_value,
                 'multiple': multiple,
                 'categories': categories,
                 'more_categories': more_categories,
                 'form': form,
-                'current_page': current_page,
-                'max_pages': c_pages,
                 'onsubmit': onsubmit,
+                'current_page': int(current_page),
+                'max': c_pages,
+                'previous_page': previous_page,
+                'next_page': next_page,
+                'end': end,
+                'start': start,
             }
 
             return render(self.request, "moderator/mod_categories.html", context)
@@ -1221,6 +1243,8 @@ class CategoriesView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
+        # get the limit
+        limit = default_pagination_values
         try:
             # where are we
             current_page = 1
@@ -1228,66 +1252,15 @@ class CategoriesView(LoginRequiredMixin, View):
                 current_page = int(self.request.POST['current_page'])
 
             # what button did we press
-            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "":
-                # make a form and populate so we can clean the data
-                if 'previousPage' in self.request.POST.keys() or 'nextPage' in self.request.POST.keys() or 'page' in self.request.POST.keys():
-                    # we only have one type of search for this we can only get one page.
-                    category_id = int(self.request.POST['search_value'])
-
-                    if category_id != 0:
-                        # next page on a single user is the same as the search for single user
-                        # get the user
-
-                        try:
-                            the_category = Category.objects.get(id=category_id)
-
-                            # there is only one
-                            c_pages = 1
-                            more_categories = [{'number': 1}]
-
-                            # set current page to 1
-                            current_page = 1
-
-                            # set a bool to check if we are showing one or multiple orders
-
-                            multiple = False
-
-                            # set the search type
-
-                            search_type = "categoryID"
-
-                            # form
-
-                            form = searchCategoryForm()
-                            form.populate(category_id)
-                            onsubmit = get_message('warning', 4)
-
-                            context = {
-                                'gdpr_check': gdpr_check,
-                                'search_type': search_type,
-                                'search_value': category_id,
-                                'multiple': multiple,
-                                'category': the_category,
-                                'more_categories': more_categories,
-                                'form': form,
-                                'current_page': current_page,
-                                'max_pages': c_pages,
-                                'onsubmit': onsubmit,
-                            }
-
-                            return render(self.request, "moderator/mod_categories.html", context)
-
-                        except ObjectDoesNotExist:
-                            info_message = get_message('info', 44)
-                            messages.info(
-                                self.request, info_message)
-                            return redirect("moderator:categories")
-                    else:
-                        # if the product id is 0 we are probably trying to reset the form
+            if 'search' in self.request.POST.keys() and self.request.POST['search'] != "" and self.request.POST['search'] != "None":
+                # check if we are using the form
+                search_test = self.request.POST['search']
+                if search_test == "newSearch":
+                    # make a form and populate so we can clean the data
+                    if self.request.POST['category_id'] == "":
+                        # resetting form
                         return redirect("moderator:categories")
 
-                else:
-                    # make a form and populate so we can clean the data
                     form = searchCategoryForm(self.request.POST)
 
                     if form.is_valid():
@@ -1299,30 +1272,61 @@ class CategoriesView(LoginRequiredMixin, View):
                         try:
                             category = Category.objects.get(id=category_id)
                             c_pages = 1
-                            more_categories = [{'number': 1}]
-                            # set current page to 1
+
+                            # create a list for a ul to work through
+
                             current_page = 1
+                            more_categories, where = get_list_of_pages(
+                                current_page, c_pages)
+
+                            # pagination booleans
+
+                            if current_page == 1 or where == "no extras":
+                                start = False
+                            else:
+                                start = True
+
+                            if current_page == 4:
+                                start = False
+
+                            if current_page == c_pages or where == "no extras":
+                                end = False
+                            else:
+                                end = True
+
+                            if where == "end":
+                                end = False
+
+                            if current_page < c_pages:
+                                next_page = True
+                            else:
+                                next_page = False
+
+                            if current_page > 1:
+                                previous_page = True
+                            else:
+                                previous_page = False
 
                             # set a bool to check if we are showing one or multiple orders
 
                             multiple = False
 
-                            # set the search type
-
-                            search_type = "categoryID"
                             onsubmit = get_message('warning', 4)
 
                             context = {
                                 'gdpr_check': gdpr_check,
-                                'search_type': search_type,
                                 'search_value': search_value,
                                 'multiple': multiple,
                                 'category': category,
                                 'more_categories': more_categories,
                                 'form': form,
-                                'current_page': current_page,
-                                'max_pages': c_pages,
                                 'onsubmit': onsubmit,
+                                'current_page': int(current_page),
+                                'max': c_pages,
+                                'previous_page': previous_page,
+                                'next_page': next_page,
+                                'end': end,
+                                'start': start,
                             }
 
                             return render(self.request, "moderator/mod_categories.html", context)
@@ -1338,335 +1342,82 @@ class CategoriesView(LoginRequiredMixin, View):
                                 messages.info(self.request, info_message)
                                 return redirect("moderator:categories")
                     else:
-                        # rerender page with error message
-                        # get the limit
-                        limit = default_pagination_values
-                        # get the first categories and a count of all categories
-                        categories = Category.objects.all()[:20]
-                        number_categories = Category.objects.all().count()
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer number of pages will be 1
-
-                        c_pages = 1
-
-                        if number_categories > limit:
-                            # if there are more we divide by the limit
-                            c_pages = number_categories / limit
-                            # see if there is a decimal
-                            testC = int(c_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testC != c_pages:
-                                c_pages = int(c_pages)
-                                c_pages += 1
-                            if type(c_pages) != "int":
-                                c_pages = int(c_pages)
-
-                        # create a list for a ul to work through
-
-                        more_categories = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(c_pages):
-                            i += 1
-                            more_categories.append({'number': i})
-
-                        # we already have the form
-
-                        # set current page to 1
-                        current_page = 1
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-
-                        onsubmit = get_message('warning', 4)
-
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'categories': categories,
-                            'more_categories': more_categories,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': c_pages,
-                            'onsubmit': onsubmit,
-                        }
-
                         if self.request.POST['category_id'] != "":
                             message = get_message('error', 97)
                             messages.warning(
                                 self.request, message)
-                        return render(self.request, "moderator/mod_categories.html", context)
-            elif 'search' in self.request.POST.keys() and self.request.POST['search'] == "":
-                # empty search means resetting form
-                return redirect("moderator:categories")
-            elif 'nextPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-                # get the limit
-                limit = default_pagination_values
-
-                try:
-                    number_categories = Category.objects.all(
-                    ).count()
-                    numbepages = number_categories / limit
-                    if current_page < numbepages:
-                        current_page += 1
-                    offset = (current_page - 1) * limit
-                    o_l = offset + limit
-                    categories = Category.objects.all()[offset:o_l]
-                except ObjectDoesNotExist:
-                    categories = {}
-                    number_categories = 0
-
-                # figure out how many pages there are
-                # if there are only the limit or fewer number of pages will be 1
-
-                c_pages = 1
-
-                if number_categories > limit:
-                    # if there are more we divide by the limit
-                    c_pages = number_categories / limit
-                    # see if there is a decimal
-                    testC = int(c_pages)
-                    # if there isn't an even number of ten make an extra page for the last group
-                    if testC != c_pages:
-                        c_pages = int(c_pages)
-                        c_pages += 1
-                    if type(c_pages) != "int":
-                        c_pages = int(c_pages)
-
-                # create a list for a ul to work through
-
-                more_categories = []
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(c_pages):
-                    i += 1
-                    more_categories.append({'number': i})
-
-                # make search for specific order or customer
-
-                form = searchCategoryForm()
-
-                # set a bool to check if we are showing one or multiple orders
-
-                multiple = True
-
-                # set the hidden value for wether or not we have done a search
-
-                search_type = "None"
-                search_value = "None"
-
-                onsubmit = get_message('warning', 4)
-
-                context = {
-                    'gdpr_check': gdpr_check,
-                    'search_type': search_type,
-                    'search_value': search_value,
-                    'multiple': multiple,
-                    'categories': categories,
-                    'more_categories': more_categories,
-                    'form': form,
-                    'current_page': current_page,
-                    'max_pages': c_pages,
-                    'onsubmit': onsubmit,
-                }
-
-                return render(self.request, "moderator/mod_categories.html", context)
-
-            elif 'previousPage' in self.request.POST.keys():
-                # get what type of search
-                search_type = self.request.POST['search']
-                # get the limit
-                limit = default_pagination_values
-
-                # check what page
-                if current_page > 2:
-
-                    try:
-                        if current_page > 1:
-                            current_page -= 1
-                        if current_page == 1:
-                            categories = Category.objects.all()[:limit]
-                        else:
-                            offset = (current_page - 1) * limit
-                            o_l = offset + limit
-                            categories = Category.objects.all()[offset:o_l]
-
-                        number_categories = Category.objects.all(
-                        ).count()
-
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer number of pages will be 1
-
-                        c_pages = 1
-
-                        if number_categories > limit:
-                            # if there are more we divide by the limit
-                            c_pages = number_categories / limit
-                            # see if there is a decimal
-                            testC = int(c_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testC != c_pages:
-                                c_pages = int(c_pages)
-                                c_pages += 1
-                            if type(c_pages) != "int":
-                                c_pages = int(c_pages)
-
-                        # create a list for a ul to work through
-
-                        more_categories = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(c_pages):
-                            i += 1
-                            more_categories.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchCategoryForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-                        onsubmit = get_message('warning', 4)
-
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'categories': categories,
-                            'more_categories': more_categories,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': c_pages,
-                            'onsubmit': onsubmit,
-                        }
-
-                        return render(self.request, "moderator/mod_categories.html", context)
-
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 98)
-                        messages.warning(
-                            self.request, message)
                         return redirect("moderator:categories")
-
                 else:
-
-                    try:
-                        # get the limit
-                        limit = default_pagination_values
-                        if current_page > 1:
-                            current_page -= 1
-                        categories = Category.objects.all()[:limit]
-                        number_categories = Category.objects.all(
-                        ).count()
-
-                        # figure out how many pages there are
-                        # if there are only the limit or fewer number of pages will be 1
-
-                        c_pages = 1
-
-                        if number_categories > limit:
-                            # if there are more we divide by the limit
-                            p_pages = number_categories / limit
-                            # see if there is a decimal
-                            testC = int(c_pages)
-                            # if there isn't an even number of ten make an extra page for the last group
-                            if testC != c_pages:
-                                c_pages = int(c_pages)
-                                c_pages += 1
-                            if type(c_pages) != "int":
-                                c_pages = int(c_pages)
-
-                        # create a list for a ul to work through
-
-                        more_categories = []
-
-                        i = 0
-                        # populate the list with the amount of pages there are
-                        for i in range(c_pages):
-                            i += 1
-                            more_categories.append({'number': i})
-
-                        # make search for specific order or customer
-
-                        form = searchCategoryForm()
-
-                        # set a bool to check if we are showing one or multiple orders
-
-                        multiple = True
-
-                        # set the hidden value for wether or not we have done a search
-
-                        search_type = "None"
-                        search_value = "None"
-                        onsubmit = get_message('warning', 4)
-
-                        context = {
-                            'gdpr_check': gdpr_check,
-                            'search_type': search_type,
-                            'search_value': search_value,
-                            'multiple': multiple,
-                            'categories': categories,
-                            'more_categories': more_categories,
-                            'form': form,
-                            'current_page': current_page,
-                            'max_pages': c_pages,
-                            'onsubmit': onsubmit,
-                        }
-
-                        return render(self.request, "moderator/mod_categories.html", context)
-
-                    except ObjectDoesNotExist:
-                        message = get_message('error', 99)
-                        messages.warning(
-                            self.request, message)
-                        return redirect("moderator:categories")
-
-            elif 'delete' in self.request.POST.keys():
-                if 'id' in self.request.POST.keys():
-
-                    category_id = int(self.request.POST['id'])
+                    # we shouldnt be here but just in case of later changes do a search on the value
+                    # get the values
+                    category_id = int(search_test)
+                    # search done on product id
+                    search_value = category_id
+                    # get the product
                     category = Category.objects.get(id=category_id)
-                    category.delete()
-                    info_message = get_message('info', 47)
-                    messages.info(
-                        self.request, info_message)
-                    return redirect("moderator:categories")
+                    c_pages = 1
 
-                    # might want to change this to rerender the page where we left off
-                else:
-                    return redirect("moderator:categories")
-            elif 'page' in self.request.POST.keys():
-                # get the page
-                page = int(self.request.POST['page'])
-                # get the limit
-                limit = default_pagination_values
+                    # create a list for a ul to work through
 
-                if page == 1:
-                    categories = Category.objects.all()[:limit]
-                else:
-                    offset = (page - 1) * limit
-                    o_l = offset + limit
-                    categories = Category.objects.all()[offset:o_l]
+                    current_page = 1
+                    more_categories, where = get_list_of_pages(
+                        current_page, c_pages)
+
+                    # pagination booleans
+
+                    if current_page == 1 or where == "no extras":
+                        start = False
+                    else:
+                        start = True
+
+                    if current_page == 4:
+                        start = False
+
+                    if current_page == c_pages or where == "no extras":
+                        end = False
+                    else:
+                        end = True
+
+                    if where == "end":
+                        end = False
+
+                    if current_page < c_pages:
+                        next_page = True
+                    else:
+                        next_page = False
+
+                    if current_page > 1:
+                        previous_page = True
+                    else:
+                        previous_page = False
+
+                    # set a bool to check if we are showing one or multiple orders
+
+                    multiple = False
+
+                    onsubmit = get_message('warning', 4)
+
+                    context = {
+                        'gdpr_check': gdpr_check,
+                        'search_value': search_value,
+                        'multiple': multiple,
+                        'category': category,
+                        'more_categories': more_categories,
+                        'form': form,
+                        'onsubmit': onsubmit,
+                        'current_page': int(current_page),
+                        'max': c_pages,
+                        'previous_page': previous_page,
+                        'next_page': next_page,
+                        'end': end,
+                        'start': start,
+                    }
+
+                    return render(self.request, "moderator/mod_categories.html", context)
+
+            elif 'nextPage' in self.request.POST.keys():
+                # get current page
+                current_page = int(self.request.POST['current_page'])
 
                 number_categories = Category.objects.all(
                 ).count()
@@ -1688,15 +1439,52 @@ class CategoriesView(LoginRequiredMixin, View):
                     if type(c_pages) != "int":
                         c_pages = int(c_pages)
 
+                # correct current page in accordance with c_pages
+
+                if current_page < c_pages:
+                    current_page += 1
+                elif current_page >= c_pages:
+                    current_page = c_pages
+
                 # create a list for a ul to work through
 
-                more_categories = []
+                more_categories, where = get_list_of_pages(
+                    current_page, c_pages)
 
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(c_pages):
-                    i += 1
-                    more_categories.append({'number': i})
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == 4:
+                    start = False
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                if current_page > 1:
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    categories = Category.objects.all()[offset:o_l]
+                else:
+                    categories = Category.objects.all()[:limit]
 
                 # make search for specific order or customer
 
@@ -1708,21 +1496,241 @@ class CategoriesView(LoginRequiredMixin, View):
 
                 # set the hidden value for wether or not we have done a search
 
-                search_type = "None"
                 search_value = "None"
+
                 onsubmit = get_message('warning', 4)
 
                 context = {
                     'gdpr_check': gdpr_check,
-                    'search_type': search_type,
                     'search_value': search_value,
                     'multiple': multiple,
                     'categories': categories,
                     'more_categories': more_categories,
                     'form': form,
-                    'current_page': page,
+                    'current_page': current_page,
                     'max_pages': c_pages,
                     'onsubmit': onsubmit,
+                    'current_page': int(current_page),
+                    'max': c_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
+                }
+
+                return render(self.request, "moderator/mod_categories.html", context)
+
+            elif 'previousPage' in self.request.POST.keys():
+                # get current page
+                current_page = int(self.request.POST['current_page'])
+
+                # figure out how many pages there are
+
+                number_categories = Category.objects.all(
+                ).count()
+
+                # if there are only the limit or fewer number of pages will be 1
+
+                c_pages = 1
+
+                if number_categories > limit:
+                    # if there are more we divide by the limit
+                    c_pages = number_categories / limit
+                    # see if there is a decimal
+                    testC = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testC != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+                    if type(c_pages) != "int":
+                        c_pages = int(c_pages)
+
+                # correct current page in accordance with c_pages
+
+                if current_page > 1:
+                    current_page -= 1
+                elif current_page <= 1:
+                    current_page = 1
+
+                # create a list for a ul to work through
+
+                more_categories, where = get_list_of_pages(
+                    current_page, c_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == 4:
+                    start = False
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                if current_page > 1:
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    categories = Category.objects.all()[offset:o_l]
+                else:
+                    categories = Category.objects.all()[:limit]
+
+                # make search for specific order or customer
+
+                form = searchCategoryForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_value = "None"
+                onsubmit = get_message('warning', 4)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'categories': categories,
+                    'more_categories': more_categories,
+                    'form': form,
+                    'onsubmit': onsubmit,
+                    'current_page': int(current_page),
+                    'max': c_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
+                }
+
+                return render(self.request, "moderator/mod_categories.html", context)
+
+            elif 'delete' in self.request.POST.keys():
+                if 'id' in self.request.POST.keys():
+
+                    category_id = int(self.request.POST['id'])
+                    category = Category.objects.get(id=category_id)
+                    category.delete()
+                    info_message = get_message('info', 47)
+                    messages.info(
+                        self.request, info_message)
+                    return redirect("moderator:categories")
+
+                    # might want to change this to rerender the page where we left off
+                else:
+                    return redirect("moderator:categories")
+            elif 'page' in self.request.POST.keys():
+                # get the page
+                page = int(self.request.POST['page'])
+
+                number_categories = Category.objects.all(
+                ).count()
+
+                # if there are only the limit or fewer number of pages will be 1
+
+                c_pages = 1
+
+                if number_categories > limit:
+                    # if there are more we divide by the limit
+                    c_pages = number_categories / limit
+                    # see if there is a decimal
+                    testC = int(c_pages)
+                    # if there isn't an even number of ten make an extra page for the last group
+                    if testC != c_pages:
+                        c_pages = int(c_pages)
+                        c_pages += 1
+                    if type(c_pages) != "int":
+                        c_pages = int(c_pages)
+
+                # correct current page in accordance with c_pages
+
+                current_page = page
+
+                # create a list for a ul to work through
+
+                more_categories, where = get_list_of_pages(
+                    current_page, c_pages)
+
+                # pagination booleans
+
+                if current_page == 1 or where == "no extras":
+                    start = False
+                else:
+                    start = True
+
+                if current_page == 4:
+                    start = False
+
+                if current_page == c_pages or where == "no extras":
+                    end = False
+                else:
+                    end = True
+
+                if where == "end":
+                    end = False
+
+                if current_page < c_pages:
+                    next_page = True
+                else:
+                    next_page = False
+
+                if current_page > 1:
+                    previous_page = True
+                else:
+                    previous_page = False
+
+                if current_page > 1:
+                    offset = (current_page - 1) * limit
+                    o_l = offset + limit
+                    categories = Category.objects.all()[offset:o_l]
+                else:
+                    categories = Category.objects.all()[:limit]
+
+                # make search for specific order or customer
+
+                form = searchCategoryForm()
+
+                # set a bool to check if we are showing one or multiple orders
+
+                multiple = True
+
+                # set the hidden value for wether or not we have done a search
+
+                search_value = "None"
+                onsubmit = get_message('warning', 4)
+
+                context = {
+                    'gdpr_check': gdpr_check,
+                    'search_value': search_value,
+                    'multiple': multiple,
+                    'categories': categories,
+                    'more_categories': more_categories,
+                    'form': form,
+                    'onsubmit': onsubmit,
+                    'current_page': int(current_page),
+                    'max': c_pages,
+                    'previous_page': previous_page,
+                    'next_page': next_page,
+                    'end': end,
+                    'start': start,
                 }
 
                 return render(self.request, "moderator/mod_categories.html", context)
@@ -1843,13 +1851,8 @@ class OrderHandlingView(LoginRequiredMixin, View):
         # first get the constants
         # get max pages regular orders
         o_pages = 1
-        try:
-            orders = Order.objects.filter(
-                ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
-            info1 = ""
-        except ObjectDoesNotExist:
-            orders = []
-            info1 = get_message('info', 49)
+        orders = Order.objects.filter(
+            ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
 
         number_orders = Order.objects.filter(
             ordered=True, being_delivered=False, removed_order=False).count()
@@ -1868,17 +1871,36 @@ class OrderHandlingView(LoginRequiredMixin, View):
 
         # create a list for a ul to work through
 
-        more_orders = []
-
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(o_pages):
-            i += 1
-            more_orders.append({'number': i})
-
-        # current page for regular
-
         current_page = 1
+        more_orders, where = get_list_of_pages(current_page, o_pages)
+
+        # pagination booleans
+
+        if current_page == 1 or where == "no extras":
+            start = False
+        else:
+            start = True
+
+        if current_page == 4:
+            start = False
+
+        if current_page == o_pages or where == "no extras":
+            end = False
+        else:
+            end = True
+
+        if where == "end":
+            end = False
+
+        if current_page < o_pages:
+            next_page = True
+        else:
+            next_page = False
+
+        if current_page > 1:
+            previous_page = True
+        else:
+            previous_page = False
 
         # make search form for specific order or customer
 
@@ -1886,22 +1908,21 @@ class OrderHandlingView(LoginRequiredMixin, View):
 
         # set the hidden value for wether or not we have done a search
 
-        search_type = "None"
-        search_value = "None"
+        search_value = "0"
 
         context = {
             'gdpr_check': gdpr_check,
             'form': form,
-            'search_type': search_type,
             'search_value': search_value,
             'orders': orders,
-            'max': o_pages,
-            'current_page': current_page,
             'more_orders': more_orders,
+            'current_page': int(current_page),
+            'max': o_pages,
+            'previous_page': previous_page,
+            'next_page': next_page,
+            'end': end,
+            'start': start,
         }
-
-        if info1 != "":
-            messages.info(self.request, info1)
 
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
@@ -1911,12 +1932,9 @@ class OrderHandlingView(LoginRequiredMixin, View):
         # get the limit
         limit = default_pagination_values
         # set the search type and value here before we go into the rest
-        search_type = "None"
-        search_value = "None"
-        if 'search_type' in self.request.POST.keys():
-            search_type = int(self.request.POST['search_type'])
-        if 'search_value' in self.request.POST.keys():
-            search_value = int(self.request.POST['search_value'])
+        search_value = "0"
+        if 'search' in self.request.POST.keys():
+            search_value = int(self.request.POST['search'])
         # handle status change and pagination
         current_page = int(self.request.POST['current_page'])
 
@@ -1937,8 +1955,8 @@ class OrderHandlingView(LoginRequiredMixin, View):
             if type(o_pages) != "int":
                 o_pages = int(o_pages)
 
-        if 'search' in self.request.POST.keys() and self.request.POST['search'] != "None":
-            if 'order_ref' in self.request.POST.keys() and self.request.POST['order_ref'] != "" or 'order_id' in self.request.POST.keys() and self.request.POST['order_id'] != "":
+        if 'search' in self.request.POST.keys() and self.request.POST['search'] == "newSearch":
+            if ('order_ref' in self.request.POST.keys() and self.request.POST['order_ref'] != "") or ('order_id' in self.request.POST.keys() and self.request.POST['order_id'] != ""):
                 # order id and order ref only retrievs a single item
 
                 # make a form and populate so we can clean the data
@@ -1962,15 +1980,14 @@ class OrderHandlingView(LoginRequiredMixin, View):
                             messages.info(
                                 self.request, "Ordern med det referensnummret saknas.")
                             return redirect("moderator:orderhandling")
-                        number_orders = 1
-
-                        # create a list for a ul to work through
-
-                        more_orders = [{'number': 1}]
-
-                        # current page for regular
-
+                        # we only have one page so change the bools etc
+                        o_pages = 1
                         current_page = 1
+                        start = False
+                        end = False
+                        next_page = False
+                        previous_page = False
+                        more_orders = []
 
                         # set the search type
 
@@ -1979,12 +1996,15 @@ class OrderHandlingView(LoginRequiredMixin, View):
                         context = {
                             'gdpr_check': gdpr_check,
                             'form': form,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'orders': orders,
-                            'max': o_pages,
-                            'current_page': current_page,
                             'more_orders': more_orders,
+                            'current_page': int(current_page),
+                            'max': o_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
@@ -2002,29 +2022,31 @@ class OrderHandlingView(LoginRequiredMixin, View):
                             messages.info(
                                 self.request, "Ordern med det id:t saknas.")
                             return redirect("moderator:orderhandling")
-                        number_orders = 1
-
-                        # create a list for a ul to work through
-
-                        more_orders = [{'number': 1}]
-
-                        # current page for regular
-
+                        # we only have one page so change the bools etc
+                        o_pages = 1
                         current_page = 1
+                        start = False
+                        end = False
+                        next_page = False
+                        previous_page = False
+                        more_orders = []
 
                         # set the search type
 
-                        search_type = "Reference"
+                        search_type = "ID"
 
                         context = {
                             'gdpr_check': gdpr_check,
                             'form': form,
-                            'search_type': search_type,
                             'search_value': search_value,
                             'orders': orders,
-                            'max': o_pages,
-                            'current_page': current_page,
                             'more_orders': more_orders,
+                            'current_page': int(current_page),
+                            'max': o_pages,
+                            'previous_page': previous_page,
+                            'next_page': next_page,
+                            'end': end,
+                            'start': start,
                         }
 
                         return render(self.request, "moderator/mod_orderhandling.html", context)
@@ -2039,56 +2061,67 @@ class OrderHandlingView(LoginRequiredMixin, View):
             else:
                 # reset page
                 return redirect("moderator:orderhandling")
-        elif 'previousPageOrder' in self.request.POST.keys():
+        elif 'previousPage' in self.request.POST.keys():
             if current_page >= 2:
                 current_page -= 1
-        elif 'nextPageOrder' in self.request.POST.keys():
-            if current_page < pages:
+            elif current_page <= 1:
+                current_page = 1
+        elif 'nextPage' in self.request.POST.keys():
+            if current_page < o_pages:
                 current_page += 1
+            elif current_page >= o_pages:
+                current_page = o_pages
         elif 'page' in self.request.POST.keys():
             page = int(self.request.POST['page'])
-            # just to make sure
-            if page <= o_pages and page > 1:
-                current_page = page
+            current_page = page
         else:
             # bugg handle this
             messages.warning(
                 self.request, "Något gick fel. Om detta återupprepas kontakta IT supporten.")
             redirect("moderator:orderhandling")
 
-        # calculations
-
         # create a list for a ul to work through
 
-        more_orders = []
+        more_orders, where = get_list_of_pages(
+            current_page, o_pages)
 
-        i = 0
-        # populate the list with the amount of pages there are
-        for i in range(o_pages):
-            i += 1
-            more_orders.append({'number': i})
+        # pagination booleans
+
+        if current_page == 1 or where == "no extras":
+            start = False
+        else:
+            start = True
+
+        if current_page == 4:
+            start = False
+
+        if current_page == o_pages or where == "no extras":
+            end = False
+        else:
+            end = True
+
+        if where == "end":
+            end = False
+
+        if current_page < o_pages:
+            next_page = True
+        else:
+            next_page = False
+
+        if current_page > 1:
+            previous_page = True
+        else:
+            previous_page = False
 
         # after all these we need display the page again but with the current pages set correctly this will differ if we or have paged.
-
-        info1 = ""
         if current_page > 1:
-            try:
-                offset = (current_page - 1) * limit
-                o_l = offset + limit
-                orders = Order.objects.filter(
-                    ordered=True, being_delivered=False, removed_order=False).order_by('id')[offset:o_l]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info1 = get_message('info', 49)
-                orders = []
+            offset = (current_page - 1) * limit
+            o_l = offset + limit
+            orders = Order.objects.filter(
+                ordered=True, being_delivered=False, removed_order=False).order_by('id')[offset:o_l]
         else:
-            try:
-                orders = Order.objects.filter(
-                    ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
-            except ObjectDoesNotExist:
-                # no orders left to complete
-                info1 = get_message('info', 49)
-                orders = []
+            orders = Order.objects.filter(
+                ordered=True, being_delivered=False, removed_order=False).order_by('id')[:limit]
 
         # make search form for specific order or customer
 
@@ -2097,16 +2130,16 @@ class OrderHandlingView(LoginRequiredMixin, View):
         context = {
             'gdpr_check': gdpr_check,
             'form': form,
-            'search_type': search_type,
             'search_value': search_value,
             'orders': orders,
-            'max': o_pages,
-            'current_page': current_page,
             'more_orders': more_orders,
+            'current_page': int(current_page),
+            'max': o_pages,
+            'previous_page': previous_page,
+            'next_page': next_page,
+            'end': end,
+            'start': start,
         }
-
-        if info1 != "":
-            messages.info(self.request, info1)
 
         return render(self.request, "moderator/mod_orderhandling.html", context)
 
@@ -5321,7 +5354,7 @@ class DeleteSpecificFAQView(LoginRequiredMixin, View):
 
             for faq in faqs:
                 faq.delete()
-            #info_message = get_message('info', code)
+            # info_message = get_message('info', code)
             messages.info(self.request, "FAQs borttagen")
             return redirect("moderator:faqs")
 
@@ -5401,7 +5434,7 @@ class NewSpecificFAQView(LoginRequiredMixin, View):
                     faq.subject = form.cleaned_data.get('subject')
                     faq.content = form.cleaned_data.get('content')
                     faq.save()
-                    #info_message = get_message('info', code)
+                    # info_message = get_message('info', code)
                     messages.info(self.request, "FAQs sparad")
                     return redirect("moderator:faqs")
                 else:
