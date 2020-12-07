@@ -63,7 +63,7 @@ BUTTON_TYPES = (
     ('015', 'continue to checkout'),
 )
 
-default_pagination_values = 2
+default_pagination_values = 8
 overview_number = 4
 
 
@@ -314,6 +314,9 @@ class Order(models.Model):
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
     coupon = models.ForeignKey(
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
+    coupon_amount = models.FloatField(blank=True, null=True)
+    coupon_type = models.CharField(max_length=20, blank=True, null=True)
+    coupon_code = models.CharField(max_length=15, blank=True, null=True)
     being_delivered = models.BooleanField(default=False)
     return_handled = models.BooleanField(default=False)
     canceled = models.BooleanField(default=False)

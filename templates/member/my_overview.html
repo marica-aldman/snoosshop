@@ -7,12 +7,12 @@
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <div class="container">
+    <div class="main_container">
     <!--orders-->
     <!--active-->
-        <div class="border rounded mb-3">
+        <div class="border rounded mb-3 table_container">
             <h3>Aktiva ordrar</h3>
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover mb-2 table_sizing_fullwidth">
                 <thead class="mdb-color lighten-5">
                     <tr>
                         <th>
@@ -20,9 +20,6 @@
                         </th>
                         <th>
                             Beställd
-                        </th>
-                        <th>
-                            Prenumeration
                         </th>
                         <th>
                             Status
@@ -42,13 +39,6 @@
                             {{ order.ordered_date }}
                         </td>
                         <td>
-                            {% if order.subscription_order %}
-                                Ja
-                            {% else %}
-                                Nej
-                            {% endif %}
-                        </td>
-                        <td>
                             {% if order.being_delivered %}
                                 Skickad
                             {% else %}
@@ -58,7 +48,7 @@
                         <td>
                             <form method="POST" action="{{ order.get_absolute_url_member }}">
                                 {% csrf_token %}
-                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
+                                <button class="btn btn-primary float-right see_button" type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>

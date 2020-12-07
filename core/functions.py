@@ -183,7 +183,7 @@ def get_order_total(order):
     orderItems = order.items.all()
     i = 0
     for item in orderItems:
-        if item.discount_price > 0:
+        if item.discount_price != None:
             total = total + item.discount_price
         else:
             total = total + item.price
@@ -201,7 +201,8 @@ def get_order_total(order):
     freight = order.freight
     if freight is not None:
         # need to add the amount to the database later for easier adjustment. Also check with company what the amount is
-        if i < 6:
+        free_freight = 6
+        if i < free_freight:
             total = total + freight.amount
     # return total
     return total
@@ -367,3 +368,21 @@ def get_anonymous_user():
             same = False
 
     return user_new_id
+
+
+def update_order_total(order):
+    items = order.items.all()
+    total = 0
+
+    for item in items:
+        total = total + item.total_price
+
+    if order.freight_price != None:
+        total = total + order.freight_price
+
+    if order.coupon_amount != None:
+        if coupon.coupon_type == "Percent":
+            total = total * order.coupon_amount
+        elif coupon.coupon_type == "Amount":
+            total = total - order.coupon_amount
+    return total

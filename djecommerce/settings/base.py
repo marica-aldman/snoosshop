@@ -92,9 +92,3 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 SITE_ID = 1
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'snoosshop.confirmation@gmail.com'
-EMAIL_HOST_PASSWORD = 'p123456;'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True

@@ -6,7 +6,6 @@ from .models import FormFields, FormText, Freight
 
 PAYMENT_CHOICES = (
     ('S', 'Stripe'),
-    ('P', 'PayPal')
 )
 
 

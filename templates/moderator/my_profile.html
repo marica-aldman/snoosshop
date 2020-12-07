@@ -11,7 +11,7 @@
     <div class="container">
     <!--profile-->
         <div class="w-100">
-            <form method="POST" action="{% url 'member:changePassword' %}">
+            <form method="POST" action="{% url 'moderator:my_profile' %}">
                 {% csrf_token %}
                 <button class="btn btn-primary float-right" name="change" value="{{user.id}}">
                     Ändra lösenord
@@ -62,7 +62,8 @@
                 </tbody>
             </table>
             
-            <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2" style="height: 50px;">
+            {% comment %} <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2 mod_info" style="height: 50px;"> {% endcomment %}
+            <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2 mod_info">
                 {% csrf_token %}
                 <input type="hidden" value="edit" name="edit">
                 <input type="hidden" value="{{info.first_name}}" name="first_name">

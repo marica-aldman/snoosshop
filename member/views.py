@@ -530,6 +530,7 @@ class Profile(LoginRequiredMixin, View):
             # get user info
             try:
                 info = UserInfo.objects.get(user=self.request.user)
+                print(info.company)
             except ObjectDoesNotExist:
                 info = UserInfo()
                 info.company = False
@@ -612,13 +613,28 @@ class changePassword(LoginRequiredMixin, View):
         if 'change' in self.request.POST.keys():
             userID = int(self.request.POST['change'])
             theUser = User.objects.get(id=userID)
+
+            # we use this view for all accounts so test for group
+
+            groupTest = theUser.groups.all()
+
+            print(groupTest)
+            if len(groupTest) > 1:
+                message = "Något gick fel. Om detta fortsätter inträffa kontakta supporten."
+                messages.warning(
+                    self.request, message)
+                return redirect("core:home")
+            else:
+                theGroup = str(groupTest[0])
             # get form for this
+            print(theGroup)
 
             form = changePasswordForm()
 
             context = {
                 'gdpr_check': gdpr_check,
                 'form': form,
+                'theGroup': theGroup,
                 'theUser': theUser,
             }
 

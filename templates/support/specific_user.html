@@ -11,7 +11,7 @@
     <!-- results or all orders -->
     <div class="mb-3 p-2">
         <div class="float-right" >
-            <form method="POST" action="{% url 'support:edit_addresses' %}" class="float-right">
+            <form method="POST" class="float-right">
                 {% csrf_token %}
                 <button type="submit" class='btn btn-primary float-right' name="back" value="{{user.id}}">
                     Tillbaka
@@ -34,6 +34,7 @@
                         </form>
                     </td>
                 </tr>
+                {% if userInfo.company %}
                 <tr>
                     <td>
                         Företag
@@ -47,6 +48,7 @@
                         </form>
                     </td>
                 </tr>
+                {% endif %}
                 <tr>
                     <td>
                         Addresser

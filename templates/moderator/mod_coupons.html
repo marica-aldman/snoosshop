@@ -68,7 +68,8 @@
                     <td>
                         <form method="POST" action="{{a_coupon.get_absolute_url_moderator}}">
                             {% csrf_token %}
-                            <button type="submit" value="{{a_coupon.id}}" name="see" class='btn btn-primary' style="padding: 5px">
+                            {% comment %} <button type="submit" value="{{a_coupon.id}}" name="see" class='btn btn-primary mod_button_see' style="padding: 5px"> {% endcomment %}
+                            <button type="submit" value="{{a_coupon.id}}" name="see" class='btn btn-primary mod_button_see'>
                                 Se
                             </button>
                         </form>
@@ -76,8 +77,10 @@
                     <td>
                         <form method="POST" action="." onSubmit="return confirm('{{onSubmit}}');">
                             {% csrf_token %}
+                            {% comment %} <input type="hidden" name="delete" value={{a_coupon.id}}>
+                            <button type="submit" class="btn btn-primary float-right mod_button_remove" style="padding: 5px"> {% endcomment %}
                             <input type="hidden" name="delete" value={{a_coupon.id}}>
-                            <button type="submit" class="btn btn-primary float-right" style="padding: 5px">
+                            <button type="submit" class="btn btn-primary float-right mod_button_remove">
                                 Ta bort
                             </button>
                         </form>

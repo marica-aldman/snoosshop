@@ -118,10 +118,12 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras">
                         1
                     </button>
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
                 </form>
@@ -132,7 +134,7 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link">
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_if_4">
                         1
                     </button>
                 </form>
@@ -160,10 +162,12 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
-                    <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="{{max}}" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="{{max}}" name="page" class="page-link mod_button_paging_extras">
                         {{max}}
                     </button>
                 </form>

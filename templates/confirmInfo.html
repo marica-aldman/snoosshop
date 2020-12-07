@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+  <main >
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
+        <div class="list-inline container wow fadeIn">
+          <div class="text-muted list-inline-item">Steg 1: Val och Address</div>
+          <div class="list-inline-item"><strong>Steg 2: Konfirmation av uppgifter</strong></div>
+          <div class="text-muted list-inline-item">Steg 3: Betalning</div>
+          <div class="text-muted list-inline-item">Steg 4: Betalningskonfirmation</div>
+        </div>
+    <div class="container wow fadeIn">
+      
+
+        <div class="table-responsive text-nowrap">
+            <h2>Konfirmation av uppgifter</h2>
+            <h3>Orderreferes: {{order.ref_code}}</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Vara</th>
+                    <th scope="col">Pris</th>
+                    <th scope="col">Mängd</th>
+                    <th scope="col">Totalpris för varan</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order_item in order.items.all %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ order_item.item.title }}</td>
+                    {% if order_item.item.discount_price %}
+                    <td>{{ order_item.item.discount_price }}</td>
+                    {% else %}
+                    <td>{{ order_item.item.price }}</td>
+                    {% endif %}
+                    <td>
+                        {{ order_item.quantity }}
+                    </td>
+                    <td>
+                    {% if order_item.item.discount_price %}
+                        {{ order_item.get_total_discount_item_price }} kr
+                        <span class="badge badge-primary">Sparar {{ order_item.get_amount_saved }} kr</span>
+                    {% else %}
+                        {{ order_item.get_total_item_price }} kr
+                    {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="4"><strong>Frakt</strong></td>
+                    <td><strong>{{ order.freight_price }} kr</strong></td>
+                </tr>
+                {% if order.coupon_amount%}
+                <tr>
+                    <td colspan="4"><strong>Rabatt</strong></td>
+                    <td><strong>{{ order.coupon_amount }} kr</strong></td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td colspan="4"><strong>Totalpris för ordern</strong></td>
+                    <td><strong>{{ order.total_price }} kr</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>Leveransadress</strong></td>
+                    <td><strong>{{ order.shipping_address.street_address }} </strong></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>Fakturaadress</strong></td>
+                    <td><strong>{{ order.billing_address.street_address }} </strong></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>Betalning med</strong></td>
+                    <td><strong>Stripe</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                    <a class='btn btn-warning float-right ml-2' href='/checkout/'>Tillbaka</a>
+                    <a class='btn btn-primary float-right' id="submitBtn" data-secret="{{ client_secret }}">Fortsätt till betalning</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+  </main>
+
+{% endblock content %}
+
+{% block extra_scripts %}
+<script>
+console.log("Sanity check! Test");
+
+// Get Stripe publishable key
+fetch("/config/")
+    .then((result) => { return result.json(); })
+    .then((data) => {
+        // Initialize Stripe.js
+        const stripe = Stripe(data.publicKey);
+        var elements = stripe.elements();
+
+        // new
+        // Event handler
+        document.querySelector("#submitBtn").addEventListener("click", () => {
+            // Get Checkout Session ID
+            fetch("/create-checkout-session/")
+                .then((result) => { return result.json(); })
+                .then((data) => {
+                    console.log(data);
+                    // Redirect to Stripe Checkout
+                    return stripe.redirectToCheckout({ sessionId: data.sessionId })
+                })
+                .then((res) => {
+                    console.log(res);
+                });
+        });
+    });
+</script>
+{% endblock extra_scripts %}

@@ -4129,8 +4129,8 @@ class CouponsView(LoginRequiredMixin, View):
             if 'search' in self.request.POST.keys() and 'searchValue' in self.request.POST.keys() and 'current_page' in self.request.POST.keys():
                 search_type = self.request.POST['search']
                 search_value = self.request.POST['searchValue']
-                current_page = int(self.request.POST['current_page'])
                 page = int(self.request.POST['page'])
+                current_page = page
 
                 # we need the max pages first
 
@@ -4151,6 +4151,7 @@ class CouponsView(LoginRequiredMixin, View):
                         c_pages = int(c_pages)
 
                 if page == 1:
+
                     coupons = Coupon.objects.all().order_by('code')[
                         :limit]
 
@@ -4239,12 +4240,6 @@ class CouponsView(LoginRequiredMixin, View):
                     previous_page = True
                 else:
                     previous_page = False
-
-                i = 0
-                # populate the list with the amount of pages there are
-                for i in range(c_pages):
-                    i += 1
-                    more_coupons.append({'number': i})
 
                 # make an empty coupon for the new form
                 coupon = Coupon()

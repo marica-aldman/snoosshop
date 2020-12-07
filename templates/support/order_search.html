@@ -28,7 +28,8 @@
                 {% endif %}
                 </div>
                 <div>
-                    <button type="submit" name="search" class='btn btn-primary mt-3' value="True" style="padding:10px">Sök</button>
+                    {% comment %} <button type="submit" name="search" class='btn btn-primary mt-3 sup_search_button' value="True" style="padding:10px">Sök</button> {% endcomment %}
+                    <button type="submit" name="search" class='btn btn-primary mt-3 sup_search_button' value="True">Sök</button>
                 </div>
             </div>
         </form>
@@ -39,13 +40,16 @@
         <table class="table-striped table-hover w-100  mb-2">
             <thead class="mdb-color lighten-5">
                 <tr>
-                    <th style="font-size: 0.8rem;">
+                    {% comment %} <th class="sup_orders_table_th_td" style="font-size: 0.8rem;"> {% endcomment %}
+                    <th class="sup_orders_table_th_td">
                         Order Ref
                     </th>
-                    <th style="font-size: 0.8rem;">
+                    {% comment %} <th class="sup_orders_table_th_td" style="font-size: 0.8rem;"> {% endcomment %}
+                    <th class="sup_orders_table_th_td">
                         Status
                     </th>
-                    <th style="font-size: 0.8rem;">
+                    {% comment %} <th class="sup_orders_table_th_td" style="font-size: 0.8rem;"> {% endcomment %}
+                    <th class="sup_orders_table_th_td">
                         Titta på ordern
                     </th>
                 </tr>
@@ -53,10 +57,12 @@
             <tbody>
         {% for order in orders %}
                 <tr>
-                    <td style="font-size: 0.8rem;">
+                    {% comment %} <th class="sup_orders_table_th_td" style="font-size: 0.8rem;"> {% endcomment %}
+                    <td class="sup_orders_table_th_td">
                         {{ order.ref_code }}
                     </td>
-                    <td style="font-size: 0.8rem;">
+                    {% comment %} <th class="sup_orders_table_th_td" style="font-size: 0.8rem;"> {% endcomment %}
+                    <td class="sup_orders_table_th_td">
                         {% if order.refund_granted %}
                             Återbetalning godkänd
                         {% elif order.returned %}
@@ -78,7 +84,8 @@
                     <td>
                         <form method="POST" action="{{ order.get_absolute_url_support }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary' style="font-size: 0.8rem; padding:10px">
+                            {% comment %} <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary sup_see_order_button' style="font-size: 0.8rem; padding:10px"> {% endcomment %}
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary sup_see_order_button' style="font-size: 0.8rem;">
                                 Se order
                             </button>
                         </form>
@@ -112,10 +119,12 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras">
                         1
                     </button>
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
                 </form>
@@ -127,7 +136,7 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link">
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_if_4">
                         1
                     </button>
                 </form>
@@ -157,10 +166,12 @@
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_type}}">
                     <input type="hidden" name="searchValue" value="{{search_value}}">
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
-                    <button type="submit" value="{{max_pages}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="{{max_pages}}" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="{{max_pages}}" name="page" class="page-link mod_button_paging_extras">
                         {{max_pages}}
                     </button>
                 </form>

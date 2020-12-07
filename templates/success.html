@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+  <main>
+
+    {% if gdpr_check %}
+      {% include "gdpr_popup.html" %}
+    {% endif %}
+    <div class="list-inline container wow fadeIn">
+      <div class="text-muted list-inline-item">Steg 1: Val och Address</div>
+      <div class="text-muted list-inline-item">Steg 2: Konfirmation av uppgifter</div>
+      <div class="text-muted list-inline-item">Steg 3: Betalning</div>
+      <div class="list-inline-item"><strong>Steg 4: Betalningskonfirmation</strong></div>
+    </div>
+    <div class="d-flex justify-content-center">
+      <div class="wow fadeIn">
+        <h2>Betalningskonfirmation</h2>
+        <h3>Orderreferes: {{order.ref_code}}</h3>
+        <table>
+          <tbody>
+            <tr>
+              <td class="p-2">
+                Totalpris för ordern:
+              </td>
+              <td class="p-2">
+                {{ order.total_price }} kr
+              </td>
+            </tr>
+            <tr>
+              <td class="p-2">
+                Frakt:
+              </td>
+              <td class="p-2">
+                {{ order.freight.title }}
+              </td>
+            </tr>
+            <tr>
+              <td class="p-2">
+                Leveransadress:
+              </td>
+              <td class="p-2">
+                {{ order.shipping_address.street_address }} 
+              </td>
+            </tr>
+            <tr>
+              <td class="p-2">
+                Fakturaadress:
+              </td>
+              <td class="p-2">
+                {{ order.billing_address.street_address }} 
+              </td>
+            </tr>
+            <tr>
+              <td class="p-2">
+                Betalning med:
+              </td>
+              <td class="p-2">
+                Stripe
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+{% endblock content %}
+
+{% block extra_scripts %}
+{% endblock extra_scripts %}

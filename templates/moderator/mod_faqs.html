@@ -37,7 +37,8 @@
         <h3>Vanliga frågor</h3>
         <table class="table-striped table-hover w-100  mb-2">
             <thead class="mdb-color lighten-5">
-                <tr style="text-align: center;">
+                {% comment %} <tr class="mod_faqs_table_tr" style="text-align: center;"> {% endcomment %}
+                <tr class="mod_faqs_table_tr">
                     <th>
                         FAQ ID
                     </th>
@@ -54,7 +55,8 @@
             </thead>
             <tbody>
         {% for faq in FAQS %}
-                <tr style="text-align: center;">
+                {% comment %} <tr class="mod_faqs_table_tr" style="text-align: center;"> {% endcomment %}
+                <tr class="mod_faqs_table_tr">
                     <td>
                         {{ faq.id }}
                     </td>
@@ -64,7 +66,8 @@
                     <td>
                         <form method="POST" action="{{ faq.get_absolute_url_moderator }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary' style="padding: 5px">
+                            {% comment %} <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary mod_button_see' style="padding: 5px"> {% endcomment %}
+                            <button type="submit" value="{{faq.id}}" name="lookAtFAQ" class='btn btn-primary mod_button_see'>
                                 Se FAQ
                             </button>
                         </form>
@@ -73,7 +76,8 @@
                         <form method="POST" action="{{ empty_faq.get_absolute_url_moderator_delete }}"  class="w-100">
                             {% csrf_token %}
                             {% for abutton in deleteButton %}
-                                <button type='submit' class='btn btn-primary' name="deleteFAQ" value="{{faq.id}}" style="padding: 5px">{{abutton.buttonText}}</button>
+                                {% comment %} <button type='submit' class='btn btn-primary mod_button_remove' name="deleteFAQ" value="{{faq.id}}" style="padding: 5px">{{abutton.buttonText}}</button> {% endcomment %}
+                                <button type='submit' class='btn btn-primary mod_button_remove' name="deleteFAQ" value="{{faq.id}}">{{abutton.buttonText}}</button>
                             {% endfor %}
                         </form>
                     </td>

@@ -2104,6 +2104,8 @@ class SpecificUser(LoginRequiredMixin, View):
             }
 
             return render(self.request, "support/specific_user.html", context)
+        else:
+            return redirect("support:search_users")
 
 
 class OrderView(LoginRequiredMixin, View):

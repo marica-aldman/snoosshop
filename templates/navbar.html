@@ -1,32 +1,50 @@
 <body>
 {% load cart_template_tags %}
 
-<nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar" style="height: 64px; ">
-    <div class="container" style="height: 40px;">
+{% comment %} <nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar navbar_scroll" style="height: 64px; ">
+    <div class="container navbar_container" style="height: 40px;">
 
       <!-- Brand -->
-      <a class="navbar-brand waves-effect" href="/" styles="min-width: 100px;">
-        <strong class="blue-text" styles="max-width: 100px">Snoosshop</strong>
+      <a class="navbar-brand waves-effect snoos_icon" href="/" styles="min-width: 100px;">
+        <strong class="blue-text" styles="max-width: 100px"> {% endcomment %}
+        
+        
+<nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar navbar_scroll">
+    <div class="container navbar_container">
+
+      <!-- Brand -->
+      <a class="navbar-brand waves-effect snoos_icon">
+        <strong class="blue-text snoos_icon">Snoosshop</strong>
       </a>
 
       <!-- Collapse -->
-      <button class="navbar-toggler" style="height: 40px;" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+
+      {% comment %} <button class="navbar-toggler main_nav_toggle" style="height: 40px;" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> {% endcomment %}
+
+      <button class="navbar-toggler main_nav_toggle" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <!-- Links -->
-      <div class="collapse navbar-collapse" id="navbarSupportedContent" style="height: 40px; background: white">
+      {% comment %} <div class="collapse navbar-collapse main_nav" id="navbarSupportedContent" style="height: 40px; background: white"> {% endcomment %}
+      <div class="collapse navbar-collapse main_nav" id="navbarSupportedContent">
         
-        <ul class="navbar-nav ml-auto"  style="height: 40px;">
+        {% comment %} <ul class="navbar-nav ml-auto"  style="height: 40px;"> {% endcomment %}
+
+        <ul class="navbar-nav ml-auto main_nav_border">
               {% if request.user.is_authenticated %}
                 {% if group.1 == 'moderator' or group.1 == 'support' %}
-                <li class="nav-item dropdown" style="height: 40px;padding-top: 14px; background: white;">
+                {% comment %} <li class="nav-item dropdown main_nav_staff" style="height: 40px;padding-top: 14px; background: white;"> {% endcomment %}
+                <li class="nav-item dropdown main_nav_staff">
                 {% else %}
-                <li class="nav-item dropdown" style="height: 40px;padding-top: 10px; background: white;">
+                {% comment %} <li class="nav-item dropdown main_nav_customer" style="height: 40px;padding-top: 10px; background: white;"> {% endcomment %}
+                <li class="nav-item dropdown main_nav_customer">
                 {% endif %}
               {% else %}
-                <li class="nav-item dropdown" style="height: 40px;padding-top: 10px; background: white;">
+                {% comment %} <li class="nav-item dropdown main_nav_else" style="height: 40px;padding-top: 8px; background: white;"> {% endcomment %}
+                <li class="nav-item dropdown main_nav_else">
               {% endif %}
             <div id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Meny
             </div>
@@ -35,19 +53,22 @@
                 <a class="nav-link waves-effect" href="/">Hem
                 </a>
               </li>
-              <li class="nav-item" style="min-width:80px">
+              {% comment %} <li class="nav-item main_nav_about" style="min-width:80px"> {% endcomment %}
+              <li class="nav-item main_nav_about">
                 <a class="nav-link waves-effect" href="/omoss">Om Oss</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link waves-effect" href="/team">Teamet</a>
               </li>
-              <li class="nav-item" style="min-width:90px">
+              {% comment %} <li class="nav-item main_nav_vision" style="min-width:90px"> {% endcomment %}
+              <li class="nav-item main_nav_vision">
                 <a class="nav-link waves-effect" href="/vision">Vår Vision</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link waves-effect" href="/freight">Fraktinformation</a>
               </li>
-              <li class="nav-item" style="min-width:120px">
+              {% comment %} <li class="nav-item main_nav_faq" style="min-width:120px"> {% endcomment %}
+              <li class="nav-item main_nav_faq">
                 <a class="nav-link waves-effect" href="/faq">Vanliga frågor</a>
               </li>
               
@@ -56,9 +77,10 @@
                     User
                   {% endcomment %}
 
-                  <li class="nav-item" style="min-width:150px">
+                  {% comment %} <li class="nav-item main_nav_settings" style="min-width:150px"> {% endcomment %}
+                  <li class="nav-item main_nav_settings">
                     <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
-                        <span class="clearfix d-none d-sm-inline-block">
+                        <span class="clearfix">
                           Mina inställningar
                         </span>
                       </a>
@@ -67,10 +89,12 @@
                   {% comment %}
                     Support
                   {% endcomment %}
-
-              <li class="nav-item" style="min-width:150px">
+              {% comment %}
+              <li class="nav-item main_nav_contact_support" style="min-width:150px">
+              {% endcomment %}
+              <li class="nav-item main_nav_contact_support">
                 <a class="nav-link waves-effect" href="{% url 'member:support' %}">
-                  <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+                  <span class="clearfix"> Kontakta support </span>
                 </a>
               </li>
               {% endif %}
@@ -88,7 +112,10 @@
                     {% comment %}
                       Moderator menu
                     {% endcomment %}
-                <li class="nav-item dropdown" style="padding-top: 10px; padding-left: 5px; background: white;">
+                {% comment %}
+                <li class="nav-item dropdown main_nav_sub_mod" style="padding-top: 10px; padding-left: 10px; padding-right: 10px;background: white;">
+                {% endcomment %}
+                <li class="nav-item dropdown main_nav_sub_mod">
                   <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Modereringsmeny
                   </div>
@@ -126,7 +153,10 @@
                     {% comment %}
                       Support menu
                     {% endcomment %}
-                <li class="nav-item dropdown" style="padding-top: 14px; padding-left: 5px; background: white;">
+                {% comment %}
+                <li class="nav-item dropdown main_nav_sub_sup" style="padding-top: 10px; padding-right: 10px; padding-left: 10px; background: white;">
+                {% endcomment %}
+                <li class="nav-item dropdown main_nav_sub_sup">
                   <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Support meny
                   </div>
@@ -155,33 +185,39 @@
                       User menu
                     {% endcomment %}
 
-                <li class="nav-item dropdown pb-4" style="padding-top: 10px; background: white;">
-                  <div class="pl-2" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 90px; max-width: 90px; min-height: 30px;">
+                {% comment %}
+                <li class="nav-item dropdown main_nav_li_cus" style="padding-top: 10px; padding-left: 10px; background: white;">
+                {% endcomment %}
+                <li class="nav-item dropdown main_nav_li_cus">
+                {% comment %}
+                  <div class="customer_nav_toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 80px; max-width: 80px; min-height: 30px;">
+                {% endcomment %}
+                  <div class="customer_nav_toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Mina Sidor
                   </div>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_overview' %}">
-                      <span class="clearfix d-none d-sm-inline-block">
+                    <a class="nav-link waves-effect dropdown-item " href="{% url 'member:my_overview' %}">
+                      <span class="clearfix">
                         Min översikt
                       </span>
                     </a>
-                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_orders' %}">
-                      <span class="clearfix d-none d-sm-inline-block">
+                    <a class="nav-link waves-effect dropdown-item "  href="{% url 'member:my_orders' %}">
+                      <span class="clearfix">
                         Mina ordrar
                       </span>
                     </a>
                     <a class="nav-link waves-effect dropdown-item1" href="{% url 'member:my_profile' %}">
-                      <span class="clearfix d-none d-sm-inline-block">
+                      <span class="clearfix">
                         Min profil
                       </span>
                     </a>
-                    <a class="nav-link waves-effect dropdown-item" href="{% url 'member:my_settings' %}">
-                      <span class="clearfix d-none d-sm-inline-block">
+                    <a class="nav-link waves-effect dropdown-item " href="{% url 'member:my_settings' %}">
+                      <span class="clearfix">
                         Mina inställningar
                       </span>
                     </a>
                     <a class="nav-link waves-effect dropdown-item" href="{% url 'member:support' %}">
-                      <span class="clearfix d-none d-sm-inline-block"> Kontakta support </span>
+                      <span class="clearfix"> Kontakta support </span>
                     </a>
                   </div>
                 </li>
@@ -191,36 +227,65 @@
                 Cart
               {% endcomment %}
 
-
-                {% if group.1 == 'moderator' or group.1 == 'support' %}
-          <li class="nav-item" style="padding-top: 6px; background: white;">
-                {% else %}
-          <li class="nav-item" style="padding-top: 2px; background: white;">
-                {% endif %}
+                
+              {% for group in request.user.groups.values_list %}
+                {% if group.1 != 'moderator' and group.1 != 'support' %}
+              {% comment %}
+          <li class="nav-item nav_item_extras" style="padding-top: 2px; background: white;">
+              {% endcomment %}
+          <li class="nav-item nav_item_extras">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
-              <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
+              {% comment %}
+              <span class="position-absolute badge red z-depth-1 p-0 main_nav_basket_count_cus" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">
+              {% endcomment %}
+              <span class="position-absolute badge red z-depth-1 p-0 main_nav_basket_count_cus">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
-              <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
+              <span class="clearfix"> Varukorg </span>
             </a>
           </li>
+                {% endif %}
 
               {% comment %}
                 Logout
               {% endcomment %}
 
-                {% if group.1 == 'moderator' or group.1 == 'support' %}
-          <li class="nav-item" style="padding-top: 14px; background: white;">
+                {% if group.1 == 'support' %}
+
+              {% comment %}
+          <li class="nav-item main_nav_logout_li_sup" style="padding-top: 10px; background: white; color: #212529;">
+              {% endcomment %}
+          <li class="nav-item main_nav_logout_li_sup">
                 {% else %}
-          <li class="nav-item" style="padding-top: 10px; background: white;">
+              {% comment %}
+          <li class="nav-item main_nav_logout_li_else" style="padding-top: 10px; background: white;">
+              {% endcomment %}
+          <li class="nav-item main_nav_logout_li_else">
                 {% endif %}
+
+                {% if group.1 == 'moderator' %}
+                  <div>
+              {% comment %}
+                    <a class="nav-link waves-effect main_nav_logout_button_mod" style="padding-top: 0; padding-left: 0; color: #212529;" href="{% url 'core:logoutview' %}">
+              {% endcomment %}
+                    <a class="nav-link waves-effect main_nav_logout_button_mod" href="{% url 'core:logoutview' %}">
+                      <span class="clearfix"> Logga Ut </span>
+                    </a>
+                  </div>
+                </li>
+                {% else %}
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
               {% endif %}
-              <button class='nav-link waves-effect' style="padding: 0; border: none; background: none; font-weight: 300;" type="submit">Logga Ut</button>
+              {% comment %}
+              <button class='nav-link waves-effect main_nav_logout_button' style="padding: 0; padding-bottom: 14px; border: none; background: none; font-weight: 300; color: #212529;" type="submit">Logga Ut</button>
+              {% endcomment %}
+              <button class='nav-link waves-effect main_nav_logout_button' type="submit">Logga Ut</button>
             </form>
           </li>
+                {% endif %}
+            {% endfor %}
           {% else %}
 
               {% comment %}
@@ -231,11 +296,17 @@
                 Cart
               {% endcomment %}
 
+              {% comment %}
           <li class="nav-item" style="background: white;">
+              {% endcomment %}
+          <li class="nav-item nav_item">
             <a href="{% url 'core:order-summary' %}" class="nav-link waves-effect">
-              <span class="position-absolute badge red z-depth-1 p-0" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
+              {% comment %}
+              <span class="position-absolute badge red z-depth-1 p-0 main_nav_basket_count_else" style="width: 10px; height: 10px; font-size: 8px; padding-top: 1.5px!important;">{{ request.user|cart_item_count }}</span>
+              {% endcomment %}
+              <span class="position-absolute badge red z-depth-1 p-0 main_nav_basket_count_else">{{ request.user|cart_item_count }}</span>
               <i class="fas fa-shopping-cart"></i>
-              <span class="clearfix d-none d-sm-inline-block"> Varukorg </span>
+              <span class="clearfix"> Varukorg </span>
             </a>
           </li>
 
@@ -243,9 +314,12 @@
                 Logga in
               {% endcomment %}
 
-          <li class="nav-item" style="background: white;">
+              {% comment %}
+          <li class="nav-item main_nav_login_button" style="background: white;">
+              {% endcomment %}
+          <li class="nav-item main_nav_login_button">
             <a class="nav-link waves-effect" href="{% url 'account_login' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Logga in </span>
+              <span class="clearfix"> Logga in </span>
             </a>
           </li>
 
@@ -253,9 +327,12 @@
                 Registrera
               {% endcomment %}
 
-          <li class="nav-item"  style="background: white;">
+              {% comment %}
+          <li class="nav-item main_nav_create_account_button"  style="background: white;">
+              {% endcomment %}
+          <li class="nav-item main_nav_create_account_button">
             <a class="nav-link waves-effect" href="{% url 'account_signup' %}">
-              <span class="clearfix d-none d-sm-inline-block"> Skaffa konto </span>
+              <span class="clearfix"> Skaffa konto </span>
             </a>
           </li>
           {% endif %}

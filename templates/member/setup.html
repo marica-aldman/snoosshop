@@ -50,7 +50,8 @@ $(document).ready(function(){
                             <td>{{ userForm.telephone }}
                             </td>
                         </tr>
-                        <tr style="height:56px;">
+                        {% comment %} <tr style="height:56px;"> {% endcomment %}
+                        <tr class="setup_company_tr">
                             <td>Handla som företag:
                             </td>
                             <td><input type="checkbox" id="hasCompany" name="hasCompany">
@@ -75,7 +76,8 @@ $(document).ready(function(){
                                 <td>{{ companyForm.organisation_number }}
                                 </td>
                             </tr>
-                            <tr style="height:56px;">
+                            {% comment %} <tr style="height:56px;"> {% endcomment %}
+                            <tr  class="setup_company_tr">
                                 <td>
                                     Företagetsaddress:
                                 </td>

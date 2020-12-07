@@ -22,7 +22,8 @@
     {% if search %}
         {% for faq in faqs %}
         <div class="border rounded mb-3">
-            <div class="ml-2 mb-2" style="font-size: 1.2rem">
+            {% comment %} <div class="ml-2 mb-2 faq_subject" style="font-size: 1.2rem"> {% endcomment %}
+            <div class="ml-2 mb-2 faq_subject">
                 {{faq.subject}}
             </div>
             <div class="ml-2">
@@ -33,7 +34,7 @@
     {% else %}
         {% for faq in faqs %}
         <div class="border rounded mb-3">
-            <div class="ml-2 mb-2" style="font-size: 1.2rem">
+            <div class="ml-2 mb-2 faq_subject" style="font-size: 1.2rem">
                 {{faq.subject}}
             </div>
             <div class="ml-2">
@@ -56,11 +57,11 @@
                 {% endif %}
                 {% for page in page_list %}
                     {% if page == page_obj.number %}
-                        <button type="submit" value="{{ page }}" name="page" class="page-link" style="background-color:#4285f4; color:#FFFFFF;-webkit-box-shadow:0 2px 5px 0 rgba(0,0,0,.16),0 2px 10px 0 rgba(0,0,0,.12); display:inline; margin: 0">{{ page }}
+                        <button type="submit" value="{{ page }}" name="page" class="page-link faq_paging_current_page" style="background-color:#4285f4; color:#FFFFFF;-webkit-box-shadow:0 2px 5px 0 rgba(0,0,0,.16),0 2px 10px 0 rgba(0,0,0,.12); display:inline; margin: 0">{{ page }}
                             <span class="sr-only">{{ page }}(current)</span>
                         </button>
                     {% else %}
-                        <button type="submit" value={{ page }} name="page" class="page-link" style="color:#000000; display:inline; margin: 0; border: 0">
+                        <button type="submit" value={{ page }} name="page" class="page-link faq_paging_page" style="color:#000000; display:inline; margin: 0; border: 0">
                             <span aria-hidden="true">{{ page }}</span>
                             <span class="sr-only">{{ page }}</span>
                         </button>

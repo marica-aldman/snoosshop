@@ -139,7 +139,8 @@
                     </tr>
                     {% if item.refund_handled %}
                     <tr>
-                        <td style="colspan: 2">
+                        {% comment %} <td class="sup_order_item_refunded" style="colspan: 2"> {% endcomment %}
+                        <td class="sup_order_item_refunded">
                             Varan har betalats tillbaka och vi kan därmed inte göra några justeringar här
                         </td>
                     </tr>

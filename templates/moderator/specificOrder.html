@@ -2,9 +2,8 @@
 
 {% block content %}
 
-<!--orders-->
-<!--active-->
-<div class="container" style="margin: 0">
+{% comment %} <div class="container mod_order_container" style="margin: 0"> {% endcomment %}
+<div class="container mod_order_container">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
@@ -21,36 +20,48 @@
         </div>
     </form>
 
-    <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'" style="max-width: 100%; display: flex; flex-direction: column; align-items: center">
+    {% comment %} <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'" class="mod_order_form" style="max-width: 100%; display: flex; flex-direction: column; align-items: center"> {% endcomment %}
+    <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'" class="mod_order_form">
         {% csrf_token %}
-        <div style="max-width: 100%">
+        {% comment %} <div style="max-width: 100%"> {% endcomment %}
+        <div>
             <h1>Order {{order.id}}</h1> 
             <h4>{{ order.ref_code }}</h4>
-            <table class="table-striped table-hover mb-2" style="max-width: 100%; margin-left: 0;">
-                <thead style="max-width: 100%;">
+            {% comment %} <table class="table-striped table-hover mb-2" style="max-width: 100%; margin-left: 0;"> {% endcomment %}
+            <table class="table-striped table-hover mb-2">
+                {% comment %} <thead style="max-width: 100%;">
                     <tr style="max-width: 100%;">
-                        <th style="max-width: 24%">
+                        <th style="max-width: 24%"> {% endcomment %}
+                <thead>
+                    <tr>
+                        <th>
                             Beställd
                         </th>
-                        <th style="max-width: 24%">
+                        {% comment %} <th style="max-width: 24%"> {% endcomment %}
+                        <th>
                             Status
                         </th>
                         {% if comment != "" %}
-                        <th style="max-width: 24%">
+                        {% comment %} <th style="max-width: 24%"> {% endcomment %}
+                        <th>
                             Kommentar
                         </th>
                         {% endif %}
-                        <th style="max-width: 24%">
+                        {% comment %} <th style="max-width: 24%"> {% endcomment %}
+                        <th>
                             Ändra
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="max-width: 100%">
-                        <td style="font-size:12px">
+                    {% comment %} <tr style="max-width: 100%">
+                        <td class="mod_order_form_td" style="font-size:12px"> {% endcomment %}
+                    <tr>
+                        <td class="mod_order_form_td">
                             {{ order.ordered_date }}
                         </td>
-                        <td style="font-size:12px">
+                        {% comment %} <td class="mod_order_form_td" style="font-size:12px"> {% endcomment %}
+                        <td class="mod_order_form_td">
                             {% if order.being_delivered %}
                                 Skickad
                             {% else %}
@@ -58,12 +69,15 @@
                             {% endif %}
                         </td>
                         {% if comment != "" %}
-                        <td style="font-size:2vw">
+                        {% comment %} <td class="mod_order_form_td_comment" style="font-size:2vw"> {% endcomment %}
+                        <td class="mod_order_form_td_comment">
                             {{ comment }}
                         </td>
                         {% endif %}
-                        <td  style="max-width: 18%">
-                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary' {% if not_same_person %}disabled{%endif%} style="padding:1px; max-width: 50%">
+                        {% comment %} <td class="mod_order_form_td_send" style="max-width: 18%"> {% endcomment %}
+                        <td class="mod_order_form_td_send">
+                            {% comment %} <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary mod_order_form_td_send_button' {% if not_same_person %}disabled{%endif%} style="padding:1px; max-width: 50%"> {% endcomment %}
+                            <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary mod_order_form_td_send_button' {% if not_same_person %}disabled{%endif%}>
                                 Markera som skickad
                             </button>
                         </td>
@@ -73,10 +87,12 @@
 
         </div>
 
-        <!--recently completed-->
-        <div class="border border-dark" style="width: 75%;">
-            <h1 style="width: 100%">Order delar</h1>
-            <table class="table-striped table-hover mb-2" style="width: 100%">
+        {% comment %} <div class="border border-dark mod_order_parts" style="width: 75%;"> {% endcomment %}
+        <div class="border border-dark mod_order_parts">
+            {% comment %} <h1 style="width: 100%">Order delar</h1>
+            <table class="table-striped table-hover mb-2" style="width: 100%"> {% endcomment %}
+            <h1>Order delar</h1>
+            <table class="table-striped table-hover mb-2">
                 <thead>
                     <tr>
                         <th>

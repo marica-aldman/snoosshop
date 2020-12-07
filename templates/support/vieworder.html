@@ -4,12 +4,13 @@
 
 <!--orders-->
 <!--active-->
-<div class="container" style="margin: 5px">
+{% comment %} <div class="container sup_order_container" style="margin: 5px"> {% endcomment %}
+<div class="container sup_order_container">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <form method="POST" action="{% url 'support:specific_user' %}">
+    <form method="POST" action="{% url 'support:orders' %}">
         {% csrf_token %}
         <div>
             <div>
@@ -23,7 +24,8 @@
     <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="order" value="{{order.id}}">
-        <div class="row" style="padding: 5px;">
+        {% comment %} <div class="row sup_order_form_row" style="padding: 5px;"> {% endcomment %}
+        <div class="row sup_order_form_row">
             <h1>Order {{order.id}}</h1>
             <table class="table-striped table-hover w-100  mb-2">
                 <tbody>
@@ -355,7 +357,8 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="order" value="{{order.id}}">
                                 <input type="hidden" name="item" value="{{item.id}}">
-                                <button type='submit' class='btn btn-primary' name="handle" value="True" style="padding: 10px;">Hantera</button>
+                                {% comment %} <button type='submit' class='btn btn-primary sup_order_button_handle' name="handle" value="True" style="padding: 10px;">Hantera</button> {% endcomment %}
+                                <button type='submit' class='btn btn-primary sup_order_button_handle' name="handle" value="True">Hantera</button>
                             </form>
                         </td>
                     </tr>

@@ -90,7 +90,9 @@
                 </tbody>
             </table>
             
-            <form method="POST" action="{% url 'member:my_info' %}" class="w-100 mb-2" style="height: 50px;">
+            {% comment %} <form method="POST" action="{% url 'member:my_info' %}" class="w-100 mb-2 customer_change_info_form" style="height: 50px;"> {% endcomment %}
+            
+            <form method="POST" action="{% url 'member:my_info' %}" class="w-100 mb-2 customer_change_info_form">
                 {% csrf_token %}
                 <input type="hidden" value="edit" name="edit">
                 <input type="hidden" value="{{info.first_name}}" name="first_name">

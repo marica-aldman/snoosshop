@@ -1,19 +1,24 @@
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import logout
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.utils.timezone import make_aware
 from django.db.models import Q
 from django.contrib.sites.models import Site
 from itertools import combinations
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm, SearchFAQForm
 from .models import *
 from core.functions import *
+import stripe
+from django.http.response import JsonResponse, HttpResponse
 
 import stripe
 
@@ -39,32 +44,36 @@ class CheckoutView(View):
             order = Order.objects.get(user=self.request.user, ordered=False)
             form = CheckoutForm()
 
+            if order.shipping_address != None or order.shipping_address != "":
+                shipping_address_qs = order.shipping_address
+            else:
+                # get the users preset adresses if there are some
+                shipping_address_qs = Address.objects.get(
+                    user=self.request.user,
+                    address_type='S',
+                    default=True
+                )
+
+            if order.billing_address != None or order.billing_address != "":
+                billing_address_qs = order.billing_address
+            else:
+                billing_address_qs = Address.objects.get(
+                    user=self.request.user,
+                    address_type='B',
+                    default=True
+                )
+
             context = {
                 'gdpr_check': gdpr_check,
                 'form': form,
                 'couponform': CouponForm(),
+                'first_load': True,
+                'form_not_complete': False,
                 'order': order,
+                'shipping_address': shipping_address_qs,
+                'billing_address': billing_address_qs,
                 'DISPLAY_COUPON_FORM': True
             }
-
-            # get the users preset adresses if there are some
-            shipping_address_qs = Address.objects.filter(
-                user=self.request.user,
-                address_type='S',
-                default=True
-            )
-            if shipping_address_qs.exists():
-                context.update(
-                    {'default_shipping_address': shipping_address_qs[0]})
-
-            billing_address_qs = Address.objects.filter(
-                user=self.request.user,
-                address_type='B',
-                default=True
-            )
-            if billing_address_qs.exists():
-                context.update(
-                    {'default_billing_address': billing_address_qs[0]})
 
             if order.freight:
                 freights = Freight.objects.all()
@@ -270,6 +279,7 @@ class CheckoutView(View):
                         'couponform': CouponForm(),
                         'order': order,
                         'DISPLAY_COUPON_FORM': True,
+                        'first_load': False,
                         'form_not_complete': form_not_complete,
                         'shipping_address1': shipping_address1,
                         'shipping_address2': shipping_address2,
@@ -308,9 +318,8 @@ class CheckoutView(View):
                     return render(self.request, "checkout.html", context)
                 else:
                     if payment_option == 'S':
-                        return redirect('core:payment', payment_option='stripe')
-                    elif payment_option == 'P':
-                        return redirect('core:payment', payment_option='paypal')
+                        # change this for stripe
+                        return redirect('core:confirm')
                     else:
                         messages.warning(
                             self.request, "Ogiltig betalningsalternativ valt.")
@@ -609,10 +618,85 @@ class OrderSummaryView(LoginRequiredMixin, View):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
         try:
-            order = Order.objects.get(user=self.request.user, ordered=False)
+            # if the user has an old basket and are returning the prices may have changed. Same if there are changes coming into effect before the order has been payed for. We need to check, update and let the user know if there is a change
+            order = Order.objects.get(
+                user=self.request.user, ordered=False)
+            orderItems = order.items.all()
+            warning = ""
+            info = ""
+            recount = False
+
+            for orderItem in orderItems:
+                item = orderItem.item
+                total_price = 0
+                if item.discount_price != None:
+                    total_price = item.discount_price * orderItem.quantity
+                else:
+                    total_price = item.price * orderItem.quantity
+
+                if orderItem.total_price != total_price:
+                    recount = True
+                    # check if there is a discount
+                    # set a warning to the user so they know that there are alterations to the order
+                    warning = "Priser ändrade då de antingen är gamla eller inte längre giltiga."
+                    if item.discount_price != None:
+                        total_price = item.discount_price * orderItem.quantity
+                        if orderItem.total_price != total_price:
+                            # there is difference in prices this is most likely due to a change in price of the item or discount price no longer valid
+                            if item.discount_price != None:
+                                total = item.discount_price * orderItem.quantity
+                                orderItem.price = item.price
+                                orderItem.discount_price = item.discount_price
+                                orderItem.total_price = total
+                                orderItem.save()
+                            else:
+                                total = item.price * orderItem.quantity
+                                orderItem.price = item.price
+                                orderItem.discount_price = item.discount_price
+                                orderItem.total_price = total
+                                orderItem.save()
+                    else:
+                        # there is no discount but the price isnt right so correct the prices
+                        total = item.price * orderItem.quantity
+                        orderItem.price = item.price
+                        orderItem.discount_price = item.discount_price
+                        orderItem.total_price = total
+                        orderItem.save()
+                else:
+                    # the price is correct towards the regular price but check that there isnt currently a discount
+                    if item.discount_price != None and (item.discount_price * orderItem.quantity) != orderItem.total_price:
+                        recount = True
+                        # there is currently a discount recalculate the price
+                        # set a warning to the user so they know that there are alterations to the order
+                        info = "Priser ändrade då de för nuvarnde är på rea."
+                        total = item.discount_price * orderItem.quantity
+                        orderItem.total_price = total
+                        orderItem.save()
+
+            if warning != "":
+                messages.warning(
+                    self.request, warning)
+
+            if info != "":
+                messages.info(
+                    self.request, info)
+
+            if recount:
+                print("recount")
+                # prices have changed order needs to be updated
+                newTotal = update_order_total(order)
+                order.total_price = newTotal
+                order.ordered_date = make_aware(datetime.now())
+                order.updated_date = make_aware(datetime.now())
+                order.save()
+                freshOrder = Order.objects.get(id=order.id)
+            else:
+                # no update can pass order to view without anything
+                freshOrder = order
+
             context = {
                 'gdpr_check': gdpr_check,
-                'object': order
+                'object': freshOrder,
             }
             return render(self.request, 'order_summary.html', context)
         except ObjectDoesNotExist:
@@ -651,6 +735,7 @@ def add_to_cart(request, slug):
     if order_qs.exists():
         order = order_qs[0]
         order.ordered_date = make_aware(datetime.now())
+        order.updated_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
@@ -677,11 +762,12 @@ def add_to_cart(request, slug):
             messages.info(request, "Varan lagd i varukorgen.")
             return redirect("core:order-summary")
     else:
-        ordered_date = timezone.now()
+        ordered_date = make_aware(datetime.now())
+        updated_date = make_aware(datetime.now())
         refCode = create_ref_code()
         rcode = test_order_ref_code(refCode)
         order = Order.objects.create(
-            user=request.user, ordered_date=ordered_date, ref_code=rcode)
+            user=request.user, ordered_date=ordered_date, updated_date=updated_date, ref_code=rcode)
         order_item.quantity = 1
         order_item.discount_price = item.discount_price
         order_item.price = item.price
@@ -707,6 +793,7 @@ def remove_from_cart(request, slug):
     if order_qs.exists():
         order = order_qs[0]
         order.ordered_date = make_aware(datetime.now())
+        order.updated_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item = OrderItem.objects.filter(
@@ -740,6 +827,7 @@ def remove_single_item_from_cart(request, slug):
     if order_qs.exists():
         order = order_qs[0]
         order.ordered_date = make_aware(datetime.now())
+        order.updated_date = make_aware(datetime.now())
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item = OrderItem.objects.get(
@@ -1124,16 +1212,21 @@ class FAQView(View):
                                 else:
                                     same = False
                                 i += 1
+
                             if not same:
                                 search_no_duplicates.append(entry)
+
                     # remove those not to be used
 
                     final_search_array = []
 
-                    i = 0
-                    while i < aquire_index:
-                        final_search_array.append(search_no_duplicates[i])
-                        i += 1
+                    if len(search_no_duplicates) > aquire_index:
+                        i = 0
+                        while i < aquire_index:
+                            final_search_array.append(search_no_duplicates[i])
+                            i += 1
+                    else:
+                        final_search_array = search_no_duplicates
 
                     # create pagination
 
@@ -1621,3 +1714,156 @@ class freight_view(View):
 
     def post(self, *args, **kwargs):
         return redirect("core:freight")
+
+
+class LogOutModView(LoginRequiredMixin, View):
+    def get(self, *args, **kwargs):
+        theUser = self.request.user
+        orders = Order.objects.filter(who=theUser)
+        for order in orders:
+            order.who = None
+            order.being_read = False
+            order.save()
+        logout(self.request)
+        return redirect("core:home")
+
+
+class SuccessView(View):
+    def get(self, *args, **kwargs):
+        gdpr_check = check_gdpr_cookies(self)
+        theUser = self.request.user
+
+        # get the content of the basket
+        order = Order.objects.get(
+            user=theUser, ordered=False)
+
+        # update the order dates and set to ordered
+        order.ordered = True
+        order.ordered_date = make_aware(datetime.now())
+        order.updated_date = make_aware(datetime.now())
+        # to find this on the confirmation page set who to user
+        order.who = theUser
+        order.save()
+        return redirect("core:confirmation")
+
+
+class ConfirmationView(View):
+    def get(self, *args, **kwargs):
+        gdpr_check = check_gdpr_cookies(self)
+        theUser = self.request.user
+
+        # get the order
+
+        order = Order.objects.get(who=theUser)
+        # set who to null
+        order.who = None
+        order.save()
+
+        # display confirmation
+
+        context = {
+            "gdpr_check": gdpr_check,
+            "order": order,
+        }
+
+        return render(self.request, "success.html", context)
+
+
+class CancelledView(View):
+    def get(self, *args, **kwargs):
+        # payment cancelled set message and redirect to basket
+        message = "Betalning avbruten."
+        messages.warning(
+            self.request, message)
+        return redirect("core:order-summary")
+
+
+@csrf_exempt
+def stripe_config(request):
+    if request.method == 'GET':
+        stripe_config = {'publicKey': settings.STRIPE_PUBLISHABLE_KEY}
+        return JsonResponse(stripe_config, safe=False)
+
+
+@csrf_exempt
+def create_checkout_session(request):
+    if request.method == 'GET':
+        # FIX THIS ON UPLOAD
+        domain_url = 'http://127.0.0.1:8000/'
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        # get the content of the basket
+        theUser = request.user
+        order = Order.objects.get(
+            user=theUser, ordered=False)
+        theUserInfo = UserInfo.objects.get(user=theUser)
+        theName = "Orderreferens: " + order.ref_code
+        # sent in öre
+        theAmount = int(order.total_price * 100)
+        try:
+            # Create new Checkout Session for the order
+            checkout_session = stripe.checkout.Session.create(
+
+                client_reference_id=theUser.id if theUser.is_authenticated else None,
+                customer_email=theUserInfo.email,
+                success_url=domain_url +
+                'success/',
+                cancel_url=domain_url + 'cancelled/',
+                payment_method_types=['card'],
+                mode='payment',
+                line_items=[
+                    {
+                        'name': theName,
+                        'quantity': 1,
+                        'currency': 'SEK',
+                        'amount': theAmount,
+                    }
+                ]
+            )
+            return JsonResponse({'sessionId': checkout_session['id']})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    print("yes")
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError as e:
+        # Invalid payload
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return HttpResponse(status=400)
+
+    # Handle the checkout.session.completed event
+    if event['type'] == 'checkout.session.completed':
+        print("Payment was successful.")
+        # TODO: run some custom code here
+
+    return HttpResponse(status=200)
+
+
+class ConfirmInfo(View):
+    def get(self, *args, **kwargs):
+        gdpr_check = check_gdpr_cookies(self)
+        theUser = self.request.user
+
+        # get the content of the basket
+        order = Order.objects.get(
+            user=self.request.user, ordered=False)
+
+        context = {
+            "gdpr_check": gdpr_check,
+            "order": order,
+        }
+
+        return render(self.request, "confirmInfo.html", context)

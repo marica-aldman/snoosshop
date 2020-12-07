@@ -80,7 +80,8 @@
                     <td>
                         <form method="POST" action="{% url 'moderator:product' %}">
                             {% csrf_token %}
-                            <button type="submit" value="{{product.id}}" name="lookAtProduct" class='btn btn-primary' style="padding: 5px;">
+                            {% comment %} <button type="submit" value="{{product.id}}" name="lookAtProduct" class='btn btn-primary mod_button_see' style="padding: 5px;"> {% endcomment %}
+                            <button type="submit" value="{{product.id}}" name="lookAtProduct" class='btn btn-primary mod_button_see'>
                                 Se
                             </button>
                         </form>
@@ -90,7 +91,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="delete" value='yes'>
                             <input type="hidden" name="id" value={{product.id}}>
-                            <button type="submit" class="btn btn-primary float-right" style="padding: 5px;">
+                            {% comment %} <button type="submit" class="btn btn-primary float-right mod_button_remove" style="padding: 5px;"> {% endcomment %}
+                            <button type="submit" class="btn btn-primary float-right mod_button_remove">
                                 Ta bort
                             </button>
                         </form>
@@ -124,10 +126,12 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_extras">
                         1
                     </button>
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
                 </form>
@@ -139,7 +143,8 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="1" name="page" class="page-link" style="color: black; border: 0">
+                    {% comment %} <button type="submit" value="1" name="page" class="page-link mod_button_paging_if_4" style="color: black; border: 0"> {% endcomment %}
+                    <button type="submit" value="1" name="page" class="page-link mod_button_paging_if_4">
                         1
                     </button>
                 </form>
@@ -168,10 +173,12 @@
                     <input type="hidden" value="pagination" name="paging">
                     <input type="hidden" value="{{current_page}}" name="current_page">
                     <input type="hidden" name="search" value="{{search_value}}">
-                    <button type="submit" value="False" name="..." class="page-link" style="color: black; border: 0; display:inline-block" disabled>
+                    {% comment %} <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block" disabled> {% endcomment %}
+                    <button type="submit" value="False" name="..." class="page-link mod_button_paging_extras" disabled>
                         ...
                     </button>
-                    <button type="submit" value="{{max}}" name="page" class="page-link" style="color: black; border: 0; display:inline-block">
+                    {% comment %} <button type="submit" value="{{max}}" name="page" class="page-link mod_button_paging_extras" style="color: black; border: 0; display:inline-block"> {% endcomment %}
+                    <button type="submit" value="{{max}}" name="page" class="page-link mod_button_paging_extras">
                         {{max}}
                     </button>
                 </form>

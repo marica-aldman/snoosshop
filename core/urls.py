@@ -15,13 +15,20 @@ from .views import (
     teamet_view,
     vision_view,
     freight_view,
+    LogOutModView,
+    ConfirmInfo,
+    CancelledView,
+    SuccessView,
+    ConfirmationView,
 )
 
+from . import views
 app_name = 'core'
 
 urlpatterns = [
     path('', NewHomeView.as_view(), name='home'),
     path('checkout/', CheckoutView.as_view(), name='checkout'),
+    path('confirmingInformation/', ConfirmInfo.as_view(), name='confirm'),
     path('order-summary/', OrderSummaryView.as_view(), name='order-summary'),
     path('product/<slug>/', ItemDetailView.as_view(), name='product'),
     path('add-to-cart/<slug>/', add_to_cart, name='add-to-cart'),
@@ -36,4 +43,11 @@ urlpatterns = [
     path('team', teamet_view.as_view(), name='teamet'),
     path('vision', vision_view.as_view(), name='vision'),
     path('freight', freight_view.as_view(), name='freight'),
+    path('logout', LogOutModView.as_view(), name='logoutview'),
+    path('webhook/', views.stripe_webhook),
+    path('success/', SuccessView.as_view(), name='success'),
+    path('confirmation/', ConfirmationView.as_view(), name='confirmation'),
+    path('cancelled/', CancelledView.as_view(), name='cancelled'),
+    path('create-checkout-session/', views.create_checkout_session),
+    path('config/', views.stripe_config),
 ]
