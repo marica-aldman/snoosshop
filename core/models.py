@@ -64,18 +64,6 @@ BUTTON_TYPES = (
 )
 
 default_pagination_values = 8
-overview_number = 4
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
-    one_click_purchasing = models.BooleanField(default=False)
-    user_status = models.IntegerField(default=1, blank=False, null=False)
-
-    def __str__(self):
-        return self.user.username
 
 
 class Address(models.Model):
@@ -95,7 +83,7 @@ class Address(models.Model):
 
     def get_absolute_url(self):
         return reverse("member:edit_address", kwargs={
-            'slug': self.slug
+            'slug': self.id
         })
 
     # for the support
@@ -310,8 +298,6 @@ class Order(models.Model):
         'Address', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
     billing_address = models.ForeignKey(
         'Address', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
-    payment = models.ForeignKey(
-        'Payment', on_delete=models.SET_NULL, blank=True, null=True)
     coupon = models.ForeignKey(
         'Coupon', on_delete=models.SET_NULL, blank=True, null=True)
     coupon_amount = models.FloatField(blank=True, null=True)
@@ -392,17 +378,6 @@ class PaymentTypes(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class Payment(models.Model):
-    stripe_charge_id = models.CharField(max_length=50)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.SET_NULL, blank=True, null=True)
-    amount = models.FloatField()
-    timestamp = models.DateTimeField(default=datetime.now, blank=True)
-
-    def __str__(self):
-        return self.stripe_charge_id
 
 
 class Coupon(models.Model):

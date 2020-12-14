@@ -8,45 +8,48 @@
     {% endif %}
     <div class="container">
 
-    <div class="table-responsive text-nowrap">
+    <div class="table-responsive">
     <h2>Sammanställning av order</h2>
-    <table class="table">
+    <table class="table basket_table">
         <thead>
         <tr>
-            <th scope="col">#</th>
-            <th scope="col">Vara</th>
-            <th scope="col">Pris</th>
-            <th scope="col">Mängd</th>
-            <th scope="col">Totalpris för varan</th>
+            <th>#</th>
+            <th>Vara</th>
+            <th>Pris</th>
+            <th>Mängd</th>
+            <th>Totalpris för varan</th>
+            <th>&nbsp;</th>
         </tr>
         </thead>
         <tbody>
         {% for order_item in object.items.all %}
         <tr>
-            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ forloop.counter }}</td>
             <td>{{ order_item.item.title }}</td>
             {% if order_item.item.discount_price %}
             <td>{{ order_item.item.discount_price }}</td>
             {% else %}
             <td>{{ order_item.item.price }}</td>
             {% endif %}
-            <td>
-                <a href="{% url 'core:remove-single-item-from-cart' order_item.item.slug %}"><i class="fas fa-minus mr-2"></i></a>
+            <td class="basket_alter">
+                <a href="{% url 'core:remove-single-item-from-cart' order_item.item.slug %}"><i class="fas fa-minus basket_alter_left"></i></a>
                 {{ order_item.quantity }}
-                <a href="{% url 'core:add-to-cart' order_item.item.slug %}"><i class="fas fa-plus ml-2"></i></a>
+                <a href="{% url 'core:add-to-cart' order_item.item.slug %}"><i class="fas fa-plus basket_alter_right"></i></a>
             </td>
             <td>
             {% if order_item.item.discount_price %}
                 {{ order_item.get_total_discount_item_price }} kr
-                <span class="badge badge-primary">Sparar {{ order_item.get_amount_saved }} kr</span>
+                <span class="badge badge-primary basket_wrap">Sparar {{ order_item.get_amount_saved }} kr</span>
             {% else %}
                 {{ order_item.get_total_item_price }} kr
             {% endif %}
+            </td>
+            <td>
               {% comment %}
             <a class="remove_from_basket" style='color: red;' href="{% url 'core:remove-from-cart' order_item.item.slug %}">
               {% endcomment %}
-            <a class="remove_from_basket" href="{% url 'core:remove-from-cart' order_item.item.slug %}">
-                <i class="fas fa-trash float-right"></i>
+            <a href="{% url 'core:remove-from-cart' order_item.item.slug %}">
+                <i class="fas fa-trash float-right remove_from_basket"></i>
             </a>
             </td>
         </tr>

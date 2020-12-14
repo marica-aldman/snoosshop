@@ -3,14 +3,14 @@
 
 {% block content %}
 
-<div class="container mt-3">
+<div class="container ">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
 
     <div class="border border-dark mb-3 p-2">
-        <form method="POST" class="w-100">
+        <form method="POST" class="">
             <input type="hidden" value="{{current_page}}" name="current_page">
         {% csrf_token %}
             <div class="d-flex justify-content-around">
@@ -37,9 +37,9 @@
         </form>
     </div>
     <!-- results or all orders -->
-    <div class="border border-dark mb-3 p-2">
-        <h3>Produkter</h3>
-        <table class="table-striped table-hover w-100  mb-2 table-bordered">
+    <div class="border border-dark mb-3">
+        <h3 class="p-2">Produkter</h3>
+        <table class="table-striped table-hover mb-2 table-bordered table_sizing_fullwidth_6">
             <thead class="mdb-color lighten-5">
                 <tr>
                     <th>

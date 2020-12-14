@@ -4,26 +4,20 @@
 {% block content %}
 
 <!-- all subscriptions-->
-<main>
+<main class="address_centering_div">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <div class="container">
-    <div>
-    <form method="POST" action="{% url 'support:specific_user' %}">
-        {% csrf_token %}
-        <div>
-            <div>
-                <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
-                    Tillbaka
-                </button>
-            </div>
-        </div>
-    </form>
-    </div>
-        <div class="border rounded mb-3">
-            {% if info.company %}
+    <div class="address_container">
+        <form method="POST" action="{% url 'support:specific_user' %}">
+            {% csrf_token %}
+            <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
+                Tillbaka
+            </button>
+        </form>
+        <div class="mb-3">
+            {% if newOrOld %}
             <h3>Ändra företagsinformation</h3>
             {% else %}
             <h3>Skapa företagsinformation</h3>

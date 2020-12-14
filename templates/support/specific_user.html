@@ -3,21 +3,20 @@
 
 {% block content %}
 
-<div class="container mt-3">
+<div class="container">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <!-- results or all orders -->
-    <div class="mb-3 p-2">
-        <div class="float-right" >
-            <form method="POST" class="float-right">
-                {% csrf_token %}
-                <button type="submit" class='btn btn-primary float-right' name="back" value="{{user.id}}">
-                    Tillbaka
-                </button>
-            </form>
-        </div>
+    <div class="back_button">
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class='btn btn-primary' name="back" value="{{user.id}}">
+                Tillbaka
+            </button>
+        </form>
+    </div>
+    <div class="mb-3 p-2 sup_fullsize">
         <h3>Kund: {{userInfo.first_name}} {{userInfo.last_name}}</h3>
         <table class="table-striped table-hover w-100  mb-2 table-bordered">
             <tbody>

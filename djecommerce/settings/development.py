@@ -42,3 +42,10 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+#STRIPE_PUBLIC_KEY = "pk_test_eFZKUsz2OYa1ajw67BsAjjZv00ohCMOXu5"
+#STRIPE_SECRET_KEY = "sk_test_bXnknmDwKCj2pkpHB58NXEH800L3JEAmOc"
+
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51Ht9JcFRP5ucPaMMxdHhH9rp249fcT9zlP00wRkCookqJa608VFDhuqwd0856jxvbLYWuj2GCQgppBiSj70sgHJ800H96vkyJa'
+STRIPE_SECRET_KEY = 'sk_test_51Ht9JcFRP5ucPaMMXCMIaejaHxqLaCd30RxKmoQQoM3aNGls3zn0y76wP8RYUlwUKjCpZgavXzfXAAQDvczKzBrf00bpWh0xtB'
+STRIPE_ENDPOINT_SECRET = 'whsec_1uBkFTF0jrGrdmEcq5v4Mf1P5pc87FjR'

@@ -19,14 +19,12 @@ class OrderAdmin(admin.ModelAdmin):
                     'refund_granted',
                     'shipping_address',
                     'billing_address',
-                    'payment',
                     'coupon',
                     ]
     list_display_links = [
         'user',
         'shipping_address',
         'billing_address',
-        'payment',
         'coupon'
     ]
     list_filter = ['ordered',
@@ -60,11 +58,9 @@ admin.site.register(Item)
 admin.site.register(Category)
 admin.site.register(OrderItem)
 admin.site.register(Order)
-admin.site.register(Payment)
 admin.site.register(Coupon)
 admin.site.register(Refund)
 admin.site.register(Address, AddressAdmin)
-admin.site.register(UserProfile)
 admin.site.register(UserInfo)
 admin.site.register(CompanyInfo)
 admin.site.register(Cookies)

@@ -11,9 +11,9 @@
     <div class="container">
     <!--profile-->
         <div class="w-100">
-            <form method="POST" action="{% url 'moderator:my_profile' %}">
+            <form method="POST" action="{% url 'member:changePassword' %}">
                 {% csrf_token %}
-                <button class="btn btn-primary float-right" name="change" value="{{user.id}}">
+                <button class="btn btn-primary back_button" name="change" value="{{user.id}}">
                     Ändra lösenord
                 </button>
             </form>

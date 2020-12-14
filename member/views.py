@@ -291,9 +291,9 @@ class Overview(LoginRequiredMixin, View):
             # get the orders
 
             try:
-                aquire = overview_number
                 orders = Order.objects.filter(
-                    user=self.request.user, ordered=True)[:aquire]
+                    user=self.request.user, ordered=True, being_delivered=False)
+
             except ObjectDoesNotExist:
                 orders = {}
 
@@ -391,17 +391,6 @@ class OrderView(LoginRequiredMixin, View):
                 else:
                     noCoupons = True
 
-                # get the payment info
-                payment_id = 1
-                payments = Payment()
-                if order.payment is not None:
-                    payment_id = order.payment.id
-
-                    paymentQuery = Payment.objects.filter(id=payment_id)
-
-                    for payment in paymentQuery:
-                        payments = payment
-
                 theOrder = Order()
                 theOrderItems = {}
 
@@ -418,7 +407,6 @@ class OrderView(LoginRequiredMixin, View):
                     'billing_address': billing_address,
                     'coupons': coupons,
                     'noCoupons': noCoupons,
-                    'payment': payments,
                 }
 
                 return render(self.request, "member/my_order.html", context)
@@ -1594,15 +1582,28 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     OFreight = o.freight.title
                 else:
                     OFreight = ""
+
                 if o.payment != None:
                     Opayment = o.payment.id
                 else:
                     Opayment = ""
+
                 if o.coupon != None:
                     Ocoupon = o.coupon.id
                 else:
                     Ocoupon = ""
 
+                if o.shipping_address != None:
+                    shipping_address_id = o.shipping_address.id
+                    print(shipping_address_id)
+                else:
+                    shipping_address_id = "Borttagen"
+
+                if o.billing_address != None:
+                    billing_address_id = o.billing_address.id
+                    print(billing_address_id)
+                else:
+                    billing_address_id = "Borttagen"
                 order = {
                     'id': o.id,
                     'user': o.user.username,
@@ -1612,10 +1613,10 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     'freight_price': o.freight_price,
                     'ordered_date': str(o.ordered_date),
                     'ordered': o.ordered,
-                    'shipping_address_id': o.shipping_address.id,
-                    'billing_address_id': o.billing_address.id,
+                    'shipping_address_id': shipping_address_id,
+                    'billing_address_id': billing_address_id,
                     'stripe_payment': Opayment,
-                    'coupon': o.coupon,
+                    'coupon': Ocoupon,
                     'sent': o.being_delivered,
                     'order_canceled': o.canceled,
                     'returned': o.returned,
@@ -1658,7 +1659,7 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     'stripe_charge_id': sp.stripe_charge_id,
                     'user': UI.user.username,
                     'amount': sp.amount,
-                    'timestamp': sp.timestamp
+                    'timestamp': str(sp.timestamp)
                 }
                 stripe_payments.append(stripe_payment)
 

@@ -8,25 +8,21 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="d-flex w-100 justify-content-around">
-    <form method="POST" action="{{ order.get_absolute_url_support }}">
-        {% csrf_token %}
-        <div>
-            <div>
-                <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
-                    Tillbaka
-                </button>
-            </div>
-        </div>
-    </form>
+        <form method="POST" action="{{ order.get_absolute_url_support }}">
+            {% csrf_token %}
+            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                Tillbaka
+            </button>
+        </form>
     </div>
 
     <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="order" value="{{order.id}}">
         <input type="hidden" name="item" value="{{item.id}}">
-        <div class="row border border-warning" >
-            <h1>Order {{order.id}}</h1>
-            <h3>{{item.title}}</h3>
+        <div class="" >
+            <h1>Orderitem: {{item.title}}</h1>
+            <h3>Order: {{order.id}}</h3>
             <table class="table-striped table-hover w-100  mb-2">
                 <tbody>
                     <tr>

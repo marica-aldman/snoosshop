@@ -3,25 +3,19 @@
 
 {% block content %}
 
-<main>
+<main class="address_centering_div">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <div class="container">
-    <form method="POST" action="{% url 'support:edit_addresses' %}">
-        {% csrf_token %}
-        <div>
-            <div>
-                <button type="submit" class='btn btn-primary' name="back" value="{{person.id}}">
-                    Tillbaka
-                </button>
-            </div>
-        </div>
-    </form>
-    <!--orders-->
-    <!--active-->
-        <div class="border rounded mb-3">
+    <div class="address_container">
+        <form method="POST" action="{% url 'support:edit_addresses' %}">
+            {% csrf_token %}
+            <button type="submit" class='btn btn-primary back_button' name="back" value="{{person.id}}">
+                Tillbaka
+            </button>
+        </form>
+        <div class="mb-3">
             <h3>Kundens adress</h3>
             <form method="POST">
                 {% csrf_token %}

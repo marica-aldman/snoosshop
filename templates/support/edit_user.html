@@ -9,19 +9,15 @@
       {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="container">
-    <div>
-        <form method="POST" action="{% url 'support:specific_user' %}">
-            {% csrf_token %}
-            <div>
-                <div>
-                    <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
-                        Tillbaka
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-        <div class="border rounded mb-3">
+        <div class="back_button">
+            <form method="POST" action="{% url 'support:specific_user' %}">
+                {% csrf_token %}
+                <button type="submit" class='btn btn-primary' name="lookAt" value="{{person.id}}">
+                    Tillbaka
+                </button>
+            </form>
+        </div>
+        <div class="mb-3">
             {% if info.company %}
             <h3>Ändra Kundens Kontaktpersonsinformation</h3>
             {% else %}

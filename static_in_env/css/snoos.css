@@ -99,6 +99,7 @@ html, body, header, .carousel {
 }
 
 .main_nav_sub_sup {
+    padding-left: 5px;
     padding-top: 14px;
     background: white;
 }
@@ -173,6 +174,27 @@ html, body, header, .carousel {
     min-width: 80px;
     max-width: 80px;
     min-height: 30px;
+}
+
+.basket_table, .basket_table > thead, .basket_table > tbody, .basket_table > thead > tr, .basket_table > tbody > tr {
+    max-width: 100vw;
+}
+
+ .basket_table > thead > tr > th, .basket_table > tbody > tr > td {
+     max-width: 16vw;
+ }
+
+.basket_alter {
+    display: flex;
+    justify-content: space-around;
+}
+
+.basket_alter_left, .basket_alter_right {
+    font-size: 0.8rem;
+}
+
+.basket_wrap {
+    white-space: normal;
 }
 
 .remove_from_basket {
@@ -293,11 +315,11 @@ html, body, header, .carousel {
 
 .mod_order_form_td_send_button {
     padding:1px;
-    max-width: 50%;
 }
 
 .mod_order_parts {
-    width: 75%;
+    width: 100%;
+    padding: 5px;
 }
 
 .mod_order_parts > h1 {
@@ -357,12 +379,30 @@ html, body, header, .carousel {
     margin: 5px;
 }
 
-.sup_order_form_row {
+.sup_order_back_form {
+    min-width: 100%;
+}
+
+.sup_order_form_table_div {
     padding: 5px;
+}
+
+.sup_order_form_table_div > h1 {
+    min-width: 100%;
+}
+
+.sup_order_form_table_div > table, .sup_order_form_table_div > table > thead, .sup_order_form_table_div > table > thead > tr, .sup_order_form_table_div > table > tbody, .sup_order_form_table_div > table > tbody > tr {
+    max-width: calc(100vw - 20px);
 }
 
 .sup_order_button_handle {
     padding: 10px;
+}
+
+.sup_order_parts_table_extra {
+    max-width: calc(20vw - 4px);
+    overflow: hidden;
+    text-overflow: ellipsis; 
 }
 
 .sup_profile_change_form {
@@ -376,6 +416,23 @@ html, body, header, .carousel {
 .sup_edit_address_tr {
     height:56px;
 }
+
+.sup_fullsize {
+    min-width: 100%;
+}
+
+.sup_fullsize > div {
+    min-width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sections {
+    max-width: 30%;
+}
+
 
 .product_card {
     width: 240px;
@@ -398,26 +455,218 @@ html, body, header, .carousel {
 }
 
 .table_sizing_fullwidth {
-    max-width:100vw;
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
 }
 
 .table_sizing_fullwidth > thead, .table_sizing_fullwidth > thead > tr , .table_sizing_fullwidth > tbody, .table_sizing_fullwidth > tbody > tr {
-    max-width:100vw;
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
 }
 
 .table_sizing_fullwidth > thead > tr > th, .table_sizing_fullwidth > tbody > tr > td {
-    max-width: 24vw; 
+    min-width: calc(calc(100vw - 32px)/4); 
+    max-width: calc(calc(100vw - 32px)/4); 
     overflow: hidden;
     text-overflow: ellipsis; 
 }
 
+.table_sizing_fullwidth_6 {
+    max-width:100vw;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.table_sizing_fullwidth_6 > thead, .table_sizing_fullwidth_6 > thead > tr , .table_sizing_fullwidth_6 > tbody, .table_sizing_fullwidth_6 > tbody > tr {
+    min-width: calc(100vw - 30px);
+}
+
+.table_sizing_fullwidth_6 > thead > tr > th, .table_sizing_fullwidth_6 > tbody > tr > td {
+    max-width: calc(100vw / 6); 
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}
+
+.table_sizing_fullwidth_6_less_pad {
+    min-width: calc(100vw - 60px);
+    max-width: calc(100vw - 60px);
+}
+
+.table_sizing_fullwidth_6_less_pad > thead, .table_sizing_fullwidth_6_less_pad > thead > tr , .table_sizing_fullwidth_6_less_pad > tbody, .table_sizing_fullwidth_6_less_pad > tbody > tr {
+    min-width: calc(100vw - 60px);
+    max-width: calc(100vw - 60px);
+}
+
+.table_sizing_fullwidth_6_less_pad > thead > tr > th, .table_sizing_fullwidth_6_less_pad > tbody > tr > td {
+    max-width: 14vw; 
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    font-size: 12px;
+}
+
+.table_sizing_fullwidth_3 {
+    max-width:100vw;
+}
+
+.table_sizing_fullwidth_3 > thead, .table_sizing_fullwidth_3 > thead > tr , .table_sizing_fullwidth_3 > tbody, .table_sizing_fullwidth_3 > tbody > tr {
+    max-width:100vw;
+}
+
+.table_sizing_fullwidth_3 > thead > tr > th, .table_sizing_fullwidth_3 > tbody > tr > td {
+    max-width: 30vw; 
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}
+
+
+.confirm_subtitle {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.word_break {
+    word-wrap: break-word;
+}
+
+.profile_button {
+    font-size: 0.5rem;
+    padding:10px;
+}
+
+.customer_profile {
+    min-width: 100vw;
+}
+
+.customer_profile_buttons {
+    min-width: calc(100vw - 30px);
+    display: flex;
+    justify-content: center;
+}
+
+.customer_profile_buttons > form, .customer_profile_buttons > a {
+    padding: 0;
+    margin: 0;
+}
+
+.customer_profile_info {
+    min-width: calc(100vw - 30px);
+    word-wrap: break-word;
+}
+
+.customer_profile_adress_table {
+    max-width: calc(100vw - 50px);
+    word-wrap: break-word;
+
+}
+
+.description > textarea {
+    max-width: 65%;
+}
+
+.description2 > textarea {
+    max-width: 90%;
+}
+
+.customer_profile_adress_table > thead > tr > th, .customer_profile_adress_table > tbody > tr > td {
+    max-width: 18vw;
+}
+
+.moderator_orderhandling_container {
+    width: 100vw;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-top: 1rem;
+}
+
+.sup_container {
+    height: calc(100vh - 213px)
+}
+
+.sup_container_width {
+    max-width: 100vw;
+    padding: 5px;
+}
+
+.sup_container_width_second {
+    max-width: 100vw;
+}
+
+.sup_buttons {
+    padding: 5px;
+    font-size: 0.5rem;
+    margin: 0;
+}
+
+.max_button_size {
+    max-width: 100%;
+}
+
+.address_container {
+    min-width: 100%;
+    max-width: 750px;
+    padding: 5px;
+}
+
 @media (max-width: 740px) {
     html, body, header, .carousel {
-    height: 100vh;
+        height: 100vh;
+        width: 100vw;
+    }
+}
+
+@media(min-width: 550px){
+    .address_centering_div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .address_container {
+        min-width: 100%;
+    }
+
+    .back_button {
+        float: right;
+    }
+
+    .sup_order_back_form, .sup_order_parts_div {
+        display: flex;
+        justify-content: center;
+    }
+
+    .sup_order_form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sup_container_width {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .table_sizing_fullwidth_6_less_pad {
+        max-width: 750px;
+    }
+
+    .table_sizing_fullwidth_6_less_pad > thead > tr,
+    .table_sizing_fullwidth_6_less_pad > thead, .table_sizing_fullwidth_6_less_pad > tbody > tr, .table_sizing_fullwidth_6_less_pad > tbody {
+        max-width: 750px;
+    }
+
+    .table_sizing_fullwidth_6_less_pad > thead > tr > th, .table_sizing_fullwidth_6_less_pad > tbody > tr > td {
+        max-width: 100px; 
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        font-size: 14px;
     }
 }
 
 @media(min-width: 769px){
+
+    .address_container {
+        min-width: 750px;
+    }
 
     .main_nav_border {
         border: none;
@@ -455,6 +704,95 @@ html, body, header, .carousel {
     .main_nav_logout_li_sup {
         padding-top: 10px;
         background: white;
+    }
+
+    .basket_alter_left, .basket_alter_right {
+        font-size: 1rem;
+    }
+
+    .customer_profile_buttons {
+        justify-content: space-around;
+    }
+
+    .customer_profile_adresses {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .customer_profile_adress_form {
+        min-width: 100%;
+    }
+
+    .customer_profile_adress_table {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .profile_button {
+        font-size: 0.8rem;
+    }
+
+    .sup_container_width {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sup_buttons {
+        font-size: 0.8rem;
+    }
+
+    .sup_container_width_second {
+        max-width: 750px;
+    }
+    
+
+    .table_sizing_fullwidth_6_less_pad {
+        min-width: 750px;
+    }
+
+    .table_sizing_fullwidth_6_less_pad > thead > tr,
+    .table_sizing_fullwidth_6_less_pad > thead, .table_sizing_fullwidth_6_less_pad > tbody > tr, .table_sizing_fullwidth_6_less_pad > tbody {
+        min-width: 750px;
+    }
+
+    .table_sizing_fullwidth_6_less_pad > thead > tr > th, .table_sizing_fullwidth_6_less_pad > tbody > tr > td {
+        min-width: 100px;
+    }
+
+}
+
+@media(min-width: 880px){
+
+    .moderator_orderhandling_container {
+        max-width: 880px;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-top: 1rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .table_sizing_fullwidth {
+        min-width: 848px;
+        max-width: 848px;
+    }
+
+    .table_sizing_fullwidth > thead, .table_sizing_fullwidth > thead > tr , .table_sizing_fullwidth > tbody, .table_sizing_fullwidth > tbody > tr {
+        min-width: 848px;
+        max-width: 848px;
+    }
+
+    .table_sizing_fullwidth > thead > tr > th, .table_sizing_fullwidth > tbody > tr > td {
+        min-width: 211px; 
+        max-width: 211px; 
+        overflow: hidden;
+        text-overflow: ellipsis; 
+    }
+
+    .sup_order_form_table_div {
+        max-width: 850px;   
     }
 
 }

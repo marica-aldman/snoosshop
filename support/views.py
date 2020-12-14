@@ -3340,15 +3340,14 @@ class EditAdress(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         # GDPR check
         gdpr_check = check_gdpr_cookies(self)
-        if "theClient" in self.request.POST.keys():
+        if "theClient" in self.request.POST.keys() and "theAddress" in self.request.POST.keys():
             user_id = int(self.request.POST['theClient'])
             theUser = User.objects.get(id=user_id)
-            # which one are we looking for
-            where = where_am_i(self)
+            address_id = int(self.request.POST['theAddress'])
             # get this address
             hasAddress = False
             try:
-                address = Address.objects.get(slug=where)
+                address = Address.objects.get(id=address_id)
                 hasAddress = True
             except ObjectDoesNotExist:
                 address = Address()

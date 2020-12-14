@@ -10,7 +10,7 @@
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <form method="POST" action="{% url 'support:orders' %}">
+    <form method="POST" action="{% url 'support:orders' %}" class="sup_order_back_form">
         {% csrf_token %}
         <div>
             <div>
@@ -21,13 +21,13 @@
         </div>
     </form>
 
-    <form method="POST">
+    <form method="POST" class="sup_order_form">
         {% csrf_token %}
         <input type="hidden" name="order" value="{{order.id}}">
         {% comment %} <div class="row sup_order_form_row" style="padding: 5px;"> {% endcomment %}
-        <div class="row sup_order_form_row">
+        <div class="sup_order_form_table_div">
             <h1>Order {{order.id}}</h1>
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover mb-2">
                 <tbody>
                     <tr>
                         <td>
@@ -298,29 +298,31 @@
                     {% endif %}
                 </tbody>
             </table>
+        </div>
+        <div>
             <button type='submit' class='btn btn-primary' name="save" value="True">Spara</button>
         </div>
     </form>
-
-        <!--recently completed-->
-        <div class="row">
+    
+    <div class="sup_order_parts_div">
+        <div class="sup_order_form_table_div">
             <h1>Order delar</h1>
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover mb-2">
                 <thead>
                     <tr>
-                        <th>
+                        <th class="sup_order_parts_table_extra">
                             Vara
                         </th>
-                        <th>
+                        <th class="sup_order_parts_table_extra">
                             Skickad
                         </th>
-                        <th>
+                        <th class="sup_order_parts_table_extra">
                             Returnerad
                         </th>
-                        <th>
+                        <th class="sup_order_parts_table_extra">
                             Avbeställd
                         </th>
-                        <th>
+                        <th class="sup_order_parts_table_extra">
                             Hantera produkten
                         </th>
                     </tr>
@@ -366,6 +368,7 @@
                 </tbody>
             </table>
         </div>
+    </div>
 </div>
 
 

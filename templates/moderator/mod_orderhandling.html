@@ -3,12 +3,12 @@
 
 {% block content %}
 
-<div class="container mt-3">
+<div class="moderator_orderhandling_container">
 
     {% if gdpr_check %}
       {% include "gdpr_popup.html" %}
     {% endif %}
-    <div class="row border border-dark mb-3 p-2">
+    <div class="border border-dark mb-3 p-2">
         <form method="POST" class="w-100">
             {% csrf_token %}
             <input type="hidden" value="{{current_page}}" name="current_page">
@@ -27,12 +27,12 @@
         </form>
     </div>
     <!-- results or all orders -->
-    <div class="row border border-dark mb-3 p-2">
+    <div class="border border-dark mb-3">
         <h3>Ordrar</h3>
-        <table class="table-striped table-hover w-100  mb-2">
+        <table class="table-striped table-hover mb-2 table_sizing_fullwidth">
             <thead class="mdb-color lighten-5">
                 {% comment %} <tr class="mod_orders_tr" style="text-align: center;"> {% endcomment %}
-                <tr class="mod_orders_tr">
+                <tr>
                     <th>
                         Order ID
                     </th>
@@ -50,7 +50,7 @@
             <tbody>
         {% for order in orders %}
                 {% comment %} <tr class="mod_orders_tr" style="text-align: center;"> {% endcomment %}
-                <tr class="mod_orders_tr">
+                <tr>
                     <td>
                         {{ order.id }}
                     </td>
@@ -60,7 +60,7 @@
                     <td>
                         <form method="POST" action="{{ order.get_absolute_url_moderator }}">
                             {% csrf_token %}
-                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary'>
+                            <button type="submit" value="{{order.id}}" name="lookAtOrder" class='btn btn-primary see_button'>
                                 Se order
                             </button>
                         </form>

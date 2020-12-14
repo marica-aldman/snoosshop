@@ -13,7 +13,7 @@
             <h3>
                 Ordrar
             </h3>
-            <table class="table-striped table-hover w-100  mb-2">
+            <table class="table-striped table-hover mb-2 table_sizing_fullwidth">
                 <thead class="mdb-color lighten-5">
                     <tr>
                         <th>
@@ -34,7 +34,7 @@
             {% for order in orders_a %}
                     <tr>
                         <td>
-                            {{ order.id }}
+                            {{ order.ref_code }}
                         </td>
                         <td>
                             {{ order.ordered_date }}
@@ -49,7 +49,7 @@
                         <td>
                             <form method="POST" action="{{ order.get_absolute_url_member }}">
                                 {% csrf_token %}
-                                <button class="btn btn-primary float-right" type="submit" value="{{order.id}}" name="lookAtOrder">
+                                <button class="btn btn-primary float-right see_button" type="submit" value="{{order.id}}" name="lookAtOrder">
                                     Se order
                                 </button>
                             </form>

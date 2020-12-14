@@ -178,8 +178,6 @@ class editOrCreateCategory(forms.ModelForm):
         self.fields['discount_price'].widget.attrs.update(
             {'value': category.discount_price})
         self.fields['description'].initial = category.description
-        self.fields['description'].widget.attrs.update(
-            {'style': "width: 100%"})
 
 
 class SearchFAQForm(forms.Form):

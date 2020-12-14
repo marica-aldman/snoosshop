@@ -10,14 +10,10 @@
     {% endif %}
     <form method="POST">
         {% csrf_token %}
-        <div>
-            <div>
-                <input type="hidden" name="reader" value="{{the_user}}">
-                <button type="submit" class='btn btn-primary' name="back" value="{{order.id}}">
-                    Tillbaka
-                </button>
-            </div>
-        </div>
+        <input type="hidden" name="reader" value="{{the_user}}">
+        <button type="submit" class='btn btn-primary' name="back" value="{{order.id}}">
+            Tillbaka
+        </button>
     </form>
 
     {% comment %} <form method="POST" action="{{path}}" onSubmit="return confirm('Verifikation: {{ order.id }}lagd för utskick?'" class="mod_order_form" style="max-width: 100%; display: flex; flex-direction: column; align-items: center"> {% endcomment %}
@@ -41,12 +37,10 @@
                         <th>
                             Status
                         </th>
-                        {% if comment != "" %}
                         {% comment %} <th style="max-width: 24%"> {% endcomment %}
                         <th>
                             Kommentar
                         </th>
-                        {% endif %}
                         {% comment %} <th style="max-width: 24%"> {% endcomment %}
                         <th>
                             Ändra
@@ -68,12 +62,10 @@
                                 Under behandling
                             {% endif %}
                         </td>
-                        {% if comment != "" %}
                         {% comment %} <td class="mod_order_form_td_comment" style="font-size:2vw"> {% endcomment %}
                         <td class="mod_order_form_td_comment">
                             {{ comment }}
                         </td>
-                        {% endif %}
                         {% comment %} <td class="mod_order_form_td_send" style="max-width: 18%"> {% endcomment %}
                         <td class="mod_order_form_td_send">
                             {% comment %} <button type="submit" value="{{order.id}}" name="send" class='btn btn-primary mod_order_form_td_send_button' {% if not_same_person %}disabled{%endif%} style="padding:1px; max-width: 50%"> {% endcomment %}

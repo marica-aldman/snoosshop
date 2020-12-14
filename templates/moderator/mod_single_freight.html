@@ -10,7 +10,7 @@
     {% endif %}
     <div>
         <a href="{% url 'moderator:freights' %}">
-            <button type="submit" class="btn btn-primary float-right">
+            <button type="submit" class="btn btn-primary back_button">
                 Tillbaka till frakter
             </button>
         </a>
@@ -40,7 +40,7 @@
                     <tr>
                         <td>
                             Beskrivning
-                        <td>
+                        <td class="description">
                             {{ form.description }}
                         </td>
                     </tr>

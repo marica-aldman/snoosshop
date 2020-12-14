@@ -13,7 +13,7 @@
         <div class="w-100">
             <form method="POST" action="{% url 'member:changePassword' %}">
                 {% csrf_token %}
-                <button class="btn btn-primary float-right" name="change" value="{{user.id}}">
+                <button class="btn btn-primary back_button" name="change" value="{{user.id}}">
                     Ändra lösenord
                 </button>
             </form>
@@ -63,7 +63,7 @@
             </table>
             
             {% comment %} <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2 sup_profile_change_form" style="height: 50px;"> {% endcomment %}
-            <form method="POST" action="{% url 'moderator:my_info' %}" class="w-100 mb-2 sup_profile_change_form">
+            <form method="POST" action="{% url 'support:my_info' %}" class="w-100 mb-2 sup_profile_change_form">
                 {% csrf_token %}
                 <input type="hidden" value="edit" name="edit">
                 <input type="hidden" value="{{info.first_name}}" name="first_name">
