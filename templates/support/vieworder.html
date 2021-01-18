@@ -75,7 +75,7 @@
                     </tr>
                     <tr>
                         <td>
-                            Kupongkod
+                            Rabattkod
                         </td>
                         <td>
                             {% if hasCoupon %}
@@ -87,7 +87,7 @@
                     </tr>
                     <tr>
                         <td>
-                            Kupongsvärde
+                            Rabattkodensvärde
                         </td>
                         <td>
                             {% if hasCoupon %}
@@ -103,26 +103,6 @@
                         </td>
                         <td>
                             {{ order.total_price }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Betalad
-                        </td>
-                        <td>
-                            {% if hasPayment %}
-                            {{ payment.timestamp }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Betalat
-                        </td>
-                        <td>
-                            {{ payment.amount }}
-                            {% else %}
-                            ---
-                            {% endif %}
                         </td>
                     </tr>
                     <tr>

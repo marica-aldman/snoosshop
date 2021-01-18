@@ -44,24 +44,32 @@ class CheckoutView(View):
             order = Order.objects.get(user=self.request.user, ordered=False)
             form = CheckoutForm()
 
-            if order.shipping_address != None or order.shipping_address != "":
-                shipping_address_qs = order.shipping_address
-            else:
+            test = str(type(order.shipping_address))
+            print("test")
+            print(test)
+            print(type(test))
+
+            if test == "<class 'NoneType'>":
                 # get the users preset adresses if there are some
                 shipping_address_qs = Address.objects.get(
                     user=self.request.user,
                     address_type='S',
                     default=True
                 )
-
-            if order.billing_address != None or order.billing_address != "":
-                billing_address_qs = order.billing_address
             else:
+                shipping_address_qs = order.shipping_address
+
+            test2 = str(type(order.billing_address))
+
+            if test2 == "<class 'NoneType'>":
+                # get the users preset adresses if there are some
                 billing_address_qs = Address.objects.get(
                     user=self.request.user,
                     address_type='B',
                     default=True
                 )
+            else:
+                billing_address_qs = order.billing_address
 
             context = {
                 'gdpr_check': gdpr_check,

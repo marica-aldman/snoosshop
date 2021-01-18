@@ -1,11 +1,11 @@
-import os
 from decouple import config
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY_KEY')
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,8 +93,8 @@ SITE_ID = 1
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'snoosshop.confirmation@gmail.com'
-EMAIL_HOST_PASSWORD = 'p123456;'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST_URL')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER_NAME')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASS')
+EMAIL_PORT = config('EMAIL_PORT_NR')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS_BOOL')

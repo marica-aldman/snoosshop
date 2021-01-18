@@ -1438,8 +1438,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
         }
 
         the_user_lazy = self.request.user
-        # get stripe profile
-        stripe_profile = UserProfile.objects.get(user=the_user_lazy)
         # get user info
         the_user = UserInfo.objects.get(user=the_user_lazy)
         # get company info if company
@@ -1463,11 +1461,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
 
         # get orderitems
         orderItems = OrderItem.objects.filter(user=the_user_lazy)
-        # payments
-        stripe_payments = Payment.objects.filter(user=the_user_lazy)
-        payment = False
-        if len(stripe_payments) > 0:
-            payment = True
         # get settings
         cookie_settings = Cookies.objects.filter(user=the_user_lazy)
         # get support the internal system isnt set up yet notify the user and add a request all support errand info button
@@ -1475,9 +1468,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
         # add all info to all_of_it
 
         all_of_it = {
-            "User_Stripe_Profile": stripe_profile,
-            "Payments": payment,
-            "User_Stripe_Payments": stripe_payments,
             "User_information": the_user,
             "Has_company": the_user.company,
             "Company": company,
@@ -1506,18 +1496,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
         if "download" in self.request.POST.keys():
 
             the_user_lazy = self.request.user
-            # get stripe profile
-            UP = UserProfile.objects.get(user=the_user_lazy)
-
-            if UP != None:
-                stripe_profile = {
-                    'user': UP.user.username,
-                    'stripe_customer_id': UP.stripe_customer_id,
-                    'one_click_purchasing': UP.one_click_purchasing,
-                    'user_status': UP.user_status,
-                }
-            else:
-                stripe_profile = []
             # get user info
             UI = UserInfo.objects.get(user=the_user_lazy)
             if UI != None:
@@ -1583,11 +1561,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                 else:
                     OFreight = ""
 
-                if o.payment != None:
-                    Opayment = o.payment.id
-                else:
-                    Opayment = ""
-
                 if o.coupon != None:
                     Ocoupon = o.coupon.id
                 else:
@@ -1595,13 +1568,11 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
 
                 if o.shipping_address != None:
                     shipping_address_id = o.shipping_address.id
-                    print(shipping_address_id)
                 else:
                     shipping_address_id = "Borttagen"
 
                 if o.billing_address != None:
                     billing_address_id = o.billing_address.id
-                    print(billing_address_id)
                 else:
                     billing_address_id = "Borttagen"
                 order = {
@@ -1615,7 +1586,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     'ordered': o.ordered,
                     'shipping_address_id': shipping_address_id,
                     'billing_address_id': billing_address_id,
-                    'stripe_payment': Opayment,
                     'coupon': Ocoupon,
                     'sent': o.being_delivered,
                     'order_canceled': o.canceled,
@@ -1650,19 +1620,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     'orderitems': orderItems,
                 })
 
-            # payments
-            SP = Payment.objects.filter(user=the_user_lazy)
-            stripe_payments = []
-            for sp in SP:
-                stripe_payment = {
-                    'id': sp.id,
-                    'stripe_charge_id': sp.stripe_charge_id,
-                    'user': UI.user.username,
-                    'amount': sp.amount,
-                    'timestamp': str(sp.timestamp)
-                }
-                stripe_payments.append(stripe_payment)
-
             # get settings
             CS = Cookies.objects.get(user=the_user_lazy)
             if CS != None:
@@ -1677,8 +1634,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
             # add all info to all_of_it
 
             all_of_it = {
-                "User_Stripe_Profile": stripe_profile,
-                "User_Stripe_Payments": stripe_payments,
                 "User_information": the_user,
                 "Company": company,
                 "Addresses": addresses,
@@ -1715,8 +1670,6 @@ class GDPRErraseRequest(LoginRequiredMixin, View):
             # get all information that is connected to the user
             # user object
             the_user_lazy = self.request.user
-            # get stripe profile
-            stripe_profile = UserProfile.objects.get(user=the_user_lazy)
             # get user info
             the_user = UserInfo.objects.get(user=the_user_lazy)
             # get company info if company

@@ -11,13 +11,13 @@
     <div>
         <a href="{% url 'moderator:coupons' %}">
             <button type="submit" class="btn btn-primary back_button">
-                Tillbaka till rabbattkoder
+                Tillbaka till rabattkoder
             </button>
         </a>
     </div>
 
     <div class="border border-dark mb-3 p-2">
-        <h3>Kuppong</h3>
+        <h3>Rabattkod</h3>
         <form method="POST">
             {% csrf_token %}
             <table class="table-striped table-hover w-100  mb-2 table-bordered">

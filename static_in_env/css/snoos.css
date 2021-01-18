@@ -472,6 +472,7 @@ html, body, header, .carousel {
 }
 
 .table_sizing_fullwidth_6 {
+    min-width: 100%;
     max-width:100vw;
     margin-left: auto;
     margin-right: auto;
@@ -505,6 +506,7 @@ html, body, header, .carousel {
 }
 
 .table_sizing_fullwidth_3 {
+    min-width: 100%;
     max-width:100vw;
 }
 

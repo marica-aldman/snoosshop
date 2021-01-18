@@ -2096,6 +2096,7 @@ class SpecificUser(LoginRequiredMixin, View):
             user_id = int(self.request.POST['lookAt'])
             theUser = User.objects.get(id=user_id)
             userInfo = UserInfo.objects.get(user=theUser)
+            print(theUser.username)
 
             context = {
                 'gdpr_check': gdpr_check,
@@ -2131,10 +2132,6 @@ class OrderView(LoginRequiredMixin, View):
 
                 # get the order items
                 orderItems = order.items.all()
-                payment = order.payment
-                hasPayment = False
-                if payment:
-                    hasPayment = True
                 coupon = order.coupon
                 hasCoupon = False
                 if coupon:
@@ -2155,11 +2152,9 @@ class OrderView(LoginRequiredMixin, View):
                     'gdpr_check': gdpr_check,
                     'order': order,
                     'orderItems': orderItems,
-                    'payment': payment,
                     'coupon': coupon,
                     'shipping_address': shipping_address,
                     'billing_address': billing_address,
-                    'hasPayment': hasPayment,
                     'hasCoupon': hasCoupon,
                     'theClient': theClient,
                     'theClientInfo': theClientInfo,

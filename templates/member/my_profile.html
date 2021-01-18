@@ -219,7 +219,7 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <form method="POST" action="." onSubmit="return confirm('Are you sure you wish to delete the address? This action can not be undone.');">
+                                    <form method="POST" action="." onSubmit="return confirm('Är du säker på att du vill ta bort denna adress? Detta är permanent.');">
                                         {% csrf_token %}
                                         <input type="hidden" name="delete" value='yes'>
                                         <input type="hidden" name="id" value={{address.id}}>
