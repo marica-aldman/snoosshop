@@ -4,7 +4,6 @@ import datetime
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import django_countries.fields
 
 
 class Migration(migrations.Migration):
@@ -23,7 +22,6 @@ class Migration(migrations.Migration):
                 ('street_address', models.CharField(max_length=100)),
                 ('apartment_address', models.CharField(max_length=100)),
                 ('post_town', models.CharField(max_length=100, null=True)),
-                ('country', django_countries.fields.CountryField(max_length=2)),
                 ('zip', models.CharField(max_length=100)),
                 ('address_type', models.CharField(choices=[('B', 'Billing'), ('S', 'Shipping')], max_length=1)),
                 ('default', models.BooleanField(default=False)),

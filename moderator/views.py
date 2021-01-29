@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from urllib.parse import urlencode
 from datetime import datetime
-from slugify import slugify
+from django.utils.text import slugify
 from core.models import *
 from member.forms import *
 from .forms import *

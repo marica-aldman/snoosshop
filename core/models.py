@@ -72,7 +72,7 @@ class Address(models.Model):
     apartment_address = models.CharField(max_length=100)
     post_town = models.CharField(max_length=100, null=True)
     zip = models.CharField(max_length=100)
-    address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
+    address_type = models.CharField(max_length=3, choices=ADDRESS_CHOICES)
     default = models.BooleanField(default=False)
     slug = models.SlugField(default='address')
 
@@ -627,11 +627,3 @@ class TeamStaff(models.Model):
 
     def __str__(self):
         return self.name
-
-
-def userprofile_receiver(sender, instance, created, *args, **kwargs):
-    if created:
-        userprofile = UserProfile.objects.create(user=instance)
-
-
-post_save.connect(userprofile_receiver, sender=settings.AUTH_USER_MODEL)

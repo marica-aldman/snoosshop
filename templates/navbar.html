@@ -7,8 +7,8 @@
       <!-- Brand -->
       <a class="navbar-brand waves-effect snoos_icon" href="/" styles="min-width: 100px;">
         <strong class="blue-text" styles="max-width: 100px"> {% endcomment %}
-        
-        
+
+
 <nav class="navbar fixed-top navbar-expand-md navbar-light white scrolling-navbar navbar_scroll">
     <div class="container navbar_container">
 
@@ -30,20 +30,17 @@
       <!-- Links -->
       {% comment %} <div class="collapse navbar-collapse main_nav" id="navbarSupportedContent" style="height: 40px; background: white"> {% endcomment %}
       <div class="collapse navbar-collapse main_nav" id="navbarSupportedContent">
-        
+
         {% comment %} <ul class="navbar-nav ml-auto"  style="height: 40px;"> {% endcomment %}
 
         <ul class="navbar-nav ml-auto main_nav_border">
               {% if request.user.is_authenticated %}
                 {% if group.1 == 'moderator' or group.1 == 'support' %}
-                {% comment %} <li class="nav-item dropdown main_nav_staff" style="height: 40px;padding-top: 14px; background: white;"> {% endcomment %}
                 <li class="nav-item dropdown main_nav_staff">
                 {% else %}
-                {% comment %} <li class="nav-item dropdown main_nav_customer" style="height: 40px;padding-top: 10px; background: white;"> {% endcomment %}
                 <li class="nav-item dropdown main_nav_customer">
                 {% endif %}
               {% else %}
-                {% comment %} <li class="nav-item dropdown main_nav_else" style="height: 40px;padding-top: 8px; background: white;"> {% endcomment %}
                 <li class="nav-item dropdown main_nav_else">
               {% endif %}
             <div id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Meny
@@ -53,14 +50,12 @@
                 <a class="nav-link waves-effect" href="/">Hem
                 </a>
               </li>
-              {% comment %} <li class="nav-item main_nav_about" style="min-width:80px"> {% endcomment %}
               <li class="nav-item main_nav_about">
                 <a class="nav-link waves-effect" href="/omoss">Om Oss</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link waves-effect" href="/team">Teamet</a>
               </li>
-              {% comment %} <li class="nav-item main_nav_vision" style="min-width:90px"> {% endcomment %}
               <li class="nav-item main_nav_vision">
                 <a class="nav-link waves-effect" href="/vision">Vår Vision</a>
               </li>
@@ -71,13 +66,12 @@
               <li class="nav-item main_nav_faq">
                 <a class="nav-link waves-effect" href="/faq">Vanliga frågor</a>
               </li>
-              
+
               {% if not request.user.is_authenticated %}
                   {% comment %}
                     User
                   {% endcomment %}
 
-                  {% comment %} <li class="nav-item main_nav_settings" style="min-width:150px"> {% endcomment %}
                   <li class="nav-item main_nav_settings">
                     <a class="nav-link waves-effect" href="{% url 'member:cookie_settings' %}">
                         <span class="clearfix">
@@ -227,7 +221,7 @@
                 Cart
               {% endcomment %}
 
-                
+
               {% for group in request.user.groups.values_list %}
                 {% if group.1 != 'moderator' and group.1 != 'support' %}
               {% comment %}

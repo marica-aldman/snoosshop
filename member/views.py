@@ -18,6 +18,7 @@ from django.utils.dateparse import parse_datetime
 from core.functions import *
 from django.core.files import File
 from django.core.files.base import ContentFile
+from django.utils.text import slugify
 import json
 
 
