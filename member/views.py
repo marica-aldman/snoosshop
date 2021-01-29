@@ -112,7 +112,6 @@ class Setup(LoginRequiredMixin, View):
                         address.post_town = form_address.cleaned_data.get(
                             'post_town')
                         address.zip = form_address.cleaned_data.get('zip')
-                        address.country = "Sverige"
                         address.address_type = "B"
                         address.default = True
 
@@ -839,14 +838,6 @@ class Editaddress(LoginRequiredMixin, View):
             slug = where_am_i(self)
             # get the address
             address = Address.objects.get(slug=slug)
-            print("original")
-            print(address.street_address)
-            print(address.apartment_address)
-            print(address.post_town)
-            print(address.zip)
-            print(address.country)
-            print(address.address_type)
-            print(address.default)
             # get the user
             theUser = self.request.user
             # get the form
@@ -1065,12 +1056,11 @@ class Newaddress(LoginRequiredMixin, View):
                                         # we want both but only have one, create a new address
                                         new_address = Address()
                                         new_address.user = anAddress.user
-                                        new_address.street_address = anAddress.user
-                                        new_address.apartment_address = anAddress.user
-                                        new_address.post_town = anAddress.user
-                                        new_address.country = anAddress.user
-                                        new_address.zip = anAddress.user
-                                        new_address.address_type = anAddress.user
+                                        new_address.street_address = anAddress.street_address
+                                        new_address.apartment_address = anAddress.apartment_address
+                                        new_address.post_town = anAddress.post_town
+                                        new_address.zip = anAddress.zip
+                                        new_address.address_type = anAddress.address_type
                                         new_address.save()
                                         new_slug = create_slug_address(
                                             new_address)
@@ -1109,12 +1099,11 @@ class Newaddress(LoginRequiredMixin, View):
                                         # we want both but only have one, create a new address
                                         new_address = Address()
                                         new_address.user = anAddress.user
-                                        new_address.street_address = anAddress.user
-                                        new_address.apartment_address = anAddress.user
-                                        new_address.post_town = anAddress.user
-                                        new_address.country = anAddress.user
-                                        new_address.zip = anAddress.user
-                                        new_address.address_type = anAddress.user
+                                        new_address.street_address = anAddress.street_address
+                                        new_address.apartment_address = anAddress.apartment_address
+                                        new_address.post_town = anAddress.post_town
+                                        new_address.zip = anAddress.zip
+                                        new_address.address_type = anAddress.address_type
                                         new_address.save()
                                         new_slug = create_slug_address(
                                             new_address)
@@ -1146,7 +1135,6 @@ class Newaddress(LoginRequiredMixin, View):
                     'apartment_address')
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
 
                 # check what kind of address we have
                 address_type = form.cleaned_data.get('address_type')
@@ -1161,7 +1149,6 @@ class Newaddress(LoginRequiredMixin, View):
                         'apartment_address')
                     address2.post_town = form.cleaned_data.get('post_town')
                     address2.zip = form.cleaned_data.get('zip')
-                    address2.country = "Sverige"
 
                     address2.address_type = "S"
 
@@ -1542,7 +1529,6 @@ class GDPRInformationRequest(LoginRequiredMixin, View):
                     'street_address': a.street_address,
                     'apartment_address': a.apartment_address,
                     'post_town': a.post_town,
-                    'country': str(a.country),
                     'zip': a.zip,
                     'address_type': the_type,
                     'default': a.default,

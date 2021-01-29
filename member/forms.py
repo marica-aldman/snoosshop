@@ -1,7 +1,5 @@
 from django import forms
 from datetime import datetime
-from django_countries.fields import CountryField
-from django_countries.widgets import CountrySelectWidget
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
 
@@ -308,11 +306,6 @@ class NewAddressForm(forms.Form):
     apartment_address = forms.CharField(max_length=100, required=False)
     post_town = forms.CharField(max_length=100, required=True)
     zip = forms.CharField(max_length=100, required=True)
-    country = CountryField(blank_label='(select country)').formfield(
-        required=False,
-        widget=CountrySelectWidget(attrs={
-            'class': 'custom-select d-block w-100',
-        }))
     address_type = forms.ChoiceField(
         choices=ADDRESS_CHOICES_EXTENDED, required=False)
 
@@ -323,7 +316,6 @@ class NewAddressForm(forms.Form):
         self.fields['apartment_address'].label = ""
         self.fields['post_town'].label = ""
         self.fields['zip'].label = ""
-        self.fields['country'].label = ""
         self.fields['address_type'].label = ""
 
 
@@ -332,11 +324,6 @@ class SetupAddressForm(forms.Form):
     apartment_address = forms.CharField(max_length=100, required=False)
     post_town = forms.CharField(max_length=100, required=False)
     zip = forms.CharField(max_length=100, required=False)
-    country = CountryField(blank_label='(select country)').formfield(
-        required=False,
-        widget=CountrySelectWidget(attrs={
-            'class': 'custom-select d-block w-100',
-        }))
     address_type = forms.ChoiceField(
         choices=ADDRESS_CHOICES_EXTENDED, required=False)
 
@@ -347,7 +334,6 @@ class SetupAddressForm(forms.Form):
         self.fields['apartment_address'].label = ""
         self.fields['post_town'].label = ""
         self.fields['zip'].label = ""
-        self.fields['country'].label = ""
         self.fields['address_type'].label = ""
 
     def populate(self, theCompany, *args, **kwargs):
@@ -360,8 +346,6 @@ class SetupAddressForm(forms.Form):
             {'value': address.post_town})
         self.fields['zip'].widget.attrs.update(
             {'value': address.zip})
-        self.fields['country'].widget.attrs.update(
-            {'value': address.country})
         self.fields['address_type'].widget.attrs.update(
             {'value': address.address_type})
 
@@ -378,8 +362,6 @@ class SetupAddressForm(forms.Form):
             {'value': address.post_town})
         self.fields['zip'].widget.attrs.update(
             {'value': address.zip})
-        self.fields['country'].widget.attrs.update(
-            {'value': address.country})
         self.fields['address_type'].widget.attrs.update(
             {'value': address.address_type})
 
@@ -485,7 +467,6 @@ class InitialForm(forms.ModelForm):
 
         self.street_address1 = forms.CharField(max_length=100)
         self.apartment_address1 = forms.CharField(max_length=100)
-        self.country1 = CountryField(multiple=False)
         self.zip1 = forms.CharField(max_length=100)
         self.default1 = forms.BooleanField(default=False)
 
@@ -493,7 +474,6 @@ class InitialForm(forms.ModelForm):
 
         self.street_address2 = forms.CharField(max_length=100)
         self.apartment_address2 = forms.CharField(max_length=100)
-        self.country2 = CountryField(multiple=False)
         self.zip2 = forms.CharField(max_length=100)
         self.default2 = forms.BooleanField(default=False)
 

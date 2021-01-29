@@ -6,7 +6,6 @@ from django.db.models import Sum
 from django.shortcuts import reverse
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
-from django_countries.fields import CountryField
 
 # standardised variables
 
@@ -72,7 +71,6 @@ class Address(models.Model):
     street_address = models.CharField(max_length=100)
     apartment_address = models.CharField(max_length=100)
     post_town = models.CharField(max_length=100, null=True)
-    country = CountryField(multiple=False)
     zip = models.CharField(max_length=100)
     address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
     default = models.BooleanField(default=False)

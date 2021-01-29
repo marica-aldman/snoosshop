@@ -213,7 +213,6 @@ class CheckoutView(View):
                             user=self.request.user,
                             street_address=billing_address1,
                             apartment_address=billing_address2,
-                            country="Sverige",
                             zip=billing_zip,
                             post_town=b_post_town,
                             address_type='B'

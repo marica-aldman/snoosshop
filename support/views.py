@@ -2688,7 +2688,6 @@ class EditCompany(LoginRequiredMixin, View):
                                         'post_town')
                                     address.default = True
                                     address.address_type = "B"
-                                    address.country = "Sverige"
                                     # create a slug
 
                                     toSlug = address.street_address + \
@@ -3411,7 +3410,6 @@ class EditAdress(LoginRequiredMixin, View):
                     'apartment_address')
                 address.post_town = form.cleaned_data.get('post_town')
                 address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
                 if 'address_type' in self.request.POST.keys():
                     address_type = self.request.POST['address_type']
                     if address_type == "B":
@@ -3655,7 +3653,6 @@ class NewAddress(LoginRequiredMixin, View):
                     'apartment_address')
                 address.post_town = form_post_town
                 address.zip = form.cleaned_data.get('zip')
-                address.country = "Sverige"
 
                 # check what kind of address we have
                 address_type = form_address_type
@@ -3689,7 +3686,6 @@ class NewAddress(LoginRequiredMixin, View):
                     address2.apartment_address = address.apartment_address
                     address2.post_town = address.post_town
                     address2.zip = address.zip
-                    address2.country = address.country
                     if default:
                         address2.default = True
                         new_address_default(address2)
