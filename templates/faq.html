@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 
 <main class="container">
 
     {% if gdpr_check %}
-      {% include "gdpr_popup.html" %}
+    {% include "gdpr_popup.html" %}
     {% endif %}
     <div class="border rounded mb-3 d-flex justify-content-center">
         <form action="." method="POST" class="m-4">
@@ -14,69 +13,78 @@
             <input type="hidden" name="searchID" value="1">
             {{searchForm.searchTerm}}
             {% for button in searchButton %}
-                <button type='submit' class='btn btn-primary'>{{button.buttonText}}</button>
+            <button type='submit' class='btn btn-primary'>{{button.buttonText}}</button>
             {% endfor %}
         </form>
     </div>
     <main>
-    {% if search %}
+        {% if search %}
         {% for faq in faqs %}
         <div class="border rounded mb-3">
             {% comment %} <div class="ml-2 mb-2 faq_subject" style="font-size: 1.2rem"> {% endcomment %}
-            <div class="ml-2 mb-2 faq_subject">
-                {{faq.subject}}
+                <div class="ml-2 mb-2 faq_subject">
+                    {{faq.subject}}
+                </div>
+                <div class="ml-2">
+                    &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
+                </div>
             </div>
-            <div class="ml-2">
-                &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
+            {% endfor %}
+            {% else %}
+            {% for faq in faqs %}
+            <div class="border rounded mb-3">
+                <div class="ml-2 mb-2 faq_subject" style="font-size: 1.2rem">
+                    {{faq.subject}}
+                </div>
+                <div class="ml-2">
+                    &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
+                </div>
             </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        {% for faq in faqs %}
-        <div class="border rounded mb-3">
-            <div class="ml-2 mb-2 faq_subject" style="font-size: 1.2rem">
-                {{faq.subject}}
-            </div>
-            <div class="ml-2">
-                &nbsp;&nbsp;&nbsp;&nbsp;{{faq.content}}
-            </div>
-        </div>
-        {% endfor%}
-    {% endif %}
-    {% if is_paginated %}
-        <div class="d-flex w-100 justify-content-center">
-            <form action="." method="POST" class="m-4">
-                {% csrf_token %}
-                <input type="hidden" name="SearchTerms" value="{{ searchTerms }}">
-                {% if has_previous %}
-                    <button type="submit" value="{{page_obj.previous_page_number}}" name="page" class="page-link"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></button>
-                {% endif %}
-                {% if start_page %}
-                    <button type="submit" value="1" name="page" class="page-link"><span aria-hidden="true">1</span><span class="sr-only">1</span></button>
-                    <button type="submit" value="previous" name="page" class="page-link" disabled><span aria-hidden="true">...</span><span class="sr-only">...</span></button>
-                {% endif %}
-                {% for page in page_list %}
-                    {% if page == page_obj.number %}
-                        <button type="submit" value="{{ page }}" name="page" class="page-link faq_paging_current_page" style="background-color:#4285f4; color:#FFFFFF;-webkit-box-shadow:0 2px 5px 0 rgba(0,0,0,.16),0 2px 10px 0 rgba(0,0,0,.12); display:inline; margin: 0">{{ page }}
-                            <span class="sr-only">{{ page }}(current)</span>
-                        </button>
-                    {% else %}
-                        <button type="submit" value={{ page }} name="page" class="page-link faq_paging_page" style="color:#000000; display:inline; margin: 0; border: 0">
-                            <span aria-hidden="true">{{ page }}</span>
-                            <span class="sr-only">{{ page }}</span>
-                        </button>
+            {% endfor%}
+            {% endif %}
+            {% if is_paginated %}
+            <div class="d-flex w-100 justify-content-center">
+                <form action="." method="POST" class="m-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="SearchTerms" value="{{ searchTerms }}">
+                    {% if has_previous %}
+                    <button type="submit" value="{{page_obj.previous_page_number}}" name="page" class="page-link"><span
+                            aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></button>
                     {% endif %}
-                {% endfor %}
-                {% if end_page %}
-                    <button type="submit" value="next" name="page" class="page-link" disabled><span aria-hidden="true">...</span><span class="sr-only">...</span></button>
-                    <button type="submit" value="{{max_page}}" name="page" class="page-link"><span aria-hidden="true">{{max_page}}</span><span class="sr-only">{{max_page}}</span></button>
-                {% endif %}
-                {% if next_page %}
-                    <button type="submit" value="{{page_obj.next_page_number}}" name="page" class="page-link"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></button>
-                {% endif %}
-            </form>
-        </div>
-    {% endif %}
+                    {% if start_page %}
+                    <button type="submit" value="1" name="page" class="page-link"><span aria-hidden="true">1</span><span
+                            class="sr-only">1</span></button>
+                    <button type="submit" value="previous" name="page" class="page-link" disabled><span
+                            aria-hidden="true">...</span><span class="sr-only">...</span></button>
+                    {% endif %}
+                    {% for page in page_list %}
+                    {% if page == page_obj.number %}
+                    <button type="submit" value="{{ page }}" name="page" class="page-link faq_paging_current_page"
+                        style="background-color:#4285f4; color:#FFFFFF;-webkit-box-shadow:0 2px 5px 0 rgba(0,0,0,.16),0 2px 10px 0 rgba(0,0,0,.12); display:inline; margin: 0">{{
+                        page }}
+                        <span class="sr-only">{{ page }}(current)</span>
+                    </button>
+                    {% else %}
+                    <button type="submit" value={{ page }} name="page" class="page-link faq_paging_page"
+                        style="color:#000000; display:inline; margin: 0; border: 0">
+                        <span aria-hidden="true">{{ page }}</span>
+                        <span class="sr-only">{{ page }}</span>
+                    </button>
+                    {% endif %}
+                    {% endfor %}
+                    {% if end_page %}
+                    <button type="submit" value="next" name="page" class="page-link" disabled><span
+                            aria-hidden="true">...</span><span class="sr-only">...</span></button>
+                    <button type="submit" value="{{max_page}}" name="page" class="page-link"><span
+                            aria-hidden="true">{{max_page}}</span><span class="sr-only">{{max_page}}</span></button>
+                    {% endif %}
+                    {% if next_page %}
+                    <button type="submit" value="{{page_obj.next_page_number}}" name="page" class="page-link"><span
+                            aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></button>
+                    {% endif %}
+                </form>
+            </div>
+            {% endif %}
     </main>
 </main>
 

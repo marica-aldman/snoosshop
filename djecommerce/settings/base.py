@@ -1,11 +1,11 @@
 from decouple import config
 import os
+from os import environ
 
 BASE_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 
-SECRET_KEY = config('SECRET_KEY_KEY')
-
+SECRET_KEY = os.environ['SECRET_KEY']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,6 +27,13 @@ INSTALLED_APPS = [
     'recovery',
     'core'
 ]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -92,8 +99,14 @@ SITE_ID = 1
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = config('EMAIL_HOST_URL')
+""" EMAIL_HOST = config('EMAIL_HOST_URL')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER_NAME')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASS')
 EMAIL_PORT = config('EMAIL_PORT_NR')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS_BOOL')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS_BOOL') """
+
+EMAIL_HOST = os.environ['EMAIL_HOST_URL']
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER_NAME']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASS']
+EMAIL_PORT = os.environ['EMAIL_PORT_NR']
+EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS_BOOL']

@@ -1,459 +1,516 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 
-  <main >
+<main>
 
-    {% if gdpr_check %}
-      {% include "gdpr_popup.html" %}
-    {% endif %}
-        <div class="list-inline container wow fadeIn">
-          <div class="list-inline-item"><strong>Steg 1: Val och Address</strong></div>
-          <div class="text-muted list-inline-item">Steg 2: Konfirmation av uppgifter</div>
-          <div class="text-muted list-inline-item">Steg 3: Betalning</div>
-          <div class="text-muted list-inline-item">Steg 4: Betalningskonfirmation</div>
-        </div>
-    <div class="container wow fadeIn">
-      <h2 class="my-5 h2 text-center">Kassa Steg 1</h2>
-      <div class="row">
-        <div class="col-md-8 mb-4">
-          <div class="card">
-            <form method="POST" class="card-body">
-              {% csrf_token %}
+  {% if gdpr_check %}
+  {% include "gdpr_popup.html" %}
+  {% endif %}
+  <div class="list-inline container wow fadeIn">
+    <div class="list-inline-item"><strong>Steg 1: Val och Address</strong></div>
+    <div class="text-muted list-inline-item">Steg 2: Konfirmation av uppgifter</div>
+    <div class="text-muted list-inline-item">Steg 3: Betalning</div>
+    <div class="text-muted list-inline-item">Steg 4: Betalningskonfirmation</div>
+  </div>
+  <div class="container wow fadeIn">
+    <h2 class="my-5 h2 text-center">Kassa Steg 1</h2>
+    <div class="row">
+      <div class="col-md-8 mb-4">
+        <div class="card">
+          <form method="POST" class="card-body">
+            {% csrf_token %}
 
-              <h3>Leveransaddress</h3>
-              
-              {% if first_load %}
-              <div class='hideable_shipping_form'>
+            <h3>Leveransaddress</h3>
 
-                <div class="md-form mb-5">
-                  <input type='text' placeholder="{{ shipping_address.street_address }}" id='shipping_address' name='shipping_address' class='form-control'  value="{{ shipping_address.street_address }}"/>
-                  <label for="shipping_address" class="">Address</label>
-                </div>
+            {% if first_load %}
+            <div class='hideable_shipping_form'>
 
-                <div class="md-form mb-5">
-                  <input type='text' placeholder="{{ shipping_address.apartment_address }}" id='shipping_address2' name='shipping_address2' class='form-control' value="{{ shipping_address.apartment_address }}" />
-                  <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
-                </div>
+              <div class="md-form mb-5">
+                <input type='text' placeholder="{{ shipping_address.street_address }}" id='shipping_address'
+                  name='shipping_address' class='form-control' value="{{ shipping_address.street_address }}" />
+                <label for="shipping_address" class="">Address</label>
+              </div>
 
-                <div class="row">
-                  <div class="col-lg-4 col-md-6 mb-4">
-                    <label for="shipping_zip">Postnummer</label>
-                    <input type='text' placeholder="{{ shipping_address.zip }}" id='shipping_zip' name='shipping_zip' class='form-control' value="{{ shipping_address.zip }}"/>
-                    <div class="invalid-feedback">
-                      Postnummer obligatoriskt.
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6 mb-4">
-                    <label for="shipping_zip">Postort</label>
-                    <input type='text' placeholder="{{ shipping_address.post_town }}" id='s_post_town' name='s_post_town' class='form-control' value="{{ shipping_address.post_town }}" />
-                    <div class="invalid-feedback">
-                      Postort obligatorisk.
-                    </div>
+              <div class="md-form mb-5">
+                <input type='text' placeholder="{{ shipping_address.apartment_address }}" id='shipping_address2'
+                  name='shipping_address2' class='form-control' value="{{ shipping_address.apartment_address }}" />
+                <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
+
+              <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postnummer</label>
+                  <input type='text' placeholder="{{ shipping_address.zip }}" id='shipping_zip' name='shipping_zip'
+                    class='form-control' value="{{ shipping_address.zip }}" />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
                   </div>
                 </div>
-
-                <div class="custom-control custom-checkbox">
-                  {% if form.same_billing_address.value %}
-                    <input type="checkbox" class="custom-control-input" name="same_billing_address" id="same_billing_address" checked>
-                    <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som leveransadress</label>
-                  {% else %}
-                    <input type="checkbox" class="custom-control-input" name="same_billing_address" id="same_billing_address">
-                    <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som leveransadress</label>
-                  {%endif%}
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postort</label>
+                  <input type='text' placeholder="{{ shipping_address.post_town }}" id='s_post_town' name='s_post_town'
+                    class='form-control' value="{{ shipping_address.post_town }}" />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
                 </div>
-                <div class="custom-control custom-checkbox">
-                  {% if form.set_default_shipping.value %}
-                  <input type="checkbox" class="custom-control-input" name="set_default_shipping" id="set_default_shipping" checked>
-                  <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
-                  {% else %}
-                  <input type="checkbox" class="custom-control-input" name="set_default_shipping" id="set_default_shipping">
-                  <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
-                  {% endif %}
+              </div>
+
+              <div class="custom-control custom-checkbox">
+                {% if form.same_billing_address.value %}
+                <input type="checkbox" class="custom-control-input" name="same_billing_address"
+                  id="same_billing_address" checked>
+                <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som
+                  leveransadress</label>
+                {% else %}
+                <input type="checkbox" class="custom-control-input" name="same_billing_address"
+                  id="same_billing_address">
+                <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som
+                  leveransadress</label>
+                {%endif%}
+              </div>
+              <div class="custom-control custom-checkbox">
+                {% if form.set_default_shipping.value %}
+                <input type="checkbox" class="custom-control-input" name="set_default_shipping"
+                  id="set_default_shipping" checked>
+                <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
+                {% else %}
+                <input type="checkbox" class="custom-control-input" name="set_default_shipping"
+                  id="set_default_shipping">
+                <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
+                {% endif %}
+              </div>
+
+            </div>
+            {% else %}
+
+            {% if form_not_complete %}
+
+            <div class='hideable_shipping_form'>
+
+              <div class="md-form mb-5">
+                <input type='text' placeholder='Testgatan 1' id='shipping_address' name='shipping_address'
+                  class='form-control' value="{{ shipping_address1 }}" />
+                <label for="shipping_address" class="">Address</label>
+              </div>
+
+              <div class="md-form mb-5">
+                <input type='text' placeholder='' id='shipping_address2' name='shipping_address2' class='form-control'
+                  value="{{ shipping_address2 }}" />
+                <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
+
+              <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postnummer</label>
+                  <input type='text' placeholder='Zip code' id='shipping_zip' name='shipping_zip' class='form-control'
+                    value="{{ shipping_zip }}" />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postort</label>
+                  <input type='text' placeholder='Postort' id='s_post_town' name='s_post_town' class='form-control'
+                    value="{{ s_post_town }}" />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
+                </div>
+              </div>
+
+              <div class="custom-control custom-checkbox">
+                {% if form.same_billing_address.value %}
+                <input type="checkbox" class="custom-control-input" name="same_billing_address"
+                  id="same_billing_address" checked>
+                <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som
+                  leveransadress</label>
+                {% else %}
+                <input type="checkbox" class="custom-control-input" name="same_billing_address"
+                  id="same_billing_address">
+                <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som
+                  leveransadress</label>
+                {%endif%}
+              </div>
+              <div class="custom-control custom-checkbox">
+                {% if form.set_default_shipping.value %}
+                <input type="checkbox" class="custom-control-input" name="set_default_shipping"
+                  id="set_default_shipping" checked>
+                <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
+                {% else %}
+                <input type="checkbox" class="custom-control-input" name="set_default_shipping"
+                  id="set_default_shipping">
+                <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
+                {% endif %}
+              </div>
+
+            </div>
+            {% else %}
+            <div class='hideable_shipping_form'>
+
+              <div class="md-form mb-5">
+                <input type='text' placeholder='Testgatan 1' id='shipping_address' name='shipping_address'
+                  class='form-control' />
+                <label for="shipping_address" class="">Address</label>
+              </div>
+
+              <div class="md-form mb-5">
+                {{ form.shipping_address2 }}
+                <input type='text' placeholder='' id='shipping_address2' name='shipping_address2'
+                  class='form-control' />
+                <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
+
+              <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postnummer</label>
+                  <input type='text' placeholder='Zip code' id='shipping_zip' name='shipping_zip'
+                    class='form-control' />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="shipping_zip">Postort</label>
+                  <input type='text' placeholder='Postort' id='s_post_town' name='s_post_town' class='form-control'
+                    value="{{ shipping_address.post_town }}" />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
+                </div>
+              </div>
+
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="same_billing_address"
+                  id="same_billing_address">
+                <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som
+                  leveransadress</label>
+              </div>
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_shipping"
+                  id="set_default_shipping">
+                <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
+              </div>
+
+            </div>
+            {% endif %}
+
+            {% endif %}
+
+
+            {% if default_shipping_address %}
+            {% if form.use_default_shipping.value %}
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" name="use_default_shipping" id="use_default_shipping"
+                checked>
+              <label class="custom-control-label" for="use_default_shipping">Använd förvald leveransadress: {{
+                default_shipping_address.street_address|truncatechars:10 }}</label>
+            </div>
+            {% else %}
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" name="use_default_shipping" id="use_default_shipping">
+              <label class="custom-control-label" for="use_default_shipping">Använd förvald leveransadress: {{
+                default_shipping_address.street_address|truncatechars:10 }}</label>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <hr>
+
+            <h3>Faktureringsaddress</h3>
+
+            {% if first_load %}
+            <div class='hideable_billing_form'>
+              <div class="md-form mb-5">
+                <input type='text' placeholder="{{ billing_address.street_address }}" id='billing_address'
+                  name='billing_address' class='form-control' value="{{ billing_address.street_address }}" />
+                <label for="billing_address" class="">Address</label>
+              </div>
+
+              <div class="md-form mb-5">
+                <input type='text' placeholder="{{ billing_address.apartment_address }}" id='billing_address2'
+                  name='billing_address2' class='form-control' value="{{ billing_address.apartment_address }}" />
+                <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
+
+              <div class="row">
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="billing_zip">Postnummer</label>
+                  <input type='text' placeholder="{{ billing_address.zip }}" id='billing_zip' name='billing_zip'
+                    class='form-control' value="{{ billing_address.zip }}" />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="b_post_town">Postort</label>
+                  <input type='text' placeholder="{{ billing_address.post_town }}" id='b_post_town' name='b_post_town'
+                    class='form-control' value="{{ billing_address.post_town }}" />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
                 </div>
 
               </div>
-              {% else %}
-
-                {% if form_not_complete %}
-                
-                <div class='hideable_shipping_form'>
-
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='Testgatan 1' id='shipping_address' name='shipping_address' class='form-control' value="{{ shipping_address1 }}"/>
-                    <label for="shipping_address" class="">Address</label>
-                  </div>
-
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='' id='shipping_address2' name='shipping_address2' class='form-control' value="{{ shipping_address2 }}" />
-                    <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="shipping_zip">Postnummer</label>
-                      <input type='text' placeholder='Zip code' id='shipping_zip' name='shipping_zip' class='form-control' value="{{ shipping_zip }}"/>
-                      <div class="invalid-feedback">
-                        Postnummer obligatoriskt.
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="shipping_zip">Postort</label>
-                      <input type='text' placeholder='Postort' id='s_post_town' name='s_post_town' class='form-control' value="{{ s_post_town }}" />
-                      <div class="invalid-feedback">
-                        Postort obligatorisk.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="custom-control custom-checkbox">
-                    {% if form.same_billing_address.value %}
-                      <input type="checkbox" class="custom-control-input" name="same_billing_address" id="same_billing_address" checked>
-                      <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som leveransadress</label>
-                    {% else %}
-                      <input type="checkbox" class="custom-control-input" name="same_billing_address" id="same_billing_address">
-                      <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som leveransadress</label>
-                    {%endif%}
-                  </div>
-                  <div class="custom-control custom-checkbox">
-                    {% if form.set_default_shipping.value %}
-                    <input type="checkbox" class="custom-control-input" name="set_default_shipping" id="set_default_shipping" checked>
-                    <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
-                    {% else %}
-                    <input type="checkbox" class="custom-control-input" name="set_default_shipping" id="set_default_shipping">
-                    <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
-                    {% endif %}
-                  </div>
-
-                </div>
-                {% else %}
-                <div class='hideable_shipping_form'>
-
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='Testgatan 1' id='shipping_address' name='shipping_address' class='form-control' />
-                    <label for="shipping_address" class="">Address</label>
-                  </div>
-
-                  <div class="md-form mb-5">
-                    {{ form.shipping_address2 }}
-                    <input type='text' placeholder='' id='shipping_address2' name='shipping_address2' class='form-control' />
-                    <label for="shipping_address2" class="">Address 2 (ej obligatoriskt)</label>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="shipping_zip">Postnummer</label>
-                      <input type='text' placeholder='Zip code' id='shipping_zip' name='shipping_zip' class='form-control' />
-                      <div class="invalid-feedback">
-                        Postnummer obligatoriskt.
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="shipping_zip">Postort</label>
-                      <input type='text' placeholder='Postort' id='s_post_town' name='s_post_town' class='form-control' value="{{ shipping_address.post_town }}" />
-                      <div class="invalid-feedback">
-                        Postort obligatorisk.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" name="same_billing_address" id="same_billing_address">
-                      <label class="custom-control-label" for="same_billing_address">Faktureringsadress samma som leveransadress</label>
-                  </div>
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="set_default_shipping" id="set_default_shipping">
-                    <label class="custom-control-label" for="set_default_shipping">Spara som förvald leveransadress</label>
-                  </div>
-
-                </div>
-                {% endif %}
-
-              {% endif %}
-
-
-              {% if default_shipping_address %}
-                {% if form.use_default_shipping.value %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="use_default_shipping" id="use_default_shipping" checked>
-                    <label class="custom-control-label" for="use_default_shipping">Använd förvald leveransadress: {{ default_shipping_address.street_address|truncatechars:10 }}</label>
-                  </div>
-                {% else %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="use_default_shipping" id="use_default_shipping">
-                    <label class="custom-control-label" for="use_default_shipping">Använd förvald leveransadress: {{ default_shipping_address.street_address|truncatechars:10 }}</label>
-                  </div>
-                {% endif %}
-              {% endif %}
-
-              <hr>
-
-              <h3>Faktureringsaddress</h3>
-
-              {% if first_load %}
-              <div class='hideable_billing_form'>
-                <div class="md-form mb-5">
-                  <input type='text' placeholder="{{ billing_address.street_address }}" id='billing_address' name='billing_address' class='form-control' value="{{ billing_address.street_address }}" />
-                  <label for="billing_address" class="">Address</label>
-                </div>
-
-                <div class="md-form mb-5">
-                  <input type='text' placeholder="{{ billing_address.apartment_address }}" id='billing_address2' name='billing_address2' class='form-control'  value="{{ billing_address.apartment_address }}" />
-                  <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
-                </div>
-
-                <div class="row">
-
-                  <div class="col-lg-4 col-md-6 mb-4">
-                    <label for="billing_zip">Postnummer</label>
-                    <input type='text' placeholder="{{ billing_address.zip }}" id='billing_zip' name='billing_zip' class='form-control' value="{{ billing_address.zip }}" />
-                    <div class="invalid-feedback">
-                      Postnummer obligatoriskt.
-                    </div>
-                  </div>
-
-                  <div class="col-lg-4 col-md-6 mb-4">
-                    <label for="b_post_town">Postort</label>
-                    <input type='text' placeholder="{{ billing_address.post_town }}" id='b_post_town' name='b_post_town' class='form-control' value="{{ billing_address.post_town }}" />
-                    <div class="invalid-feedback">
-                      Postort obligatorisk.
-                    </div>
-                  </div>
-
-                </div>
-                {% if form.set_default_billing.value %}
-                <div class="custom-control custom-checkbox">
-                  <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing" checked>
-                  <label class="custom-control-label" for="set_default_billing">Spara som förvald faktureringsaddress</label>
-                </div>
-                {% else %}
-                <div class="custom-control custom-checkbox">
-                  <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
-                  <label class="custom-control-label" for="set_default_billing">Spara som förvald faktureringsaddress</label>
-                </div>
-                {% endif %}
-
+              {% if form.set_default_billing.value %}
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing"
+                  checked>
+                <label class="custom-control-label" for="set_default_billing">Spara som förvald
+                  faktureringsaddress</label>
               </div>
               {% else %}
-                {% if form_not_complete %}
-                
-                <div class='hideable_billing_form'>
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='Testgatan 1' id='billing_address' name='billing_address' class='form-control' value="{{ billing_address1 }}" />
-                    <label for="billing_address" class="">Address</label>
-                  </div>
-
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='' id='billing_address2' name='billing_address2' class='form-control'  value="{{ billing_address2 }}" />
-                    <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
-                  </div>
-
-                  <div class="row">
-
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="billing_zip">Postnummer</label>
-                      <input type='text' placeholder='Postnummer' id='billing_zip' name='billing_zip' class='form-control' value="{{ billing_zip }}" />
-                      <div class="invalid-feedback">
-                        Postnummer obligatoriskt.
-                      </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="b_post_town">Postort</label>
-                      <input type='text' placeholder='Postort' id='b_post_town' name='b_post_town' class='form-control' value="{{ b_post_town }}" />
-                      <div class="invalid-feedback">
-                        Postort obligatorisk.
-                      </div>
-                    </div>
-
-                  </div>
-                  {% if form.set_default_billing.value %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing" checked>
-                    <label class="custom-control-label" for="set_default_billing">Spara som förvald faktureringsaddress</label>
-                  </div>
-                  {% else %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
-                    <label class="custom-control-label" for="set_default_billing">Spara som förvald faktureringsaddress</label>
-                  </div>
-                  {% endif %}
-
-                </div>
-                {% else %}
-                <div class='hideable_billing_form'>
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='Testgatan 1' id='billing_address' name='billing_address' class='form-control' />
-                    <label for="billing_address" class="">Address</label>
-                  </div>
-
-                  <div class="md-form mb-5">
-                    <input type='text' placeholder='' id='billing_address2' name='billing_address2' class='form-control' />
-                    <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
-                  </div>
-
-                  <div class="row">
-
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="billing_zip">Postnummer</label>
-                      <input type='text' placeholder='Postnummer' id='billing_zip' name='billing_zip' class='form-control' />
-                      <div class="invalid-feedback">
-                        Postnummer obligatoriskt.
-                      </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <label for="b_post_town">Postort</label>
-                      <input type='text' placeholder='Postort' id='b_post_town' name='b_post_town' class='form-control' />
-                      <div class="invalid-feedback">
-                        Postort obligatorisk.
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
-                    <label class="custom-control-label" for="set_default_billing">Spara som förvald faktureringsaddress</label>
-                  </div>
-
-                </div>
-                {% endif %}
-              {% endif %}
-
-              {% if default_billing_address %}
-                {% if form.use_default_billing.value %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="use_default_billing" id="use_default_billing" checked>
-                    <label class="custom-control-label" for="use_default_billing">Använd förvald faktureringsadress: {{ default_billing_address.street_address|truncatechars:10 }}</label>
-                  </div>
-                {% else %}
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="use_default_billing" id="use_default_billing">
-                    <label class="custom-control-label" for="use_default_billing">Använd förvald faktureringsadress: {{ default_billing_address.street_address|truncatechars:10 }}</label>
-                  </div>
-                {% endif %}
-              {% endif %}
-              <hr>
-
-              <h3>Fraktalternativ</h3>
-
-              {% if form_not_complete %}
-                <div class="d-block my-3">
-                  {% for f in selectedFreights %}
-                    {% if f.chosen %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio" class="custom-control-input" required checked>
-                      <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
-                    </div>
-                    {% else %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio" class="custom-control-input" required>
-                      <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
-                    </div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-                {% elif chosen_freight %}
-                <div class="d-block my-3">
-                  {% for f in selectedFreights %}
-                    {% if f.chosen %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio" class="custom-control-input" required checked>
-                      <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
-                    </div>
-                    {% else %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio" class="custom-control-input" required>
-                      <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
-                    </div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="d-block my-3">
-                  {% for value, name in form.fields.freight_option.choices %}
-                  <div class="custom-control custom-radio">
-                    <input id="{{ name }}" name="freight_option" value="{{ value }}" type="radio" class="custom-control-input" required>
-                    <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
-                  </div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-
-              <h3>Betalningstyper</h3>
-
-              {% if form_not_complete %}
-              <div class="d-block my-3">
-                {% for p in selectedPayments %}
-                  {% if p.chosen %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ p.choice.name }}" name="payment_option" value="{{ p.choice.short }}" type="radio" class="custom-control-input" required checked>
-                      <label class="custom-control-label" for="{{ p.choice.name }}">{{ p.choice.name }}</label>
-                    </div>
-                  {% else %}
-                    <div class="custom-control custom-radio">
-                      <input id="{{ p.choice.name }}" name="payment_option" value="{{ p.choice.short }}" type="radio" class="custom-control-input" required>
-                      <label class="custom-control-label" for="{{ p.choice.name }}">{{ p.choice.name }}</label>
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </div>
-              {% else %}
-              <div class="d-block my-3">
-                {% for value, name in form.fields.payment_option.choices %}
-                <div class="custom-control custom-radio">
-                  <input id="{{ name }}" name="payment_option" value="{{ value }}" type="radio" class="custom-control-input" required>
-                  <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
-                </div>
-                {% endfor %}
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
+                <label class="custom-control-label" for="set_default_billing">Spara som förvald
+                  faktureringsaddress</label>
               </div>
               {% endif %}
 
-              <hr class="mb-4">
-              <button class="btn btn-primary btn-lg btn-block" type="submit">Fortsätt till betalning</button>
+            </div>
+            {% else %}
+            {% if form_not_complete %}
 
-            </form>
+            <div class='hideable_billing_form'>
+              <div class="md-form mb-5">
+                <input type='text' placeholder='Testgatan 1' id='billing_address' name='billing_address'
+                  class='form-control' value="{{ billing_address1 }}" />
+                <label for="billing_address" class="">Address</label>
+              </div>
 
-          </div>
+              <div class="md-form mb-5">
+                <input type='text' placeholder='' id='billing_address2' name='billing_address2' class='form-control'
+                  value="{{ billing_address2 }}" />
+                <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
 
-        </div>
+              <div class="row">
 
-        <div class="col-md-4 mb-4">
-          {% include "order_snippet.html" %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="billing_zip">Postnummer</label>
+                  <input type='text' placeholder='Postnummer' id='billing_zip' name='billing_zip' class='form-control'
+                    value="{{ billing_zip }}" />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="b_post_town">Postort</label>
+                  <input type='text' placeholder='Postort' id='b_post_town' name='b_post_town' class='form-control'
+                    value="{{ b_post_town }}" />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
+                </div>
+
+              </div>
+              {% if form.set_default_billing.value %}
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing"
+                  checked>
+                <label class="custom-control-label" for="set_default_billing">Spara som förvald
+                  faktureringsaddress</label>
+              </div>
+              {% else %}
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
+                <label class="custom-control-label" for="set_default_billing">Spara som förvald
+                  faktureringsaddress</label>
+              </div>
+              {% endif %}
+
+            </div>
+            {% else %}
+            <div class='hideable_billing_form'>
+              <div class="md-form mb-5">
+                <input type='text' placeholder='Testgatan 1' id='billing_address' name='billing_address'
+                  class='form-control' />
+                <label for="billing_address" class="">Address</label>
+              </div>
+
+              <div class="md-form mb-5">
+                <input type='text' placeholder='' id='billing_address2' name='billing_address2' class='form-control' />
+                <label for="billing_address2" class="">Address 2 (ej obligatoriskt)</label>
+              </div>
+
+              <div class="row">
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="billing_zip">Postnummer</label>
+                  <input type='text' placeholder='Postnummer' id='billing_zip' name='billing_zip'
+                    class='form-control' />
+                  <div class="invalid-feedback">
+                    Postnummer obligatoriskt.
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <label for="b_post_town">Postort</label>
+                  <input type='text' placeholder='Postort' id='b_post_town' name='b_post_town' class='form-control' />
+                  <div class="invalid-feedback">
+                    Postort obligatorisk.
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="set_default_billing" id="set_default_billing">
+                <label class="custom-control-label" for="set_default_billing">Spara som förvald
+                  faktureringsaddress</label>
+              </div>
+
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if default_billing_address %}
+            {% if form.use_default_billing.value %}
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" name="use_default_billing" id="use_default_billing"
+                checked>
+              <label class="custom-control-label" for="use_default_billing">Använd förvald faktureringsadress: {{
+                default_billing_address.street_address|truncatechars:10 }}</label>
+            </div>
+            {% else %}
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" name="use_default_billing" id="use_default_billing">
+              <label class="custom-control-label" for="use_default_billing">Använd förvald faktureringsadress: {{
+                default_billing_address.street_address|truncatechars:10 }}</label>
+            </div>
+            {% endif %}
+            {% endif %}
+            <hr>
+
+            <h3>Fraktalternativ</h3>
+
+            {% if form_not_complete %}
+            <div class="d-block my-3">
+              {% for f in selectedFreights %}
+              {% if f.chosen %}
+              <div class="custom-control custom-radio">
+                <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio"
+                  class="custom-control-input" required checked>
+                <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
+              </div>
+              {% else %}
+              <div class="custom-control custom-radio">
+                <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio"
+                  class="custom-control-input" required>
+                <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% elif chosen_freight %}
+            <div class="d-block my-3">
+              {% for f in selectedFreights %}
+              {% if f.chosen %}
+              <div class="custom-control custom-radio">
+                <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio"
+                  class="custom-control-input" required checked>
+                <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
+              </div>
+              {% else %}
+              <div class="custom-control custom-radio">
+                <input id="{{ f.choice.title }}" name="freight_option" value="{{ f.choice.id }}" type="radio"
+                  class="custom-control-input" required>
+                <label class="custom-control-label" for="{{ f.choice.title }}">{{ f.choice.title }}</label>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="d-block my-3">
+              {% for value, name in form.fields.freight_option.choices %}
+              <div class="custom-control custom-radio">
+                <input id="{{ name }}" name="freight_option" value="{{ value }}" type="radio"
+                  class="custom-control-input" required>
+                <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <h3>Betalningstyper</h3>
+
+            {% if form_not_complete %}
+            <div class="d-block my-3">
+              {% for p in selectedPayments %}
+              {% if p.chosen %}
+              <div class="custom-control custom-radio">
+                <input id="{{ p.choice.name }}" name="payment_option" value="{{ p.choice.short }}" type="radio"
+                  class="custom-control-input" required checked>
+                <label class="custom-control-label" for="{{ p.choice.name }}">{{ p.choice.name }}</label>
+              </div>
+              {% else %}
+              <div class="custom-control custom-radio">
+                <input id="{{ p.choice.name }}" name="payment_option" value="{{ p.choice.short }}" type="radio"
+                  class="custom-control-input" required>
+                <label class="custom-control-label" for="{{ p.choice.name }}">{{ p.choice.name }}</label>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="d-block my-3">
+              {% for value, name in form.fields.payment_option.choices %}
+              <div class="custom-control custom-radio">
+                <input id="{{ name }}" name="payment_option" value="{{ value }}" type="radio"
+                  class="custom-control-input" required>
+                <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <hr class="mb-4">
+            <button class="btn btn-primary btn-lg btn-block" type="submit">Fortsätt till betalning</button>
+
+          </form>
+
         </div>
 
       </div>
 
+      <div class="col-md-4 mb-4">
+        {% include "order_snippet.html" %}
+      </div>
+
     </div>
-  </main>
+
+  </div>
+</main>
 
 {% endblock content %}
 
 {% block extra_scripts %}
 <script>
-var hideable_shipping_form = $('.hideable_shipping_form');
-var hideable_billing_form = $('.hideable_billing_form');
+  var hideable_shipping_form = $('.hideable_shipping_form');
+  var hideable_billing_form = $('.hideable_billing_form');
 
-var use_default_shipping = document.querySelector("input[name=use_default_shipping]");
-var use_default_billing = document.querySelector("input[name=use_default_billing]");
+  var use_default_shipping = document.querySelector("input[name=use_default_shipping]");
+  var use_default_billing = document.querySelector("input[name=use_default_billing]");
 
-use_default_shipping.addEventListener('change', function() {
-  if (this.checked) {
-    hideable_shipping_form.hide();
-  } else {
-    hideable_shipping_form.show();
-  }
-})
+  use_default_shipping.addEventListener('change', function () {
+    if (this.checked) {
+      hideable_shipping_form.hide();
+    } else {
+      hideable_shipping_form.show();
+    }
+  })
 
-use_default_billing.addEventListener('change', function() {
-  if (this.checked) {
-    hideable_billing_form.hide();
-  } else {
-    hideable_billing_form.show();
-  }
-})
+  use_default_billing.addEventListener('change', function () {
+    if (this.checked) {
+      hideable_billing_form.hide();
+    } else {
+      hideable_billing_form.show();
+    }
+  })
 
 </script>
 {% endblock extra_scripts %}

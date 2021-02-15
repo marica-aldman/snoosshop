@@ -1,16 +1,15 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 
 <main class="mt-2">
     <div class="container">
 
-    {% if gdpr_check %}
-      {% include "gdpr_popup.html" %}
-    {% endif %}
-    <!--orders-->
-    <!--active-->
+        {% if gdpr_check %}
+        {% include "gdpr_popup.html" %}
+        {% endif %}
+        <!--orders-->
+        <!--active-->
         <div class="border rounded mb-3 p-1">
             <h3>Inställningar för mina kakor</h3>
             <form method="POST" action=".">
@@ -32,40 +31,42 @@
                     <tbody>
                         <tr>
                             <td>
-                                    Nödvändiga kakor
+                                Nödvändiga kakor
                             </td>
                             <td>
-                                    På
+                                På
                             </td>
                             <td>
-                                    Dessa går inte att stänga av då sidans grundläggande funktioner så som navigation, kundvagn etc slutar fungera.
+                                Dessa går inte att stänga av då sidans grundläggande funktioner så som navigation,
+                                kundvagn etc slutar fungera.
                             </td>
                         </tr>
                         {% comment %}
-                            These dont exist yet. When they do add remove in turn off function.
+                        These dont exist yet. When they do add remove in turn off function.
                         <tr>
                             <td>
-                                    Personligt anpassad reklam
+                                Personligt anpassad reklam
                             </td>
                             <td>
-                                    {% if cookie_settings.addapted_adds %}
-                                        På
-                                    {% else %}
-                                        Av
-                                    {% endif %}
+                                {% if cookie_settings.addapted_adds %}
+                                På
+                                {% else %}
+                                Av
+                                {% endif %}
                             </td>
                             <td>
-                                    {{form.addapted_adds}}
+                                {{form.addapted_adds}}
                             </td>
                         </tr> {% endcomment %}
                     </tbody>
                 </table>
-               {% comment %} <div class="w-100 mb-2 save_settings_button" style="height: 50px!important;"> {% endcomment %}
-               <div class="w-100 mb-2 save_settings_button">
-                    <button type="submit"class="btn btn-primary float-right" disabled>
-                        Spara kakinställningar
-                    </button>
-                </div>
+                {% comment %} <div class="w-100 mb-2 save_settings_button" style="height: 50px!important;"> {%
+                    endcomment %}
+                    <div class="w-100 mb-2 save_settings_button">
+                        <button type="submit" class="btn btn-primary float-right" disabled>
+                            Spara kakinställningar
+                        </button>
+                    </div>
             </form>
         </div>
 
