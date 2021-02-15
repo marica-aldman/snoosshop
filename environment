@@ -2,8 +2,9 @@
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
 
 
+SECRET_KEY="BlUmN4e95a0_vhQPv5Z9E9ueWL2S4Ltd_nHpNXKlJmx5IeCZHRvs1Ck831ujczrz_adv+bVJ3rlRfSYDrApfouQN0Ej286/fADRhfEFOrguVyVhFX+rmNv5R+uufli/KUnvgr1dgrvjgKtA37sM/nEDfx20rPgzic16MKqaSD2bYI3SBVSwQYVUR/2JnWgD1/w86Pt7jJWzvl4v9c2CVDACR33kwQmmzod7BdyZAXKFjzLEtY67DJcpdVh68LAUA"
 
-SECRET_KEY="kobl2týw9d80y5jt2gjnq78ú1z+rrxb7w8e47l19jz2m79zy#h04Qj{RxX2on1P6P{&Ov7Z3mce*e40)V#UX,19M^-5:XOL`q$r!SKRoPrDTJV?~?BML<L$B;?#4+dT'L2XuIoHn?0@E[JmC)@kZkmi434zYz+a2q:G/v*Ou%ij9$3$ZZ*0p(}o`!MFTG:xZ4kf>WKW[SadZ-3hnDwGIGFiM_y,-MDB$d7/%S?;2<p7o%]dI-^6nE@(wT*sb!RP[|cu~,p:U2C`J<D/oO:n7|nBEyyHPuxH[)cN/[jG/7PXJ(yA}R,EeKPB1HPd-y;;sAwXuD)iF>nB"
+
 
 STRIPE_ENDPOINT_SECRET_KEY="whsec_1uBkFTF0jrGrdmEcq5v4Mf1P5pc87FjR"
 STRIPE_LIVE_PUBLIC_KEY_VAR="pk_test_51Ht9JcFRP5ucPaMMxdHhH9rp249fcT9zlP00wRkCookqJa608VFDhuqwd0856jxvbLYWuj2GCQgppBiSj70sgHJ800H96vkyJa"
